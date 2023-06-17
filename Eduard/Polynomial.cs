@@ -16,7 +16,7 @@ namespace Eduard
         /// </summary>
         public int Degree;
         public BigInteger[] coeffs;
-        private static RNGCryptoServiceProvider rand = new RNGCryptoServiceProvider();
+        private static RandomNumberGenerator rand = RandomNumberGenerator.Create();
         private static BigInteger constant;
         internal static BigInteger field;
 

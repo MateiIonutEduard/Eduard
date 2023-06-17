@@ -10,7 +10,7 @@ namespace Eduard
     {
         public BigInteger a, b;
         public BigInteger field, order;
-        private static RNGCryptoServiceProvider rand;
+        private static RandomNumberGenerator rand;
 
         /// <summary>
         /// Creates an elliptic curve with randomly coefficients.
@@ -18,7 +18,7 @@ namespace Eduard
         /// <param name="bits"></param>
         public EllipticCurve(int bits)
         {
-            rand = new RNGCryptoServiceProvider();
+            rand = RandomNumberGenerator.Create();
             field = BigInteger.GenProbablePrime(rand, bits, 50);
             a = BigInteger.Next(rand, 1, field - 1);
 
@@ -47,7 +47,7 @@ namespace Eduard
             if (args.Length > 4)
                 throw new ArgumentException("Too many arguments.");
 
-            rand = new RNGCryptoServiceProvider();
+            rand = RandomNumberGenerator.Create();
             a = args[0];
             b = args[1];
             field = args[2];

@@ -139,7 +139,7 @@ namespace Eduard
         /// <param name="rand"></param>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="NullReferenceException"></exception>
-        public BigInteger(int bits, RNGCryptoServiceProvider rand)
+        public BigInteger(int bits, RandomNumberGenerator rand)
         {
             if (bits <= 0)
                 throw new ArgumentException("Number of bits must be greater than 0.");
@@ -1052,7 +1052,7 @@ namespace Eduard
         /// <param name="val"></param>
         /// <param name="trials"></param>
         /// <returns></returns>
-        public static bool IsProbablePrime(RNGCryptoServiceProvider rand, BigInteger val, int trials)
+        public static bool IsProbablePrime(RandomNumberGenerator rand, BigInteger val, int trials)
         {
             if (!IsProbablePrime(val)) return false;
             if (val.GetBits() <= 64) return true;
@@ -1103,7 +1103,7 @@ namespace Eduard
         /// <param name="bits"></param>
         /// <param name="trials"></param>
         /// <returns></returns>
-        public static BigInteger GenProbablePrime(RNGCryptoServiceProvider rand, int bits, int trials)
+        public static BigInteger GenProbablePrime(RandomNumberGenerator rand, int bits, int trials)
         {
             BigInteger result = new BigInteger(bits, rand);
             result |= 1;
@@ -1784,7 +1784,7 @@ namespace Eduard
         /// <param name="Min"></param>
         /// <param name="Max"></param>
         /// <returns></returns>
-        public static BigInteger Next(RNGCryptoServiceProvider rand, BigInteger Min, BigInteger Max)
+        public static BigInteger Next(RandomNumberGenerator rand, BigInteger Min, BigInteger Max)
         {
             BigInteger modulus = Max - Min + 1;
             BigInteger result = new BigInteger(modulus.GetBits(), rand);
