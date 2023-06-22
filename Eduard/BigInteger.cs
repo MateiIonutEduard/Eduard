@@ -1106,11 +1106,13 @@ namespace Eduard
         public static BigInteger GenProbablePrime(RandomNumberGenerator rand, int bits, int trials)
         {
             BigInteger result = new BigInteger(bits, rand);
+            result.data[result.data.Used - 1] |= 0x80000000;
             result |= 1;
             
             while(!IsProbablePrime(rand, result, trials))
             {
                 result = new BigInteger(bits, rand);
+                result.data[result.data.Used - 1] |= 0x80000000;
                 result |= 1;
             }
             
