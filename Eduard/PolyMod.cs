@@ -7,16 +7,16 @@ namespace Eduard
         public Polynomial poly;
         private static Polynomial mod;
 
-        internal PolyMod()
+        public PolyMod()
         { poly = new Polynomial(); }
 
-        internal PolyMod(Polynomial poly)
+        public PolyMod(Polynomial poly)
         { this.poly = poly % mod; }
 
-        internal PolyMod(PolyMod poly)
+        public PolyMod(PolyMod poly)
         { this.poly = poly.poly; }
 
-        internal BigInteger GetCoeff(int index)
+        public BigInteger GetCoeff(int index)
         { return poly.GetCoeff(index); }
 
         public static PolyMod operator +(PolyMod left, PolyMod right)
@@ -43,10 +43,10 @@ namespace Eduard
             return new PolyMod(pol);
         }
 
-        internal static Polynomial Gcd(Polynomial poly)
+        public static Polynomial Gcd(Polynomial poly)
         { return Polynomial.Gcd(poly, mod); }
 
-        internal static PolyMod Compose(PolyMod left, PolyMod right)
+        public static PolyMod Compose(PolyMod left, PolyMod right)
         {
             Polynomial poly = left.poly;
             Polynomial cpoly = 0;
@@ -64,7 +64,7 @@ namespace Eduard
             return result;
         }
 
-        internal static PolyMod Pow(PolyMod poly, BigInteger k)
+        public static PolyMod Pow(PolyMod poly, BigInteger k)
         {
             Polynomial val = Polynomial.Pow(poly.poly, k, mod);
             PolyMod result = new PolyMod();
@@ -72,10 +72,10 @@ namespace Eduard
             return result;
         }
 
-        internal BigInteger F(BigInteger x)
+        public BigInteger F(BigInteger x)
         { return poly.Horner(x); }
 
-        internal static void SetModulus(Polynomial modulus)
+        public static void SetModulus(Polynomial modulus)
         { 
             mod = modulus;
             Polynomial.SetPolyMod(modulus);
