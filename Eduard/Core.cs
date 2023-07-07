@@ -1,6 +1,6 @@
 ﻿namespace Eduard
 {
-    class Core
+    public class Core
     {
         static uint[] primes;
         static uint[] inverse;
