@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Eduard
 {
-    class Util
+    public class Util
     {
         public static BigInteger mod;
         public static BigInteger k;

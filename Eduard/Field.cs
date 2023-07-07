@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Eduard
 {
-    class Field
+    public class Field
     {
         public BigInteger fn;
         static BigInteger field;
