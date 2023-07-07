@@ -2,9 +2,9 @@
 
 namespace Eduard
 {
-    internal class PolyMod
+    public class PolyMod
     {
-        internal Polynomial poly;
+        public Polynomial poly;
         private static Polynomial mod;
 
         internal PolyMod()
