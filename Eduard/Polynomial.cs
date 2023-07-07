@@ -765,7 +765,7 @@ namespace Eduard
             }
         }
 
-        internal static Polynomial Divxn(Polynomial poly, int degn)
+        public static Polynomial Divxn(Polynomial poly, int degn)
         {
             if (poly.Degree < degn) return 0;
             Polynomial result = new Polynomial();
@@ -779,7 +779,7 @@ namespace Eduard
             return result;
         }
 
-        internal static Polynomial Modxn(Polynomial poly, int degn)
+        public static Polynomial Modxn(Polynomial poly, int degn)
         {
             if (poly.Degree < degn) return poly;
             Polynomial result = new Polynomial();
@@ -793,7 +793,7 @@ namespace Eduard
             return result;
         }
 
-        internal static Polynomial Modxn_l(Polynomial poly, int degn)
+        public static Polynomial Modxn_l(Polynomial poly, int degn)
         {
             if (poly.Degree < degn) return poly;
             Polynomial result = new Polynomial(degn - 1);
