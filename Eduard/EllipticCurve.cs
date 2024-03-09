@@ -124,7 +124,7 @@ namespace Eduard
             {
                 n = BigInteger.Next(rand, 2, field - 1);
                 JSymbol = BigInteger.Jacobi(n, field);
-            } while (JSymbol == -1);
+            } while (JSymbol != -1);
 
             z = BigInteger.Pow(n, q, field);
             y = z;
