@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 
-namespace Eduard
+namespace Eduard.Security
 {
     /// <summary>
     /// Represents the modular univariate polynomials.

@@ -1,20 +1,20 @@
 ﻿using System;
 
-namespace Eduard
+namespace Eduard.Security
 {
     /// <summary>
-    /// Performs the mathematical operations with points on the elliptic curve.
+    /// Provides mathematical operations with affine points on the Weierstrass elliptic curve.
     /// </summary>
-    public static class ECMath
+    public static class WeierstrassAffineExtensions
     {
         /// <summary>
-        /// Adds two points on the elliptic curve.
+        /// Add two affine points on the Weierstrass elliptic curve.
         /// </summary>
         /// <param name="curve"></param>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ECPoint Add(EllipticCurve curve, ECPoint left, ECPoint right)
+        public static ECPoint Add(this EllipticCurve curve, ECPoint left, ECPoint right)
         {
             if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
@@ -82,13 +82,13 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Multiplies a point on the elliptic curve with a specified scalar.
+        /// Multiply the affine point on the Weierstrass elliptic curve by a specified scalar.
         /// </summary>
         /// <param name="curve"></param>
         /// <param name="k"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point)
+        public static ECPoint Multiply(this EllipticCurve curve, BigInteger k, ECPoint point)
         {
             if (k < 0)
                 throw new ArgumentException("Bad input.");
@@ -112,12 +112,12 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Negates a specified point on the elliptic curve.
+        /// Compute the additive inverse of the specified affine point on the Weierstrass curve.
         /// </summary>
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint Negate(EllipticCurve curve, ECPoint point)
+        public static ECPoint Negate(this EllipticCurve curve, ECPoint point)
         {
             if (point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;

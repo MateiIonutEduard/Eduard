@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Eduard
+namespace Eduard.Security
 {
     public class Util
     {

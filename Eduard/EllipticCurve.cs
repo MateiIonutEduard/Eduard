@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace Eduard
+namespace Eduard.Security
 {
     /// <summary>
-    /// Represents an elliptic curve.
+    /// Represents an elliptic curve given in Weierstrass form.
     /// </summary>
     public sealed class EllipticCurve
     {
@@ -13,7 +13,7 @@ namespace Eduard
         private static RandomNumberGenerator rand;
 
         /// <summary>
-        /// Creates an elliptic curve with randomly coefficients.
+        /// Creates a Weierstrass elliptic curve with random coefficients.
         /// </summary>
         /// <param name="bits"></param>
         public EllipticCurve(int bits)
@@ -39,7 +39,7 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Creates an elliptic curve with specified coefficients.
+        /// Creates a Weierstrass elliptic curve with specific coefficients.
         /// </summary>
         /// <param name="args"></param>
         public EllipticCurve(params BigInteger[] args)
@@ -55,7 +55,7 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Evaluates the Weierstrass equation of the elliptic curve in the specified value.
+        /// Evaluate the Weierstrass elliptic curve equation at the x-coordinate.
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
@@ -69,7 +69,7 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Represents a base point on the elliptic curve.
+        /// Represents a randomly chosen base point on the elliptic curve.
         /// </summary>
         public ECPoint BasePoint
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Eduard;
 
-namespace Eduard
+namespace Eduard.Security
 {
     /// <summary>
     /// Represents the modular bivariate polynomials.

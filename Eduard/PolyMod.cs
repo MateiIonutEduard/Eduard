@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Eduard
+namespace Eduard.Security
 {
     public class PolyMod
     {

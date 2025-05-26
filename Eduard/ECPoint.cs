@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Eduard
+namespace Eduard.Security
 {
     /// <summary>
     /// Represents a point on an elliptic curve in affine coordinates.

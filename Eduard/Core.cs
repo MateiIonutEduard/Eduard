@@ -1,4 +1,4 @@
-﻿namespace Eduard
+﻿namespace Eduard.Security
 {
     public class Core
     {
