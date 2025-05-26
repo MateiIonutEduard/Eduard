@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Eduard.Security;
-
-namespace Eduard
+﻿namespace Eduard.Security
 {
     /* Cohen–Miyaji–Ono (1998) "Efficient elliptic curve exponentiation using mixed coordinates" */
     public static class ModifiedJacobianMath
