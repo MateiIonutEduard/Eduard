@@ -5,7 +5,7 @@ namespace Eduard.Security
     /// <summary>
     /// Provides mathematical operations with affine points on the Weierstrass elliptic curve.
     /// </summary>
-    public static class WeierstrassAffineExtensions
+    public static class ECMath
     {
         /// <summary>
         /// Add two affine points on the Weierstrass elliptic curve.
@@ -14,7 +14,7 @@ namespace Eduard.Security
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ECPoint Add(this EllipticCurve curve, ECPoint left, ECPoint right)
+        public static ECPoint Add(EllipticCurve curve, ECPoint left, ECPoint right)
         {
             if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
@@ -88,7 +88,7 @@ namespace Eduard.Security
         /// <param name="k"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(this EllipticCurve curve, BigInteger k, ECPoint point)
+        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point)
         {
             if (k < 0)
                 throw new ArgumentException("Bad input.");
@@ -117,7 +117,7 @@ namespace Eduard.Security
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint Negate(this EllipticCurve curve, ECPoint point)
+        public static ECPoint Negate(EllipticCurve curve, ECPoint point)
         {
             if (point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
