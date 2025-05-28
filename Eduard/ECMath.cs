@@ -3,7 +3,7 @@
 namespace Eduard.Security
 {
     /// <summary>
-    /// Provides mathematical operations with affine points on the Weierstrass elliptic curve.
+    /// Provides mathematical operations for points on the Weierstrass elliptic curve.
     /// </summary>
     public static class ECMath
     {
@@ -87,26 +87,52 @@ namespace Eduard.Security
         /// <param name="curve"></param>
         /// <param name="k"></param>
         /// <param name="point"></param>
+        /// <param name="opMode"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point)
+        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode=ECMode.EC_STANDARD)
         {
-            if (k < 0)
-                throw new ArgumentException("Bad input.");
+            if (k < 0) throw new ArgumentException("Bad input.");
 
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
-            int length = k.GetBits();
+            int t = k.GetBits();
 
-            for (int j = 0; j < length; j++)
+            if (opMode == ECMode.EC_STANDARD)
             {
-                if (k.TestBit(j))
-                    result = Add(curve, result, temp);
+                for (int j = 0; j < t; j++)
+                {
+                    if (k.TestBit(j))
+                        result = Add(curve, result, temp);
 
-                temp = Add(curve, temp, temp);
+                    temp = Add(curve, temp, temp);
+                }
             }
+            else if (opMode == ECMode.EC_SECURE)
+            {
+                JacobianPoint R0 = JacobianPoint.POINT_INFINITY;
+                JacobianPoint R1 = curve.ToJacobian(temp);
+
+                for (int j = t - 1; j >= 0; j--)
+                {
+                    if(!k.TestBit(j))
+                    {
+                        R1 = JacobianMath.Add(curve, R0, R1);
+                        R0 = JacobianMath.Doubling(curve, R0);
+                    }
+                    else
+                    {
+                        R0 = JacobianMath.Add(curve, R0, R1);
+                        R1 = JacobianMath.Doubling(curve, R1);
+                    }
+                }
+
+                result = curve.ToAffine(R0);
+            }
+            else
+                throw new NotImplementedException();
 
             return result;
         }
