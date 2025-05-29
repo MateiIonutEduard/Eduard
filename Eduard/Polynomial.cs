@@ -409,43 +409,6 @@ namespace Eduard.Security
             return rem;
         }
 
-        private static int Window(BigInteger x, int i, ref int nbs, ref int nzs, int size)
-        {
-            int j, r, w;
-            w = size;
-
-            nbs = 1;
-            nzs = 0;
-
-            if (!x.TestBit(i)) return 0;
-            if (i - w + 1 < 0) w = i + 1;
-
-            r = 1;
-            for (j = i - 1; j > i - w; j--)
-            {
-                nbs++;
-                r *= 2;
-                if (x.TestBit(j)) r += 1;
-
-                if ((r & 0x3) == 0)
-                {
-                    r >>= 2;
-                    nbs -= 2;
-                    nzs = 2;
-                    break;
-                }
-            }
-
-            if ((r & 0x1) == 0)
-            {
-                r >>= 1;
-                nzs = 1;
-                nbs--;
-            }
-
-            return r;
-        }
-
         public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial mod)
         {
             Polynomial nb = new Polynomial(val);
@@ -466,7 +429,7 @@ namespace Eduard.Security
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int n = Window(exponent, i, ref nbw, ref nzs, 5);
+                    int n = WindowUtil.Window(exponent, i, ref nbw, ref nzs);
 
                     for (int j = 0; j < nbw; j++)
                         result = Reduce(result * result, mod);
