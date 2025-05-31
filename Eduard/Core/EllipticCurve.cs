@@ -59,7 +59,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
-        public BigInteger Eval(BigInteger x)
+        public BigInteger Evaluate(BigInteger x)
         {
             BigInteger result = (x * x) % field;
             result = (result * x) % field;
@@ -83,7 +83,7 @@ namespace Eduard.Security
                 do
                 {
                     x = BigInteger.Next(rand, 0, field - 1);
-                    temp = Eval(x);
+                    temp = Evaluate(x);
 
                     if (temp < 2)
                         return new ECPoint(x, temp);
