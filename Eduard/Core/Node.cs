@@ -1,7 +1,7 @@
 ﻿using System;
 using Eduard;
 
-namespace Eduard
+namespace Eduard.Security
 {
     public class Node
     {
