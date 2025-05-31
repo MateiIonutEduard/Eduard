@@ -132,7 +132,68 @@ namespace Eduard.Security
                 result = curve.ToAffine(R0);
             }
             else
-                throw new NotImplementedException();
+            {
+                int i, j, n;
+                int nb, nbs = 0, nzs = 0;
+                int windowSize = 8;
+
+                var table = new JacobianChudnovskyPoint[windowSize];
+                table[0] = curve.ToJacobianChudnovsky(point);
+
+                var squarePoint = JacobianChudnovskyMath.Doubling(curve, table[0]);
+                JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
+
+                BigInteger k3 = 3 * k;
+                nb = k3.GetBits();
+
+                /* compute the lookup table */
+                for (i = 1; i < windowSize; i++)
+                    table[i] = JacobianChudnovskyMath.Add(curve, table[i - 1], squarePoint);
+
+                for (i = nb - 1; i >= 1;)
+                {
+                    n = WindowUtil.NAFWindow(k, k3, i, ref nbs, ref nzs, windowSize);
+                    var auxModifiedJacobianPoint = curve.ToModifiedJacobian(auxPoint);
+
+                    for (j = 0; j < nbs - 1; j++)
+                        auxModifiedJacobianPoint = ModifiedJacobianMath.Doubling(curve, auxModifiedJacobianPoint);
+
+                    if(nbs >= 1)
+                        auxPoint = JacobianMath.Doubling(curve, curve.ToJacobian(auxModifiedJacobianPoint));
+
+                    if(n > 0)
+                    {
+                        var table_point = curve.ToJacobian(table[n >> 1]);
+                        auxPoint = JacobianMath.Add(curve, table_point, auxPoint);
+                    }
+                    if(n < 0)
+                    {
+                        var table_point = curve.ToJacobian(table[(-n) >> 1]);
+                        table_point.y = curve.field - table_point.y;
+                        auxPoint = JacobianMath.Add(curve, table_point, auxPoint);
+                    }
+
+                    i -= nbs;
+
+                    if (nzs != 0)
+                    {
+                        var lastPoint = curve.ToModifiedJacobian(auxPoint);
+                        i -= nzs;
+
+                        for (j = 0; j < nzs - 1; j++)
+                            lastPoint = ModifiedJacobianMath.Doubling(curve, lastPoint);
+
+                        if(nzs >= 1)
+                        {
+                            auxPoint = curve.ToJacobian(lastPoint);
+                            auxPoint = JacobianMath.Doubling(curve, auxPoint);
+                        }
+                        
+                    }
+                }
+
+                result = curve.ToAffine(auxPoint);
+            }
 
             return result;
         }

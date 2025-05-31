@@ -1,40 +1,34 @@
 ﻿#pragma warning disable
 
-namespace Eduard
+namespace Eduard.Security
 {
     /// <summary>
-    /// Represents a Jacobian-Chudnovsky projective point (x, y, z, z^2, z^3) that maps to the affine elliptic curve point (x/z^2, y/z^3).
+    /// Represents a projective Jacobian point (x, y, z) that maps to the affine elliptic curve point (x/z^2, y/z^3).
     /// </summary>
-    public class JacobianChudnovskyPoint
+    public class JacobianPoint
     {
         public BigInteger x;
         public BigInteger y;
         public BigInteger z;
 
-        public BigInteger z2;
-        public BigInteger z3;
-
         /// <summary>
-        /// Creates a <seealso cref="JacobianChudnovskyPoint"/> equal to the point at infinity.
+        /// Creates a <seealso cref="JacobianPoint"/> equal to the point at infinity.
         /// </summary>
-        public JacobianChudnovskyPoint()
+        public JacobianPoint()
         {
             this.x = null;
             this.y = null;
             this.z = null;
-
-            this.z2 = null;
-            this.z3 = null;
         }
 
         /// <summary>
-        /// Creates a <seealso cref="JacobianChudnovskyPoint"/> from the extended Jacobian projective coordinates.
+        /// Creates a <seealso cref="JacobianPoint"/> from the specified projective x-coordinate, y-coordinate, and z-coordinate.
         /// </summary>
         /// <param name="x">The projective x-coordinate.</param>
         /// <param name="y">The projective y-coordinate.</param>
         /// <param name="z">The projective z-coordinate.</param>
         /// <exception cref="NullReferenceException"></exception>
-        public JacobianChudnovskyPoint(BigInteger x, BigInteger y, BigInteger z, BigInteger z2, BigInteger z3)
+        public JacobianPoint(BigInteger x, BigInteger y, BigInteger z)
         {
             if (object.ReferenceEquals(x, null))
                 throw new NullReferenceException("The affine x-coordinate cannot be null.");
@@ -45,17 +39,14 @@ namespace Eduard
             this.x = x;
             this.y = y;
             this.z = z;
-
-            this.z2 = z2;
-            this.z3 = z3;
         }
 
         /// <summary>
         /// Represents the point at infinity on the Weierstrass curve.
         /// </summary>
-        public static JacobianChudnovskyPoint POINT_INFINITY
+        public static JacobianPoint POINT_INFINITY
         {
-            get { return new JacobianChudnovskyPoint(); }
+            get { return new JacobianPoint(); }
         }
 
         /// <summary>
@@ -67,14 +58,12 @@ namespace Eduard
         {
             try
             {
-                JacobianChudnovskyPoint other = (JacobianChudnovskyPoint)obj;
+                JacobianPoint other = (JacobianPoint)obj;
 
-                if (object.ReferenceEquals(x, other.x) && object.ReferenceEquals(y, other.y) 
-                    && object.ReferenceEquals(z, other.z) && object.ReferenceEquals(z2, other.z2)
-                    && object.ReferenceEquals(z3, other.z3))
+                if (object.ReferenceEquals(x, other.x) && object.ReferenceEquals(y, other.y) && object.ReferenceEquals(z, other.z))
                     return true;
 
-                if (x == other.x && y == other.y && z == other.z && z2 == other.z2 && z3 == other.z3)
+                if (x == other.x && y == other.y && z == other.z)
                     return true;
 
                 return false;
@@ -84,29 +73,29 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the Jacobian-Chudnovsky projective coordinates of two <seealso cref="JacobianPoint"/> objects are equal.
+        /// Returns a value that indicates whether the Jacobian projective coordinates of two <seealso cref="JacobianPoint"/> objects are equal.
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static bool operator ==(JacobianChudnovskyPoint left, JacobianChudnovskyPoint right)
+        public static bool operator ==(JacobianPoint left, JacobianPoint right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the Jacobian-Chudnovsky projective coordinates of two <seealso cref="JacobianPoint"/> objects have different values.
+        /// Returns a value that indicates whether the Jacobian projective coordinates of two <seealso cref="JacobianPoint"/> objects have different values.
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static bool operator !=(JacobianChudnovskyPoint left, JacobianChudnovskyPoint right)
+        public static bool operator !=(JacobianPoint left, JacobianPoint right)
         {
             return !left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a hash code value for this elliptic curve Jacobian-Chudnovsky point.
+        /// Returns a hash code value for this elliptic curve Jacobian point.
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode()

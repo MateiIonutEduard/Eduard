@@ -83,7 +83,7 @@
             for (j = i - 1; j > 0; j--)
             {
                 nbs++;
-                r <<= 1;
+                r *= 2;
 
                 int x3b = x3.TestBit(j) ? 1 : 0;
                 int xb = x.TestBit(j) ? 1 : 0;
@@ -97,17 +97,17 @@
             }
 
             /* backtrack the last bit */
-            if ((r & 1) != 0 && j != 0)
+            if (r % 2 != 0 && j != 0)
             {
-                if (nb > 0) r = (r - 1) >> 1;
-                if (nb < 0) r = (r + 1) >> 1;
+                if (nb > 0) r = (r - 1) / 2;
+                if (nb < 0) r = (r + 1) / 2;
                 nbs--;
             }
 
             /* remove the trailing zeros */
-            while ((r & 1) == 0)
+            while (r % 2 == 0)
             {
-                r >>= 1;
+                r /= 2;
                 nzs++;
                 nbs--;
             }

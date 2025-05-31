@@ -42,6 +42,17 @@
             return jacobianPoint;
         }
 
+        public static JacobianPoint ToJacobian(this EllipticCurve curve, JacobianChudnovskyPoint jacobianChudnovskyPoint)
+        {
+            if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY)
+                return JacobianPoint.POINT_INFINITY;
+
+            JacobianPoint jacobianPoint = new JacobianPoint(jacobianChudnovskyPoint.x,
+                jacobianChudnovskyPoint.y, jacobianChudnovskyPoint.z);
+
+            return jacobianPoint;
+        }
+
         public static ECPoint ToAffine(this EllipticCurve curve, JacobianChudnovskyPoint jacobianChudnovskyPoint)
         {
             if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
@@ -77,6 +88,16 @@
         {
             if (affinePoint == ECPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
             ModifiedJacobianPoint modifiedJacobianPoint = new ModifiedJacobianPoint(affinePoint.GetAffineX(), affinePoint.GetAffineY(), 1, curve.a);
+            return modifiedJacobianPoint;
+        }
+
+        public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, JacobianChudnovskyPoint jacobianChudnovskyPoint)
+        {
+            if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
+            BigInteger Z4 = (jacobianChudnovskyPoint.z2 * jacobianChudnovskyPoint.z2) % curve.field;
+
+            BigInteger aZ4 = (curve.a * Z4) % curve.field;
+            ModifiedJacobianPoint modifiedJacobianPoint = new ModifiedJacobianPoint(jacobianChudnovskyPoint.x, jacobianChudnovskyPoint.y, jacobianChudnovskyPoint.z, aZ4);
             return modifiedJacobianPoint;
         }
 
