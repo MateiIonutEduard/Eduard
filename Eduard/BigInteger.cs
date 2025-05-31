@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Eduard.Security;
+using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
@@ -1311,43 +1312,6 @@ namespace Eduard
             return result;
         }
 
-        private static int Window(BigInteger val, int i, ref int nbs, ref int nzs, int size)
-        {
-            int j, r, w;
-            w = size;
-
-            nbs = 1;
-            nzs = 0;
-
-            if (!val.TestBit(i)) return 0;
-            if (i - w + 1 < 0) w = i + 1;
-
-            r = 1;
-            for (j = i - 1; j > i - w; j--)
-            {
-                nbs++;
-                r *= 2;
-                if (val.TestBit(j)) r += 1;
-
-                if ((r & 0x3) == 0)
-                {
-                    r >>= 2;
-                    nbs -= 2;
-                    nzs = 2;
-                    break;
-                }
-            }
-
-            if ((r & 0x1) == 0)
-            {
-                r >>= 1;
-                nzs = 1;
-                nbs--;
-            }
-
-            return r;
-        }
-
         /// <summary>
         /// Performs modulus division on a number raised to the power of another number.
         /// </summary>
@@ -1390,12 +1354,15 @@ namespace Eduard
 
             if (Modulus.data.Used >= 16)
             {
-                BigInteger[] table = new BigInteger[16];
+                int windowSize = 5;
+                int store = 1 << (windowSize - 1);
+
+                BigInteger[] table = new BigInteger[store];
                 table[0] = Base % Modulus;
                 BigInteger b2 = BarrettReduction(table[0] * table[0], Modulus, Constant);
 
                 // Creates table of odd powers.
-                for (int i = 1; i < 16; i++)
+                for (int i = 1; i < store; i++)
                     table[i] = BarrettReduction(table[i - 1] * b2, Modulus, Constant);
 
                 int bits = Exponent.GetBits();
@@ -1403,7 +1370,7 @@ namespace Eduard
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int n = Window(Exponent, i, ref nbw, ref nzs, 5);
+                    int n = WindowUtil.Window(Exponent, i, ref nbw, ref nzs, 5);
 
                     for (int j = 0; j < nbw; j++)
                         result = BarrettReduction(result * result, Modulus, Constant);
