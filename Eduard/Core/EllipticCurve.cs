@@ -1,5 +1,5 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
+#pragma warning disable
 
 namespace Eduard.Security
 {
@@ -10,7 +10,9 @@ namespace Eduard.Security
     {
         public BigInteger a, b;
         public BigInteger field, order;
+
         private static RandomNumberGenerator rand;
+        private static bool enableSpeedup;
 
         /// <summary>
         /// Creates a Weierstrass elliptic curve with random coefficients.
@@ -20,7 +22,9 @@ namespace Eduard.Security
         {
             rand = RandomNumberGenerator.Create();
             field = BigInteger.GenProbablePrime(rand, bits, 50);
+
             a = BigInteger.Next(rand, 1, field - 1);
+            InitParams();
 
             BigInteger temp = (a * a) % field;
             temp = (temp * a) % field;
@@ -50,8 +54,10 @@ namespace Eduard.Security
             rand = RandomNumberGenerator.Create();
             a = args[0];
             b = args[1];
+
             field = args[2];
             order = args[3];
+            InitParams();
         }
 
         /// <summary>
@@ -91,11 +97,10 @@ namespace Eduard.Security
                     if (BigInteger.Jacobi(temp, field) == 1)
                     {
                         done = true;
-                        y = TonelliShanks(temp, field);
-                        BigInteger eval = (y * y) % field;
+                        y = Sqrt(temp);
 
-                        if (temp != eval)
-                            done = false;
+                        BigInteger eval = (y * y) % field;
+                        if (temp != eval) done = false;
                     }
                 }
                 while (!done);
@@ -104,7 +109,46 @@ namespace Eduard.Security
             }
         }
 
-        private static BigInteger TonelliShanks(BigInteger val, BigInteger field)
+        private void InitParams(int windowSize = 4)
+        {
+            /* check whether optimizations can be used */
+            enableSpeedup = CanSpeedup(field);
+
+            if (enableSpeedup)
+                OptimizedRotaruIftene.Precompute(rand, field, windowSize);
+        }
+
+        private bool CanSpeedup(BigInteger field)
+        {
+            int m = field.GetBits();
+            BigInteger order = field - 1;
+            int s = 0;
+
+            while ((order & 1) == 0)
+            {
+                order >>= 1;
+                s++;
+            }
+
+            long left = s * (long)(s - 1);
+            long right = 8L * m + 20L;
+            return left > right;
+        }
+
+        private BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        {
+            /* compute the modular square root using the optimized Rotaru-Iftene method */
+            if (enableSpeedup)
+                return OptimizedRotaruIftene.Sqrt(val);
+
+            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
+            if (forceOutput) return Sqrt(val, field);
+
+            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
+            return TonelliShanks(val, field);
+        }
+
+        private BigInteger TonelliShanks(BigInteger val, BigInteger field)
         {
             long e = 0, r, s;
             BigInteger b = 0, bp = 0, q = field - 1, n = 0;
@@ -116,8 +160,7 @@ namespace Eduard.Security
                 q >>= 1;
             }
 
-            // Find a generator.
-
+            /* find a generator */
             int JSymbol = 0;
 
             do
@@ -129,6 +172,7 @@ namespace Eduard.Security
             z = BigInteger.Pow(n, q, field);
             y = z;
             r = e;
+
             x = BigInteger.Pow(val, (q - 1) / 2, field);
             b = (((val * x) % field) * x) % field;
             x = (val * x) % field;
@@ -146,36 +190,32 @@ namespace Eduard.Security
                     s++;
                 } while (bp != 1 && bp != field - 1 && s < r);
 
-                if (s == r)
-                    return 0; // Has failed !
-
+                /* has failed */
+                if (s == r) return 0;
                 t = BigInteger.Pow(y, (long)Math.Pow(2, r - s - 1), field);
                 y = (t * t) % field;
+
                 x = (x * t) % field;
                 b = (b * y) % field;
                 r = s;
             }
         }
 
-        /// <summary>
-        /// Returns modular square root of the specified value.
-        /// </summary>
-        /// <param name="val"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
-        public static BigInteger Sqrt(BigInteger val, BigInteger field)
+        private BigInteger Sqrt(BigInteger val, BigInteger field)
         {
             if ((field & 3) == 3)
                 return BigInteger.Pow(val, (field + 1) >> 2, field);
 
             BigInteger root = 0;
             BigInteger delta = ((field - 4) * (field - val)) % field;
+
             BigInteger temp = 1;
             BigInteger qnr = 0;
-            BigInteger buf = 0;
-            int ID = 1;
 
-            switch (ID)
+            BigInteger buf = 0;
+            int uid = 1;
+
+            switch (uid)
             {
                 case 1:
 
@@ -183,6 +223,7 @@ namespace Eduard.Security
 
                     if (val == (root * root) % field)
                         return root;
+
                     goto case 2;
 
                 case 2:
@@ -194,6 +235,7 @@ namespace Eduard.Security
 
                     BigInteger square = (qnr * qnr) % field;
                     delta = (delta * square) % field;
+
                     temp = (temp * qnr) % field;
                     buf = TonelliShanks(delta, field);
 
