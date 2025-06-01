@@ -416,12 +416,15 @@ namespace Eduard.Security
 
             if (mod.Degree >= 16)
             {
-                Polynomial[] table = new Polynomial[16];
-                table[0] = nb % mod;
+                int windowSize = 5;
+                int store = 1 << (windowSize - 1);
 
+                Polynomial[] table = new Polynomial[store];
+                table[0] = nb % mod;
                 Polynomial b2 = Reduce(table[0] * table[0], mod);
+
                 // Creates table of odd powers.
-                for (int i = 1; i < 16; i++)
+                for (int i = 1; i < store; i++)
                     table[i] = Reduce(table[i - 1] * b2, mod);
 
                 int bits = exponent.GetBits();
