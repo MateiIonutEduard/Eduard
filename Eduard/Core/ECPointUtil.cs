@@ -5,9 +5,15 @@
     /// </summary>
     public static class ECPointUtil
     {
+        /// <summary>
+        /// Convert a given point in Jacobian projective form to an affine point on the elliptic curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="jacobianPoint"></param>
+        /// <returns></returns>
         public static ECPoint ToAffine(this EllipticCurve curve, JacobianPoint jacobianPoint)
         {
-            if (jacobianPoint == JacobianPoint.POINT_INFINITY) 
+            if (jacobianPoint == JacobianPoint.POINT_INFINITY || jacobianPoint.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
@@ -20,6 +26,12 @@
             return new ECPoint(X, Y);
         }
 
+        /// <summary>
+        /// Convert an affine point on the elliptic curve to Jacobian projective form.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="affinePoint"></param>
+        /// <returns></returns>
         public static JacobianPoint ToJacobian(this EllipticCurve curve, ECPoint affinePoint)
         {
             if (affinePoint == ECPoint.POINT_INFINITY) 
@@ -31,6 +43,12 @@
             return jacobianPoint;
         }
 
+        /// <summary>
+        /// Convert a given point in modified Jacobian projective coordinates into a Jacobian projective point on the elliptic curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="modifiedPoint"></param>
+        /// <returns></returns>
         public static JacobianPoint ToJacobian(this EllipticCurve curve, ModifiedJacobianPoint modifiedPoint)
         {
             if (modifiedPoint == ModifiedJacobianPoint.POINT_INFINITY) 
@@ -42,6 +60,12 @@
             return jacobianPoint;
         }
 
+        /// <summary>
+        /// Convert a given point in extended Jacobian-Chudnovsky projective coordinates into a Jacobian projective point on the elliptic curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="jacobianChudnovskyPoint"></param>
+        /// <returns></returns>
         public static JacobianPoint ToJacobian(this EllipticCurve curve, JacobianChudnovskyPoint jacobianChudnovskyPoint)
         {
             if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY)
@@ -53,9 +77,15 @@
             return jacobianPoint;
         }
 
+        /// <summary>
+        /// Convert a given point in extended Jacobian-Chudnovsky projective coordinates into an affine point on the elliptic curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="jacobianChudnovskyPoint"></param>
+        /// <returns></returns>
         public static ECPoint ToAffine(this EllipticCurve curve, JacobianChudnovskyPoint jacobianChudnovskyPoint)
         {
-            if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+            if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY || jacobianChudnovskyPoint.z == 0) return ECPoint.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger X = (jacobianChudnovskyPoint.x * jacobianChudnovskyPoint.z2.Inverse(p)) % p;
@@ -63,7 +93,12 @@
             return new ECPoint(X, Y);
         }
 
-
+        /// <summary>
+        /// Convert an affine point on the elliptic curve to the extended Jacobian-Chudnovsky projective form.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="affinePoint"></param>
+        /// <returns></returns>
         public static JacobianChudnovskyPoint ToJacobianChudnovsky(this EllipticCurve curve, ECPoint affinePoint)
         {
             if (affinePoint == ECPoint.POINT_INFINITY) return JacobianChudnovskyPoint.POINT_INFINITY;
@@ -71,9 +106,15 @@
             return jacobianChudnovskyPoint;
         }
 
+        /// <summary>
+        /// Convert a given point in modified Jacobian projective coordinates into an affine point on the elliptic curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="modifiedJacobianPoint"></param>
+        /// <returns></returns>
         public static ECPoint ToAffine(this EllipticCurve curve, ModifiedJacobianPoint modifiedJacobianPoint)
         {
-            if (modifiedJacobianPoint == ModifiedJacobianPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+            if (modifiedJacobianPoint == ModifiedJacobianPoint.POINT_INFINITY || modifiedJacobianPoint.z == 0) return ECPoint.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger Z2 = (modifiedJacobianPoint.z * modifiedJacobianPoint.z) % p;
@@ -84,6 +125,12 @@
             return new ECPoint(X, Y);
         }
 
+        /// <summary>
+        /// Convert an affine point on the elliptic curve into a given point in modified Jacobian projective coordinates.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="affinePoint"></param>
+        /// <returns></returns>
         public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, ECPoint affinePoint)
         {
             if (affinePoint == ECPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
@@ -91,6 +138,12 @@
             return modifiedJacobianPoint;
         }
 
+        /// <summary>
+        /// Convert a point from Jacobian-Chudnovsky form on the elliptic curve into a given point in modified Jacobian projective coordinates.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="jacobianChudnovskyPoint"></param>
+        /// <returns></returns>
         public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, JacobianChudnovskyPoint jacobianChudnovskyPoint)
         {
             if (jacobianChudnovskyPoint == JacobianChudnovskyPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
@@ -101,6 +154,12 @@
             return modifiedJacobianPoint;
         }
 
+        /// <summary>
+        /// Convert a point from Jacobian form on the elliptic curve into a given point in modified Jacobian projective coordinates.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="jacobianPoint"></param>
+        /// <returns></returns>
         public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, JacobianPoint jacobianPoint)
         {
             if (jacobianPoint == JacobianPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
