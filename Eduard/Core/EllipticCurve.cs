@@ -78,6 +78,62 @@ namespace Eduard.Security
         }
 
         /// <summary>
+        /// Encodes the binary message as a point on the elliptic curve using Koblitz's point compression algorithm.
+        /// </summary>
+        /// <param name="m">Represents the given binary message as a big integer.</param>
+        /// <param name="r">Represents the number of iterations for Koblitz's algorithm.</param>
+        /// <returns></returns>
+        public ECPoint GetPoint(BigInteger m, int r=30)
+        {
+            BigInteger test = (r + 1) * m;
+            BigInteger xs = (m * r) % field;
+
+            /* if the product exceeds the value of the prime field, the algorithm fails */
+            if (test >= field) return ECPoint.POINT_INFINITY;
+            BigInteger ys = 1;
+
+            int ks = 0;
+            xs++;
+
+            if (xs >= field)
+                xs -= field;
+
+            while(ks < r)
+            {
+                BigInteger t = Evaluate(xs);
+
+                if (BigInteger.Jacobi(t, field) == 1)
+                {
+                    ys = Sqrt(t, true);
+                    break;
+                }
+
+                xs++; 
+                ks++;
+
+                if(xs >= field) 
+                    xs -= field;
+            }
+
+            return new ECPoint(xs, ys);
+        }
+
+        /// <summary>
+        /// Decodes the binary message using the corresponding point on the elliptic curve.
+        /// </summary>
+        /// <param name="point">Represents the point on the elliptic curve that corresponds to the binary message.</param>
+        /// <param name="r">Represents the number of iterations for Koblitz's algorithm.</param>
+        /// <returns></returns>
+        public BigInteger GetMessage(ECPoint point, int r=30)
+        {
+            if (point == ECPoint.POINT_INFINITY) return -1;
+            BigInteger steps = r;
+
+            BigInteger m = point.GetAffineX() - 1;
+            return m / steps;
+        }
+
+        /// <summary>
         /// Represents a randomly chosen base point on the elliptic curve.
         /// </summary>
         public ECPoint BasePoint
