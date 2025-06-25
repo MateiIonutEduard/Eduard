@@ -168,7 +168,7 @@ namespace Eduard.Security
             {
                 int deg = left.Degree + right.Degree;
 
-                BigInteger[] coeffs = Core.fast_poly_mul(left.coeffs, right.coeffs, field);
+                BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs, field);
 
                 while (deg > 0 && coeffs[deg] == 0)
                     deg--;
@@ -188,7 +188,7 @@ namespace Eduard.Security
         {
             if (val.Degree >= 256)
             {
-                BigInteger[] coeffs = Core.fast_poly_sqr(val.coeffs, field);
+                BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs, field);
                 int deg = val.Degree << 1;
 
                 while (deg > 0 && coeffs[deg] == 0)
@@ -226,10 +226,10 @@ namespace Eduard.Security
                 R[j] = 0;
             
 
-            if (!Core.fast_poly_rem(G, R, field))
+            if (!FFT.FastPolyMod(G, R, field))
             {
                 SetPolyMod(m);
-                Core.fast_poly_rem(G, R, field);
+                FFT.FastPolyMod(G, R, field);
             }
 
             int deg = degm - 1;
@@ -266,7 +266,7 @@ namespace Eduard.Security
                 rf[i] = (i <= m) ? h.coeffs[i] : 0;
             }
 
-            Core.polymod_set(n, rf, f, field);
+            FFT.SetPolyMod(n, rf, f, field);
         }
 
         private void Reverse()

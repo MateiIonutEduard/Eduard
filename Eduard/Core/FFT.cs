@@ -1,10 +1,13 @@
-﻿namespace Eduard.Security
+﻿#pragma warning disable
+
+namespace Eduard.Security
 {
-    public class Core
+    public class FFT
     {
         static uint[] primes;
         static uint[] inverse;
         static uint[][] roots;
+
         static uint[][] s1, s2;
         static int logN, count;
 
@@ -14,7 +17,7 @@
         static BigInteger[] C;
         static BigInteger N;
 
-        public static BigInteger[] fast_poly_mul(BigInteger[] x, BigInteger[] y, BigInteger field)
+        public static BigInteger[] FastPolyMult(BigInteger[] x, BigInteger[] y, BigInteger field)
         {
             int i, j, newn, logn, np, degree;
             uint inv, p, fac;
@@ -33,7 +36,7 @@
             }
             
             if (logN < logn)
-                np = fft_init(logn, field, field);
+                np = InitFFT(logn, field, field);
             else np = count;
 
             uint[] wa = new uint[newn];
@@ -48,7 +51,7 @@
                 for (j = degx + 1; j < newn; j++)
                     wa[j] = 0;
 
-                dif_fft(logn, i, wa);
+                dft(logn, i, wa);
 
                 for (j = 0; j <= degy; j++)
                     t[i][j] = (uint)(y[j] % p);
@@ -56,22 +59,22 @@
                 for (j = degy + 1; j < newn; j++)
                     t[i][j] = 0;
 
-                dif_fft(logn, i, t[i]);
+                dft(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    muldiv(wa[j], t[i][j], 0, p, ref t[i][j]);
+                    MulAdd(wa[j], t[i][j], 0, p, ref t[i][j]);
 
-                dit_fft(logn, i, t[i]);
+                idft(logn, i, t[i]);
                 inv = inverse[i];
 
                 if (logN > logn)
                 {
                     fac = (uint)1 << (logN - logn);
-                    inv = smul(fac, inv, p);
+                    inv = MulMod(fac, inv, p);
                 }
 
                 for (j = 0; j <= degree; j++)
-                    muldiv(t[i][j], inv, 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
             BigInteger[] res = new BigInteger[degree + 1];
@@ -94,7 +97,7 @@
             return res;
         }
 
-        public static BigInteger[] fast_poly_sqr(BigInteger[] x, BigInteger field)
+        public static BigInteger[] FastPolySquare(BigInteger[] x, BigInteger field)
         {
             int i, j, newn, logn, np, degree;
             uint inv, p, fac;
@@ -110,7 +113,7 @@
             }
 
             if (logN < logn)
-                np = fft_init(logn, field, field);
+                np = InitFFT(logn, field, field);
             else np = count;
 
             for (i = 0; i < np; i++)
@@ -121,22 +124,22 @@
                     t[i][j] = (uint)(x[j] % p);
 
                 for (j = degx + 1; j < newn; j++) t[i][j] = 0;
-                dif_fft(logn, i, t[i]);
+                dft(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    muldiv(t[i][j], t[i][j], 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], t[i][j], 0, p, ref t[i][j]);
 
-                dit_fft(logn, i, t[i]);
+                idft(logn, i, t[i]);
                 inv = inverse[i];
 
                 if (logN > logn)
                 {
                     fac = (uint)1 << (logN - logn);
-                    inv = smul(fac, inv, p);
+                    inv = MulMod(fac, inv, p);
                 }
 
                 for (j = 0; j <= degree; j++)
-                    muldiv(t[i][j], inv, 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
             BigInteger[] res = new BigInteger[degree + 1];
@@ -159,7 +162,7 @@
             return res;
         }
 
-        public static bool fast_poly_rem(BigInteger[] G, BigInteger[] R, BigInteger field)
+        public static bool FastPolyMod(BigInteger[] G, BigInteger[] R, BigInteger field)
         {
             int i, j, newn, logn, np, n;
             uint p, inv, fac;
@@ -189,22 +192,22 @@
                 for (j = dg - n + 1; j < newn; j++) 
                     t[i][j] = 0;
 
-                dif_fft(logn, i, t[i]);
+                dft(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    muldiv(t[i][j], s1[i][j], 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], s1[i][j], 0, p, ref t[i][j]);
 
-                dit_fft(logn, i, t[i]);
+                idft(logn, i, t[i]);
                 inv = inverse[i];
 
                 if (logN > logn)
                 {
                     fac = (uint)1 << (logN - logn);
-                    inv = smul(fac, inv, p);
+                    inv = MulMod(fac, inv, p);
                 }
 
                 for (j = 0; j < n; j++)
-                    muldiv(t[i][j + n - 1], inv, 0, p, ref t[i][j + n - 1]);
+                    MulAdd(t[i][j + n - 1], inv, 0, p, ref t[i][j + n - 1]);
             }
 
             for (j = 0; j < n; j++)
@@ -231,26 +234,26 @@
                 for (j = n; j < 1 + newn / 2; j++)
                     t[i][j] = 0;
 
-                dif_fft(logn - 1, i, t[i]);
+                dft(logn - 1, i, t[i]);
 
                 for (j = 0; j < newn / 2; j++)
-                    muldiv(t[i][j], s2[i][j], 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], s2[i][j], 0, p, ref t[i][j]);
 
-                dit_fft(logn - 1, i, t[i]);
+                idft(logn - 1, i, t[i]);
 
                 inv = inverse[i];
 
                 if (logN > logn - 1)
                 {
                     fac = (uint)1 << (logN - logn + 1);
-                    inv = smul(fac, inv, p);
+                    inv = MulMod(fac, inv, p);
                 }
 
                 for (j = 0; j < n; j++)
-                    muldiv(t[i][j], inv, 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
-            modxn_1(newn >> 1, dg, G, field);
+            Modxn(newn >> 1, dg, G, field);
 
             for (j = 0; j < n; j++)
             {
@@ -271,7 +274,7 @@
             return true;
         }
 
-        public static void polymod_set(int n, BigInteger[] rf, BigInteger[] f, BigInteger field)
+        public static void SetPolyMod(int n, BigInteger[] rf, BigInteger[] f, BigInteger field)
         {
             int i, j, np, newn, logn, deg;
             BigInteger[] F;
@@ -287,7 +290,7 @@
             }
 
             if (logN < logn)
-                np = fft_init(logn, field, field);
+                np = InitFFT(logn, field, field);
             else np = count;
 
             degree = n;
@@ -298,7 +301,7 @@
             for (i = 0; i <= n; i++)
                 F[i] = f[i];
 
-            modxn_1(newn >> 1, n, F, field);
+            Modxn(newn >> 1, n, F, field);
 
             for (i = 0; i < np; i++)
             {
@@ -309,16 +312,16 @@
                 for (j = 0; j < n; j++)
                     s1[i][j] = (uint)(rf[j] % p);
 
-                dif_fft(logn, i, s1[i]);
+                dft(logn, i, s1[i]);
 
                 for (j = 0; j <= n; j++)
                     s2[i][j] = (uint)(F[j] % p);
 
-                dif_fft(logn - 1, i, s2[i]);
+                dft(logn - 1, i, s2[i]);
             }
         }
 
-        static void modxn_1(int n, int deg, BigInteger[] x, BigInteger field)
+        static void Modxn(int n, int deg, BigInteger[] x, BigInteger field)
         {
             for (int i = 0; n + i <= deg; i++)
             {
@@ -328,7 +331,7 @@
             }
         }
 
-        static int fft_init(int logn, BigInteger m1, BigInteger m2)
+        static int InitFFT(int logn, BigInteger m1, BigInteger m2)
         {
             uint newn = (uint)1 << logn;
             uint kk = (uint)1 << (31 - logn);
@@ -377,24 +380,24 @@
                 uint root = p - 1;
 
                 for (j = 1; j < logn; j++)
-                    root = sqrmp(root, p);
+                    root = ModSquareRoot(root, p);
 
                 roots[i][0] = root;
 
                 for(j = 1; j < newn; j++)
-                    roots[i][j] = smul(roots[i][j - 1], root, p);
+                    roots[i][j] = MulMod(roots[i][j - 1], root, p);
 
-                inverse[i] = invers(newn, p);
+                inverse[i] = Inverse(newn, p);
             }
 
             logN = logn;
             count = pr;
 
-            crt_init();
+            InitCRT();
             return pr;
         }
 
-        static void dif_fft(int logn, int pr, uint[] data)
+        static void dft(int logn, int pr, uint[] data)
         {
             int mmax, m, j, k, istep, i, ii, jj, newn, offset;
             uint w, temp, prime;
@@ -416,8 +419,8 @@
                 for (i = 0; i < newn; i += istep)
                 {
                     j = i + mmax;
-                    temp = diff(data[i], data[j], prime);
-                    data[i] = add(data[i], data[j], prime);
+                    temp = DiffMod(data[i], data[j], prime);
+                    data[i] = AddMod(data[i], data[j], prime);
                     data[j] = temp;
                 }
 
@@ -430,16 +433,16 @@
                     for (i = m; i < newn; i += istep)
                     {
                         j = i + mmax;
-                        temp = diff(data[i], data[j], prime);
-                        data[i] = add(data[i], data[j], prime);
-                        muldiv(w, temp, 0, prime, ref data[j]);
+                        temp = DiffMod(data[i], data[j], prime);
+                        data[i] = AddMod(data[i], data[j], prime);
+                        MulAdd(w, temp, 0, prime, ref data[j]);
                     }
                 }
 
             }
         }
 
-        static void dit_fft(int logn, int pr, uint[] data)
+        static void idft(int logn, int pr, uint[] data)
         {
             int mmax, m, j, k, i, istep, ii, jj, newn, offset;
             uint w, temp = 0, prime;
@@ -463,8 +466,8 @@
                     j = i + mmax;
                     temp = data[j];
 
-                    data[j] = diff(data[i], temp, prime);
-                    data[i] = add(data[i], temp, prime);
+                    data[j] = DiffMod(data[i], temp, prime);
+                    data[i] = AddMod(data[i], temp, prime);
                 }
 
                 for (m = 1; m < mmax; m++)
@@ -475,10 +478,10 @@
                     for (i = m; i < newn; i += istep)
                     {
                         j = i + mmax;
-                        muldiv(w, data[j], 0, prime, ref temp);
+                        MulAdd(w, data[j], 0, prime, ref temp);
 
-                        data[j] = diff(data[i], temp, prime);
-                        data[i] = add(data[i], temp, prime);
+                        data[j] = DiffMod(data[i], temp, prime);
+                        data[i] = AddMod(data[i], temp, prime);
                     }
                 }
 
@@ -486,7 +489,7 @@
             }
         }
 
-        static void crt_init()
+        static void InitCRT()
         {
             N = 1;
             C = new BigInteger[count];
@@ -502,38 +505,38 @@
             }
         }
 
-        static uint add(uint a, uint b, uint m)
+        static uint AddMod(uint a, uint b, uint m)
         {
             long s = (long)a + b;
             if (s >= m) s -= m;
             return (uint)s;
         }
 
-        static uint diff(uint a, uint b, uint m)
+        static uint DiffMod(uint a, uint b, uint m)
         {
             long s = (long)a - b;
             if (s < 0) s += m;
             return (uint)s;
         }
 
-        public static uint sqrmp(uint x, uint m)
+        public static uint ModSquareRoot(uint x, uint m)
         {
             uint z, y, v, w, t, q;
             int i, e, n, r;
 
             if ((m & 3) == 3)
-                return spmd(x, (m + 1) >> 2, m);
+                return pow(x, (m + 1) >> 2, m);
 
             if((m & 7) == 5)
             {
-                t = spmd(x, (m - 1) >> 2, m);
-                if (t == 1) return spmd(x, (m + 3) >> 3, m);
+                t = pow(x, (m - 1) >> 2, m);
+                if (t == 1) return pow(x, (m + 3) >> 3, m);
 
                 if (t == m - 1)
                 {
-                    muldiv(4, x, 0, m, ref t);
-                    t = spmd(t, (m + 3) >> 3, m);
-                    muldiv(t, (m + 1) >> 1, 0, m, ref t);
+                    MulAdd(4, x, 0, m, ref t);
+                    t = pow(t, (m + 3) >> 3, m);
+                    MulAdd(t, (m + 1) >> 1, 0, m, ref t);
                     return t;
                 }
 
@@ -554,7 +557,7 @@
 
             for (r = 2; ; r++)
             {
-                z = spmd((uint)r, q, m);
+                z = pow((uint)r, q, m);
                 if (z == 1) continue;
 
                 t = z;
@@ -563,7 +566,7 @@
                 for (i = 1; i < e; i++)
                 {
                     if (t == m - 1) pp = true;
-                    muldiv(t, t, 0, m, ref t);
+                    MulAdd(t, t, 0, m, ref t);
                     if (t == 1 && !pp) return 0;
                 }
 
@@ -573,27 +576,27 @@
 
             y = z;
             r = e;
-            v = spmd(x, (q + 1) >> 1, m);
-            w = spmd(x, q, m);
+            v = pow(x, (q + 1) >> 1, m);
+            w = pow(x, q, m);
 
             while (w != 1)
             {
                 t = w;
                 for (n = 0; t != 1; n++) 
-                    muldiv(t, t, 0, m, ref t);
+                    MulAdd(t, t, 0, m, ref t);
 
                 if (n >= r) return 0;
-                y = spmd(y, (uint)1 << (r - n - 1), m);
-                muldiv(v, y, 0, m, ref v);
-                muldiv(y, y, 0, m, ref y);
-                muldiv(w, y, 0, m, ref w);
+                y = pow(y, (uint)1 << (r - n - 1), m);
+                MulAdd(v, y, 0, m, ref v);
+                MulAdd(y, y, 0, m, ref y);
+                MulAdd(w, y, 0, m, ref w);
                 r = n;
             }
 
             return v;
         }
 
-        static uint muldiv(uint a, uint b, uint c, uint m, ref uint rp)
+        static uint MulAdd(uint a, uint b, uint c, uint m, ref uint rp)
         {
             uint q;
             ulong p = (ulong)a * b + c;
@@ -602,7 +605,7 @@
             return q;
         }
 
-        static uint spmd(uint x, uint n, uint m)
+        static uint pow(uint x, uint n, uint m)
         {
             ulong res = 1;
             ulong t = x;
@@ -619,14 +622,14 @@
             return (uint)res;
         }
 
-        static uint smul(uint x, uint y, uint n)
+        static uint MulMod(uint x, uint y, uint n)
         {
             ulong val = (ulong)x * y;
             val %= n;
             return (uint)val;
         }
 
-        static uint invers(uint val, uint field)
+        static uint Inverse(uint val, uint field)
         {
             long b0 = field, t, q;
             long x0 = 0, x1 = 1;
