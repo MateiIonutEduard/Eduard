@@ -65,7 +65,7 @@ namespace Eduard.Security
 
         public static Field Sqrt(Field val)
         {
-            BigInteger root = Polynomial.Sqrt((BigInteger)val, field);
+            BigInteger root = Polynomial.Sqrt((BigInteger)val, true);
             return root;
         }
 

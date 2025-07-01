@@ -16,7 +16,10 @@ namespace Eduard.Security
         /// </summary>
         public int Degree;
         public BigInteger[] coeffs;
-        private static RandomNumberGenerator rand = RandomNumberGenerator.Create();
+
+        internal static RandomNumberGenerator rand = RandomNumberGenerator.Create();
+        private static bool enableSpeedup;
+
         private static BigInteger constant;
         internal static BigInteger field;
 
@@ -77,6 +80,9 @@ namespace Eduard.Security
         {
             Polynomial.field = field;
             constant = BigInteger.BarrettConstant(field);
+
+            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
+            ModSqrtUtil.InitParams(field);
         }
 
         internal static BigInteger Reduce(BigInteger val)
@@ -162,7 +168,7 @@ namespace Eduard.Security
             {
                 int deg = left.Degree + right.Degree;
 
-                BigInteger[] coeffs = Core.fast_poly_mul(left.coeffs, right.coeffs, field);
+                BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs, field);
 
                 while (deg > 0 && coeffs[deg] == 0)
                     deg--;
@@ -182,7 +188,7 @@ namespace Eduard.Security
         {
             if (val.Degree >= 256)
             {
-                BigInteger[] coeffs = Core.fast_poly_sqr(val.coeffs, field);
+                BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs, field);
                 int deg = val.Degree << 1;
 
                 while (deg > 0 && coeffs[deg] == 0)
@@ -220,10 +226,10 @@ namespace Eduard.Security
                 R[j] = 0;
             
 
-            if (!Core.fast_poly_rem(G, R, field))
+            if (!FFT.FastPolyMod(G, R, field))
             {
                 SetPolyMod(m);
-                Core.fast_poly_rem(G, R, field);
+                FFT.FastPolyMod(G, R, field);
             }
 
             int deg = degm - 1;
@@ -260,7 +266,7 @@ namespace Eduard.Security
                 rf[i] = (i <= m) ? h.coeffs[i] : 0;
             }
 
-            Core.polymod_set(n, rf, f, field);
+            FFT.SetPolyMod(n, rf, f, field);
         }
 
         private void Reverse()
@@ -515,7 +521,6 @@ namespace Eduard.Security
         /// Evaluates the polynomial in the specified value over specified field.
         /// </summary>
         /// <param name="x"></param>
-        /// <param name="field"></param>
         /// <returns></returns>
         public BigInteger Horner(BigInteger x)
         {
@@ -530,107 +535,6 @@ namespace Eduard.Security
             }
 
             return sum;
-        }
-
-        private static BigInteger TonelliShanks(BigInteger val, BigInteger field)
-        {
-            long e = 0, r, s;
-            BigInteger b = 0, bp = 0, q = field - 1, n = 0;
-            BigInteger t = 0, x = 0, y = 0, z = 0;
-
-            while ((q & 1) == 0)
-            {
-                e++;
-                q >>= 1;
-            }
-
-            int JSymbol = 0;
-
-            do
-            {
-                n = BigInteger.Next(rand, 2, field - 1);
-                JSymbol = BigInteger.Jacobi(n, field);
-            } while (JSymbol != -1);
-
-            z = BigInteger.Pow(n, q, field);
-            y = z;
-            r = e;
-            x = BigInteger.Pow(val, (q - 1) / 2, field);
-            b = (((val * x) % field) * x) % field;
-            x = (val * x) % field;
-
-            while (true)
-            {
-                if (b == 1 || b == field - 1)
-                    return x;
-
-                s = 1;
-
-                do
-                {
-                    bp = BigInteger.Pow(b, (long)Math.Pow(2, s), field);
-                    s++;
-                } while (bp != 1 && bp != field - 1 && s < r);
-
-                if (s == r)
-                    return 0;
-
-                t = BigInteger.Pow(y, (long)Math.Pow(2, r - s - 1), field);
-                y = (t * t) % field;
-                x = (x * t) % field;
-                b = (b * y) % field;
-                r = s;
-            }
-        }
-
-        internal static BigInteger Sqrt(BigInteger val, BigInteger field)
-        {
-            if ((field & 3) == 3)
-                return BigInteger.Pow(val, (field + 1) >> 2, field);
-
-            BigInteger root = 0;
-            BigInteger delta = ((field - 4) * (field - val)) % field;
-            BigInteger temp = 1;
-            BigInteger qnr = 0;
-            BigInteger buf = 0;
-            int ID = 1;
-
-            switch (ID)
-            {
-                case 1:
-
-                    root = TonelliShanks(val, field);
-
-                    if (val == (root * root) % field)
-                        return root;
-                    goto case 2;
-
-                case 2:
-
-                    qnr = BigInteger.Next(rand, 2, field - 1);
-
-                    if (BigInteger.Jacobi(qnr, field) != -1)
-                        goto case 2;
-
-                    BigInteger square = (qnr * qnr) % field;
-                    delta = (delta * square) % field;
-                    temp = (temp * qnr) % field;
-                    buf = TonelliShanks(delta, field);
-
-                    if (delta != (buf * buf) % field)
-                        goto case 2;
-                    goto case 3;
-
-                case 3:
-
-                    BigInteger vtemp = (2 * temp) % field;
-                    BigInteger inv = vtemp.Inverse(field);
-
-                    root = (buf * inv) % field;
-                    break;
-            }
-
-            return root;
         }
 
         private Polynomial FindFactor()
@@ -680,12 +584,12 @@ namespace Eduard.Security
                 ac4 = MulMod(ac4, poly.coeffs[0]);
                 BigInteger delta = AddMod(sb, ac4);
 
-                BigInteger root = Sqrt(delta, field);
+                BigInteger root = Sqrt(delta, true);
                 BigInteger val = MulMod(2, poly.coeffs[2]);
                 BigInteger inv = val.Inverse(field);
+
                 BigInteger t = AddMod(field - poly.coeffs[1], root);
                 t = MulMod(inv, t);
-
                 roots.Add(t);
 
                 t = AddMod(field - poly.coeffs[1], field - root);
@@ -696,6 +600,19 @@ namespace Eduard.Security
             }
 
             return -1;
+        }
+
+        internal static BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        {
+            /* compute the modular square root using the optimized Rotaru-Iftene method */
+            if (enableSpeedup)
+                return OptimizedRotaruIftene.Sqrt(val);
+
+            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
+            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
+
+            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
+            return ModSqrtUtil.TonelliShanks(val, field);
         }
 
         /// <summary>
