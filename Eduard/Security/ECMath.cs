@@ -89,7 +89,7 @@ namespace Eduard.Security
         /// <param name="point"></param>
         /// <param name="opMode"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode=ECMode.EC_STANDARD_AFFINE)
+        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE)
         {
             if (k < 0) throw new ArgumentException("Bad input.");
 
@@ -110,7 +110,7 @@ namespace Eduard.Security
                     temp = Add(curve, temp, temp);
                 }
             }
-            else if(opMode == ECMode.EC_STANDARD_PROJECTIVE)
+            else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
             {
                 JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
                 var basePoint = curve.ToModifiedJacobian(temp);
@@ -184,8 +184,8 @@ namespace Eduard.Security
                     if (n < 0)
                     {
                         var table_point = curve.ToJacobian(table[(-n) >> 1]);
-                        table_point.y = curve.field - table_point.y;
-                        auxPoint = JacobianMath.Add(curve, table_point, auxPoint);
+                        var negative_point = JacobianMath.Negate(curve, table_point);
+                        auxPoint = JacobianMath.Add(curve, negative_point, auxPoint);
                     }
 
                     i -= nbs;

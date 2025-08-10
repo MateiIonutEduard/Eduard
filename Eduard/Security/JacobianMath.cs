@@ -1,4 +1,6 @@
-﻿namespace Eduard.Security
+﻿#pragma warning disable
+
+namespace Eduard.Security
 {
     /* Hankerson, D.R., Vanstone, S.A., Menezes, A.J. (2004): Guide to elliptic curve cryptography. Springer, New York, NY. */
     public static class JacobianMath
@@ -63,6 +65,12 @@
 
             BigInteger Z = (2 * jacobianPoint.y * jacobianPoint.z) % p;
             return new JacobianPoint(X, Y, Z);
+        }
+
+        public static JacobianPoint Negate(EllipticCurve curve, JacobianPoint point)
+        {
+            if (point == JacobianPoint.POINT_INFINITY) return JacobianPoint.POINT_INFINITY;
+            return new JacobianPoint(point.x, curve.field - point.y, point.z);
         }
     }
 
