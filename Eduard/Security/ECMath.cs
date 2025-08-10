@@ -89,7 +89,7 @@ namespace Eduard.Security
         /// <param name="point"></param>
         /// <param name="opMode"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode=ECMode.EC_STANDARD)
+        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode=ECMode.EC_STANDARD_AFFINE)
         {
             if (k < 0) throw new ArgumentException("Bad input.");
 
@@ -100,7 +100,7 @@ namespace Eduard.Security
             ECPoint result = ECPoint.POINT_INFINITY;
             int t = k.GetBits();
 
-            if (opMode == ECMode.EC_STANDARD)
+            if (opMode == ECMode.EC_STANDARD_AFFINE)
             {
                 for (int j = 0; j < t; j++)
                 {
@@ -110,6 +110,21 @@ namespace Eduard.Security
                     temp = Add(curve, temp, temp);
                 }
             }
+            else if(opMode == ECMode.EC_STANDARD_PROJECTIVE)
+            {
+                JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
+                var basePoint = curve.ToModifiedJacobian(temp);
+
+                for (int j = 0; j < t; j++)
+                {
+                    if (k.TestBit(j))
+                        auxPoint = JacobianMath.Add(curve, auxPoint, curve.ToJacobian(basePoint));
+
+                    basePoint = ModifiedJacobianMath.Doubling(curve, basePoint);
+                }
+
+                result = curve.ToAffine(auxPoint);
+            }
             else if (opMode == ECMode.EC_SECURE)
             {
                 JacobianPoint R0 = JacobianPoint.POINT_INFINITY;
@@ -117,7 +132,7 @@ namespace Eduard.Security
 
                 for (int j = t - 1; j >= 0; j--)
                 {
-                    if(!k.TestBit(j))
+                    if (!k.TestBit(j))
                     {
                         R1 = JacobianMath.Add(curve, R0, R1);
                         R0 = JacobianMath.Doubling(curve, R0);
@@ -158,15 +173,15 @@ namespace Eduard.Security
                     for (j = 0; j < nbs - 1; j++)
                         auxModifiedJacobianPoint = ModifiedJacobianMath.Doubling(curve, auxModifiedJacobianPoint);
 
-                    if(nbs >= 1)
+                    if (nbs >= 1)
                         auxPoint = JacobianMath.Doubling(curve, curve.ToJacobian(auxModifiedJacobianPoint));
 
-                    if(n > 0)
+                    if (n > 0)
                     {
                         var table_point = curve.ToJacobian(table[n >> 1]);
                         auxPoint = JacobianMath.Add(curve, table_point, auxPoint);
                     }
-                    if(n < 0)
+                    if (n < 0)
                     {
                         var table_point = curve.ToJacobian(table[(-n) >> 1]);
                         table_point.y = curve.field - table_point.y;
@@ -183,12 +198,12 @@ namespace Eduard.Security
                         for (j = 0; j < nzs - 1; j++)
                             lastPoint = ModifiedJacobianMath.Doubling(curve, lastPoint);
 
-                        if(nzs >= 1)
+                        if (nzs >= 1)
                         {
                             auxPoint = curve.ToJacobian(lastPoint);
                             auxPoint = JacobianMath.Doubling(curve, auxPoint);
                         }
-                        
+
                     }
                 }
 

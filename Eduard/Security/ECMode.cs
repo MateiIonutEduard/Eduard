@@ -8,7 +8,11 @@
         /// <summary>
         /// Uses the standard affine representation for scalar multiplication of points.
         /// </summary>
-        EC_STANDARD,
+        EC_STANDARD_AFFINE,
+        /// <summary>
+        /// Use the standard mixed projective representation for scalar multiplication of points.
+        /// </summary>
+        EC_STANDARD_PROJECTIVE,
         /// <summary>
         /// Uses the NAF sliding window algorithm and mixed projective coordinates for point representation.
         /// </summary>
