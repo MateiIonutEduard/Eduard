@@ -29,16 +29,20 @@ namespace Eduard.Security
 
             BigInteger temp = (a * a) % field;
             temp = (temp * a) % field;
-            temp <<= 2;
+            temp = (4 * temp) % field;
 
             b = BigInteger.Next(rand, 1, field - 1);
-            BigInteger val = (27 * (b * b)) % field;
+            BigInteger B2 = (b * b) % field;
+
+            BigInteger val = (27 * B2) % field;
             BigInteger check = (temp + val) % field;
 
             while (check == 0)
             {
                 b = BigInteger.Next(rand, 1, field - 1);
-                val = (27 * (b * b)) % field;
+                B2 = (b * b) % field;
+
+                val = (27 * B2) % field;
                 check = (temp + val) % field;
             }
         }
