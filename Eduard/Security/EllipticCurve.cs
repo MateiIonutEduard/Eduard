@@ -190,7 +190,7 @@ namespace Eduard.Security
                 ECPoint tempPoint = value;
                 var Y2 = Evaluate(tempPoint.GetAffineX());
 
-                if (BigInteger.Jacobi(Y2, field) != 1)
+                if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
                     throw new Exception("The generator point is not on the Weierstrass curve.");
                 else
                 {
@@ -210,7 +210,7 @@ namespace Eduard.Security
             }
         }
 
-        private BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
             if (enableSpeedup)
