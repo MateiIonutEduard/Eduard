@@ -10,6 +10,7 @@ namespace Eduard.Security
     {
         public BigInteger a, b;
         public BigInteger field, order;
+        public BigInteger cofactor;
 
         private static RandomNumberGenerator rand;
         private static bool enableSpeedup;
@@ -37,6 +38,9 @@ namespace Eduard.Security
             BigInteger val = (27 * B2) % field;
             BigInteger check = (temp + val) % field;
 
+            order = 1;
+            cofactor = 1;
+
             while (check == 0)
             {
                 b = BigInteger.Next(rand, 1, field - 1);
@@ -53,15 +57,15 @@ namespace Eduard.Security
         /// <param name="args"></param>
         public EllipticCurve(params BigInteger[] args)
         {
-            if (args.Length > 4)
+            if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
             rand = RandomNumberGenerator.Create();
             a = args[0];
             b = args[1];
 
-            field = args[2];
-            order = args[3];
+            field = args[2]; order = args[3];
+            cofactor = args[4];
 
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
@@ -149,6 +153,7 @@ namespace Eduard.Security
 
                 BigInteger y = 0;
                 BigInteger temp = 0;
+                var basePoint = ECPoint.POINT_INFINITY;
 
                 do
                 {
@@ -165,11 +170,18 @@ namespace Eduard.Security
                         
                         BigInteger eval = (y * y) % field;
                         if (temp != eval) done = false;
+
+                        if(done)
+                        {
+                            ECPoint tempPoint = new ECPoint(x, y);
+                            basePoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                            done = (basePoint != ECPoint.POINT_INFINITY);
+                        }
                     }
                 }
                 while (!done);
 
-                return new ECPoint(x, y);
+                return basePoint;
             }
         }
 
