@@ -11,6 +11,9 @@ namespace Eduard.Security
         public BigInteger a, b;
         public BigInteger field, order;
 
+        public BigInteger cofactor;
+        private ECPoint basePoint;
+
         private static RandomNumberGenerator rand;
         private static bool enableSpeedup;
 
@@ -29,16 +32,23 @@ namespace Eduard.Security
 
             BigInteger temp = (a * a) % field;
             temp = (temp * a) % field;
-            temp <<= 2;
+            temp = (4 * temp) % field;
 
             b = BigInteger.Next(rand, 1, field - 1);
-            BigInteger val = (27 * (b * b)) % field;
+            BigInteger B2 = (b * b) % field;
+
+            BigInteger val = (27 * B2) % field;
             BigInteger check = (temp + val) % field;
+
+            order = 1; cofactor = 1;
+            basePoint = ECPoint.POINT_INFINITY;
 
             while (check == 0)
             {
                 b = BigInteger.Next(rand, 1, field - 1);
-                val = (27 * (b * b)) % field;
+                B2 = (b * b) % field;
+
+                val = (27 * B2) % field;
                 check = (temp + val) % field;
             }
         }
@@ -49,15 +59,16 @@ namespace Eduard.Security
         /// <param name="args"></param>
         public EllipticCurve(params BigInteger[] args)
         {
-            if (args.Length > 4)
+            if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
             rand = RandomNumberGenerator.Create();
             a = args[0];
             b = args[1];
 
-            field = args[2];
-            order = args[3];
+            field = args[2]; order = args[3];
+            basePoint = ECPoint.POINT_INFINITY;
+            cofactor = args[4];
 
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
@@ -161,15 +172,45 @@ namespace Eduard.Security
                         
                         BigInteger eval = (y * y) % field;
                         if (temp != eval) done = false;
+
+                        if(done)
+                        {
+                            ECPoint tempPoint = new ECPoint(x, y);
+                            basePoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                            done = (basePoint != ECPoint.POINT_INFINITY);
+                        }
                     }
                 }
                 while (!done);
 
-                return new ECPoint(x, y);
+                return basePoint;
+            }
+            set
+            {
+                ECPoint tempPoint = value;
+                var Y2 = Evaluate(tempPoint.GetAffineX());
+
+                if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
+                    throw new Exception("The generator point is not on the Weierstrass curve.");
+                else
+                {
+                    BigInteger y = tempPoint.GetAffineY();
+                    BigInteger eval = (y * y) % field;
+
+                    if (eval != Y2)
+                        throw new Exception("Invalid generator point for Weierstrass curve.");
+                    else
+                    {
+                        ECPoint point = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        if (point != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                        else
+                            throw new Exception("Chosen generator point yields small-order subgroup on Weierstrass curve.");
+                    }
+                }
             }
         }
 
-        private BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
             if (enableSpeedup)

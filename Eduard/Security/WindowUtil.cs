@@ -14,7 +14,7 @@
         /// <param name="nzs">Represents the number of additional trailing zeros detected.</param>
         /// <param name="size">Represents the sliding window maximum size.</param>
         /// <returns></returns>
-        public static int Window(BigInteger x, int i, ref int nbs, ref int nzs, int size=5)
+        public static int Window(BigInteger x, int i, ref int nbs, ref int nzs, int size = 5)
         {
             int j, r, w;
             w = size;
