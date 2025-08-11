@@ -10,7 +10,9 @@ namespace Eduard.Security
     {
         public BigInteger a, b;
         public BigInteger field, order;
+
         public BigInteger cofactor;
+        private ECPoint basePoint;
 
         private static RandomNumberGenerator rand;
         private static bool enableSpeedup;
@@ -38,8 +40,8 @@ namespace Eduard.Security
             BigInteger val = (27 * B2) % field;
             BigInteger check = (temp + val) % field;
 
-            order = 1;
-            cofactor = 1;
+            order = 1; cofactor = 1;
+            basePoint = ECPoint.POINT_INFINITY;
 
             while (check == 0)
             {
@@ -65,6 +67,7 @@ namespace Eduard.Security
             b = args[1];
 
             field = args[2]; order = args[3];
+            basePoint = ECPoint.POINT_INFINITY;
             cofactor = args[4];
 
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
@@ -153,7 +156,6 @@ namespace Eduard.Security
 
                 BigInteger y = 0;
                 BigInteger temp = 0;
-                var basePoint = ECPoint.POINT_INFINITY;
 
                 do
                 {
@@ -182,6 +184,29 @@ namespace Eduard.Security
                 while (!done);
 
                 return basePoint;
+            }
+            set
+            {
+                ECPoint tempPoint = value;
+                var Y2 = Evaluate(tempPoint.GetAffineX());
+
+                if (BigInteger.Jacobi(Y2, field) != 1)
+                    throw new Exception("The generator point is not on the Weierstrass curve.");
+                else
+                {
+                    BigInteger y = tempPoint.GetAffineY();
+                    BigInteger eval = (y * y) % field;
+
+                    if (eval != Y2)
+                        throw new Exception("Invalid generator point for Weierstrass curve.");
+                    else
+                    {
+                        ECPoint point = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        if (point != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                        else
+                            throw new Exception("Chosen generator point yields small-order subgroup on Weierstrass curve.");
+                    }
+                }
             }
         }
 
