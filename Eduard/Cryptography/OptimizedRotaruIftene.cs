@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace Eduard.Security
+namespace Eduard.Cryptography
 {
     /* complete generalization of Atkin's modular square root algorithm */
     internal class OptimizedRotaruIftene

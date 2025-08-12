@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 #pragma warning disable
 
-namespace Eduard.Security
+namespace Eduard.Cryptography
 {
     /// <summary>
     /// Represents an elliptic curve given in Weierstrass form.

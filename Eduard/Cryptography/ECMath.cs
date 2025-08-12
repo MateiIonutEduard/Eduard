@@ -1,6 +1,7 @@
 ﻿using System;
+using Eduard.Cryptography.Extensions;
 
-namespace Eduard.Security
+namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides mathematical operations for points on the Weierstrass elliptic curve.

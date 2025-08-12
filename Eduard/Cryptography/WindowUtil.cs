@@ -1,4 +1,4 @@
-﻿namespace Eduard.Security
+﻿namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides optimal features for the use of sliding windows and fractional sliding windows with NAF representation.

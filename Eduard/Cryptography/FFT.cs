@@ -1,6 +1,6 @@
 ﻿#pragma warning disable
 
-namespace Eduard.Security
+namespace Eduard.Cryptography
 {
     public class FFT
     {

@@ -1,9 +1,9 @@
-﻿namespace Eduard.Security
+﻿namespace Eduard.Cryptography.Extensions
 {
     /// <summary>
     /// This class is a utility for converting projective points to affine form and vice versa.
     /// </summary>
-    public static class ECPointUtil
+    public static class ECPointExtensions
     {
         /// <summary>
         /// Convert a given point in Jacobian projective form to an affine point on the elliptic curve.

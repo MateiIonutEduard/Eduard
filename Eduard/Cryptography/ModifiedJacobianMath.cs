@@ -1,6 +1,6 @@
 ﻿#pragma warning disable
 
-namespace Eduard.Security
+namespace Eduard.Cryptography
 {
     /* Cohen–Miyaji–Ono (1998) "Efficient elliptic curve exponentiation using mixed coordinates" */
     public static class ModifiedJacobianMath

@@ -1,4 +1,4 @@
-﻿namespace Eduard.Security
+﻿namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides different methods for scalar multiplication of points on an elliptic curve.
