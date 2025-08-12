@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography;
-#pragma warning disable
 
 namespace Eduard.Cryptography
 {
