@@ -1,6 +1,4 @@
-﻿#pragma warning disable
-
-namespace Eduard.Cryptography
+﻿namespace Eduard.Cryptography
 {
     /* Cohen–Miyaji–Ono (1998) "Efficient elliptic curve exponentiation using mixed coordinates" */
     public static class ModifiedJacobianMath
@@ -37,6 +35,7 @@ namespace Eduard.Cryptography
             if (Y < 0) Y += p;
 
             BigInteger Z = (left.z * right.z * A7) % p;
+            if (Z == 0) return ModifiedJacobianPoint.POINT_INFINITY;
             BigInteger Z2 = (Z * Z) % p;
 
             BigInteger aZ4 = (curve.a * Z2) % p;
@@ -64,6 +63,8 @@ namespace Eduard.Cryptography
             if (Y < 0) Y += p;
 
             BigInteger Z = (2 * jacobianPoint.y * jacobianPoint.z) % p;
+            if (Z == 0) return ModifiedJacobianPoint.POINT_INFINITY;
+
             BigInteger aZ4 = (2 * A3 * jacobianPoint.aZ4) % p;
             return new ModifiedJacobianPoint(X, Y, Z, aZ4);
         }

@@ -1,6 +1,4 @@
-﻿#pragma warning disable
-
-namespace Eduard.Cryptography
+﻿namespace Eduard.Cryptography
 {
     /* Hankerson, D.R., Vanstone, S.A., Menezes, A.J. (2004): Guide to elliptic curve cryptography. Springer, New York, NY. */
     public static class JacobianMath
@@ -34,6 +32,7 @@ namespace Eduard.Cryptography
             if (Y < 0) Y += p;
 
             BigInteger Z = (((left.z * right.z) % p) * A5) % p;
+            if (Z == 0) return JacobianPoint.POINT_INFINITY;
             return new JacobianPoint(X, Y, Z);
         }
 
@@ -54,7 +53,8 @@ namespace Eduard.Cryptography
             {
                 /* special case when Weierstrass curve parameter a = -3 */
                 BigInteger Z12 = (jacobianPoint.z * jacobianPoint.z) % p;
-                A4 = (3 * (jacobianPoint.x - Z12) * (jacobianPoint.x - Z12)) % p;
+                A4 = (3 * (jacobianPoint.x - Z12) * (jacobianPoint.x + Z12)) % p;
+                if (A4 < 0) A4 += p;
             }
 
             BigInteger X = ((A4 * A4) % p - 2 * A2) % p;
@@ -64,6 +64,7 @@ namespace Eduard.Cryptography
             if (Y < 0) Y += p;
 
             BigInteger Z = (2 * jacobianPoint.y * jacobianPoint.z) % p;
+            if (Z == 0) return JacobianPoint.POINT_INFINITY;
             return new JacobianPoint(X, Y, Z);
         }
 

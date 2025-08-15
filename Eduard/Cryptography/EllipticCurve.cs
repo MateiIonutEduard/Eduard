@@ -1,5 +1,4 @@
 ﻿using System.Security.Cryptography;
-#pragma warning disable
 
 namespace Eduard.Cryptography
 {
@@ -161,7 +160,7 @@ namespace Eduard.Cryptography
                 {
                     x = BigInteger.Next(rand, 0, field - 1);
                     temp = Evaluate(x);
-
+                    
                     if (temp < 2)
                         return new ECPoint(x, temp);
 
@@ -215,7 +214,7 @@ namespace Eduard.Cryptography
             /* compute the modular square root using the optimized Rotaru-Iftene method */
             if (enableSpeedup)
                 return OptimizedRotaruIftene.Sqrt(val);
-
+            
             /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
             if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
 
