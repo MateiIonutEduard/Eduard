@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Eduard.Cryptography
 {
     /// <summary>
-    /// Represents a projective point (x, y, z) corresponding to the affine point (x/z, y/z) on the elliptic curve.
+    /// Represents a projective point (X, Y, Z) corresponding to the affine point (X/Z, Y/Z) on the elliptic curve.
     /// </summary>
     public class ProjectivePoint
     {
@@ -26,11 +26,11 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Creates a <seealso cref="ProjectivePoint"/> from the given x, y, and z projective coordinates.
+        /// Creates a <seealso cref="ProjectivePoint"/> from the given X, Y, and Z projective coordinates.
         /// </summary>
-        /// <param name="x">The projective x-coordinate.</param>
-        /// <param name="y">The projective y-coordinate.</param>
-        /// <param name="z">The projective z-coordinate.</param>
+        /// <param name="x">The projective X-coordinate.</param>
+        /// <param name="y">The projective Y-coordinate.</param>
+        /// <param name="z">The projective Z-coordinate.</param>
         /// <exception cref="NullReferenceException"></exception>
         public ProjectivePoint(BigInteger x, BigInteger y, BigInteger z)
         {
