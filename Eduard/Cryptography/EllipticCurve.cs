@@ -209,6 +209,12 @@ namespace Eduard.Cryptography
             }
         }
 
+        /// <summary>
+        /// Computes the modular square root of an integer over the prime field.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <param name="forceOutput"></param>
+        /// <returns></returns>
         public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
