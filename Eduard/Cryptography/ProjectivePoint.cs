@@ -35,10 +35,13 @@ namespace Eduard.Cryptography
         public ProjectivePoint(BigInteger x, BigInteger y, BigInteger z)
         {
             if (object.ReferenceEquals(x, null))
-                throw new NullReferenceException("The affine x-coordinate cannot be null.");
+                throw new NullReferenceException("The projective X-coordinate cannot be null.");
 
             if (object.ReferenceEquals(null, y))
-                throw new NullReferenceException("The affine y-coordinate cannot be null.");
+                throw new NullReferenceException("The projective Y-coordinate cannot be null.");
+
+            if (object.ReferenceEquals(z, null))
+                throw new NullReferenceException("The projective Z-coordinate cannot be null.");
 
             this.x = x;
             this.y = y;
