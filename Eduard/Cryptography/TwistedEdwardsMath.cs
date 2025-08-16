@@ -1,0 +1,176 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Eduard.Cryptography
+{
+    /// <summary>
+    /// Provides mathematical operations for points on the twisted Edwards curve.
+    /// </summary>
+    public static class TwistedEdwardsMath
+    {
+        /// <summary>
+        /// Multiply an affine point on the twisted Edwards curve by a given scalar.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="k"></param>
+        /// <param name="point"></param>
+        /// <param name="opMode"></param>
+        /// <returns></returns>
+        public static ECPoint Multiply(TwistedEdwardsCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE)
+        {
+            if (k < 0) throw new ArgumentException("Bad input.");
+
+            if (k == 0 || point == ECPoint.POINT_INFINITY)
+                return ECPoint.POINT_INFINITY;
+
+            ECPoint temp = point;
+            ECPoint result = ECPoint.POINT_INFINITY;
+            int t = k.GetBits();
+
+            if (opMode == ECMode.EC_STANDARD_AFFINE)
+            {
+                for (int j = 0; j < t; j++)
+                {
+                    if (k.TestBit(j))
+                        result = Add(curve, result, temp);
+
+                    temp = Add(curve, temp, temp);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Add two affine points on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static ECPoint Add(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
+        {
+            if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
+                return ECPoint.POINT_INFINITY;
+
+            if (left == ECPoint.POINT_INFINITY)
+                return right;
+
+            if (right == ECPoint.POINT_INFINITY)
+                return left;
+
+            if (left == Negate(curve, right))
+                return ECPoint.POINT_INFINITY;
+
+            if(curve.isComplete) 
+                return CompleteAdd(curve, left, right);
+
+            if (left == right) return DedicatedDoubling(curve, left);
+            return DedicatedAdd(curve, left, right);
+        }
+
+        /// <summary>
+        /// Adds two affine points using the unified formula on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static ECPoint CompleteAdd(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
+        {
+            BigInteger p = curve.field;
+            BigInteger A1 = (left.x * right.y) % p;
+
+            BigInteger A2 = (left.y * right.x) % p;
+            BigInteger A3 = (curve.d * (A1 * A2)) % p;
+
+            BigInteger inv_x = (A3 + 1).Inverse(p);
+            BigInteger inv_y = (p + 1 - A3) % p;
+
+            if (inv_y < 0) inv_y += p;
+            inv_y = inv_y.Inverse(p);
+
+            BigInteger x = (A1 + A2) % p;
+            x = (x * inv_x) % p;
+
+            BigInteger A4 = (left.y * right.y) % p;
+            BigInteger A5 = (curve.a * ((left.x * right.x) % p)) % p;
+
+            BigInteger y = (p + A4 - A5) % p;
+            y = (y * inv_y) % p;
+            return new ECPoint(x, y);
+        }
+
+        /// <summary>
+        /// Adds two affine points using the dedicated formula on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static ECPoint DedicatedAdd(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
+        {
+            BigInteger p = curve.field;
+            BigInteger A1 = (left.x * left.y) % p;
+
+            BigInteger A2 = (right.x * right.y) % p;
+            BigInteger A3 = (left.y * right.y) % p;
+
+            BigInteger A4 = (curve.a * (left.x * right.x)) % p;
+            BigInteger A5 = (A1 + A2) % p;
+
+            BigInteger A6 = (A3 + A4) % p;
+            BigInteger A7 = (p + A1 - A2) % p;
+
+            BigInteger A8 = (left.x * right.y) % p;
+            BigInteger A9 = (left.y * right.x) % p;
+
+            BigInteger A10 = (p + A8 - A9) % p;
+            BigInteger x = (A5 * A6.Inverse(p)) % p;
+
+            BigInteger y = (A7 * A10.Inverse(p)) % p;
+            return new ECPoint(x, y);
+        }
+
+        /// <summary>
+        /// Doubles the given affine point on the twisted Edwards curve using the dedicated formula.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ECPoint DedicatedDoubling(TwistedEdwardsCurve curve, ECPoint point)
+        {
+            BigInteger p = curve.field;
+            BigInteger A1 = (2 * (point.x * point.y)) % p;
+
+            BigInteger A2 = (point.y * point.y) % p;
+            BigInteger A3 = (curve.a * ((point.x * point.x) % p)) % p;
+
+            BigInteger A4 = (A2 + A3) % p;
+            BigInteger x = (A1 * A4.Inverse(p)) % p;
+
+            BigInteger y = (p + A2 - A3) % p;
+            BigInteger A5 = (p + 2 - A4) % p;
+
+            y = (y * A5.Inverse(p)) % p;
+            return new ECPoint(x, y);
+        }
+
+        /// <summary>
+        /// Computes the additive inverse of a given affine point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ECPoint Negate(TwistedEdwardsCurve curve, ECPoint point)
+        {
+            if (point == ECPoint.POINT_INFINITY)
+                return ECPoint.POINT_INFINITY;
+
+            return new ECPoint(curve.field - point.x, point.y);
+        }
+    }
+}
