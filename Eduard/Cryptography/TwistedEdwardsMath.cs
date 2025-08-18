@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Eduard.Cryptography.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -87,14 +88,17 @@ namespace Eduard.Cryptography
             BigInteger A2 = (left.y * right.x) % p;
             BigInteger A3 = (curve.d * (A1 * A2)) % p;
 
-            BigInteger inv_x = (A3 + 1).Inverse(p);
-            BigInteger inv_y = (p + 1 - A3) % p;
+            BigInteger inv_x = (A3 + 1) % p;
+            if (inv_x == 0) return ECPoint.POINT_INFINITY;
 
+            BigInteger inv_y = (p + 1 - A3) % p;
             if (inv_y < 0) inv_y += p;
+
+            if (inv_y == 0) return ECPoint.POINT_INFINITY;
             inv_y = inv_y.Inverse(p);
 
             BigInteger x = (A1 + A2) % p;
-            x = (x * inv_x) % p;
+            x = (x * inv_x.Inverse(p)) % p;
 
             BigInteger A4 = (left.y * right.y) % p;
             BigInteger A5 = (curve.a * ((left.x * right.x) % p)) % p;
@@ -123,12 +127,15 @@ namespace Eduard.Cryptography
             BigInteger A5 = (A1 + A2) % p;
 
             BigInteger A6 = (A3 + A4) % p;
+            if (A6 == 0) return ECPoint.POINT_INFINITY;
+
             BigInteger A7 = (p + A1 - A2) % p;
-
             BigInteger A8 = (left.x * right.y) % p;
-            BigInteger A9 = (left.y * right.x) % p;
 
+            BigInteger A9 = (left.y * right.x) % p;
             BigInteger A10 = (p + A8 - A9) % p;
+
+            if (A10 == 0) return ECPoint.POINT_INFINITY;
             BigInteger x = (A5 * A6.Inverse(p)) % p;
 
             BigInteger y = (A7 * A10.Inverse(p)) % p;
@@ -150,10 +157,13 @@ namespace Eduard.Cryptography
             BigInteger A3 = (curve.a * ((point.x * point.x) % p)) % p;
 
             BigInteger A4 = (A2 + A3) % p;
-            BigInteger x = (A1 * A4.Inverse(p)) % p;
+            if (A4 == 0) return ECPoint.POINT_INFINITY;
 
+            BigInteger x = (A1 * A4.Inverse(p)) % p;
             BigInteger y = (p + A2 - A3) % p;
+
             BigInteger A5 = (p + 2 - A4) % p;
+            if (A5 == 0) return ECPoint.POINT_INFINITY;
 
             y = (y * A5.Inverse(p)) % p;
             return new ECPoint(x, y);
