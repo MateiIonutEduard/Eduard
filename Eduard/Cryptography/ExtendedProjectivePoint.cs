@@ -100,7 +100,7 @@ namespace Eduard.Cryptography
         {
             try
             {
-                ProjectivePoint other = (ProjectivePoint)obj;
+                ExtendedProjectivePoint other = (ExtendedProjectivePoint)obj;
 
                 if (object.ReferenceEquals(x, other.x) && object.ReferenceEquals(y, other.y) && object.ReferenceEquals(z, other.z))
                     return true;
