@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace Eduard.Cryptography
 {
+    /* Bernstein, D.J., Birkner, P., Joye, M., Lange, T. and Peters, C., 2008, June. Twisted edwards curves. 
+     * In International conference on cryptology in Africa (pp. 389-405). Springer Berlin Heidelberg. */
     public static class TwistedEdwardsProjectiveMath
     {
         /// <summary>
@@ -112,6 +114,9 @@ namespace Eduard.Cryptography
 
             BigInteger Z = (A6 * A7) % p;
 
+            /* This dedicated doubling formula for projective points was 
+             * derived using the mathematical properties of the 
+             * endomorphism on the twisted Edwards curve. */
             if (Z == 0) return ProjectivePoint.POINT_INFINITY;
             return new ProjectivePoint(X, Y, Z);
         }
