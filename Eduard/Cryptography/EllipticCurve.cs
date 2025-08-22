@@ -144,7 +144,7 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Specifies a randomly chosen base point on the elliptic curve.
+        /// Get a random base point or set a specified base point on the elliptic curve.
         /// </summary>
         public ECPoint BasePoint
         {
