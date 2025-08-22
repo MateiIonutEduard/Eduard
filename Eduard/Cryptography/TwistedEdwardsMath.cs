@@ -41,6 +41,21 @@ namespace Eduard.Cryptography
                     temp = Add(curve, temp, temp);
                 }
             }
+            else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
+            {
+                ProjectivePoint auxPoint = ProjectivePoint.POINT_INFINITY;
+                var basePoint = curve.ToProjective(temp);
+
+                for (int j = 0; j < t; j++)
+                {
+                    if (k.TestBit(j))
+                        auxPoint = TwistedEdwardsProjectiveMath.UnifiedAdd(curve, auxPoint, basePoint);
+
+                    basePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, basePoint);
+                }
+
+                result = curve.ToAffine(auxPoint);
+            }
 
             return result;
         }
