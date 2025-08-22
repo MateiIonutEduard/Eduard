@@ -17,7 +17,7 @@ namespace Eduard.Cryptography
         private static bool enableSpeedup;
 
         /// <summary>
-        /// Creates a Weierstrass elliptic curve with random coefficients.
+        /// Creates a Weierstrass curve with random coefficients.
         /// </summary>
         /// <param name="bits"></param>
         public EllipticCurve(int bits)
@@ -53,7 +53,7 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Creates a Weierstrass elliptic curve with specific coefficients.
+        /// Creates a Weierstrass curve with given coefficients.
         /// </summary>
         /// <param name="args"></param>
         public EllipticCurve(params BigInteger[] args)
@@ -74,7 +74,7 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Evaluate the Weierstrass elliptic curve equation at the x-coordinate.
+        /// Evaluates the Weierstrass curve equation at a given x-coordinate.
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
@@ -88,10 +88,10 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Encodes the binary message as a point on the elliptic curve using Koblitz's point compression algorithm.
+        /// Encodes a binary message as an elliptic curve point using Koblitz's compression algorithm.
         /// </summary>
-        /// <param name="m">Represents the given binary message as a big integer.</param>
-        /// <param name="r">Represents the number of iterations for Koblitz's algorithm.</param>
+        /// <param name="m">Represents a binary message as a large integer.</param>
+        /// <param name="r">Number of iterations for Koblitz's algorithm.</param>
         /// <returns></returns>
         public ECPoint GetPoint(BigInteger m, int r=30)
         {
@@ -129,10 +129,10 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Decodes the binary message using the corresponding point on the elliptic curve.
+        /// Decodes the binary message from its corresponding elliptic curve point.
         /// </summary>
-        /// <param name="point">Represents the point on the elliptic curve that corresponds to the binary message.</param>
-        /// <param name="r">Represents the number of iterations for Koblitz's algorithm.</param>
+        /// <param name="point">Represents the elliptic curve point corresponding to the binary message.</param>
+        /// <param name="r">Specifies the number of iterations in Koblitz's algorithm.</param>
         /// <returns></returns>
         public BigInteger GetMessage(ECPoint point, int r=30)
         {
@@ -144,7 +144,7 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Represents a randomly chosen base point on the elliptic curve.
+        /// Get a random base point or set a specified base point on the elliptic curve.
         /// </summary>
         public ECPoint BasePoint
         {
@@ -209,6 +209,12 @@ namespace Eduard.Cryptography
             }
         }
 
+        /// <summary>
+        /// Computes the modular square root of an integer over the prime field.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <param name="forceOutput"></param>
+        /// <returns></returns>
         public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */

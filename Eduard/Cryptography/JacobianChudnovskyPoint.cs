@@ -1,7 +1,7 @@
 ﻿namespace Eduard.Cryptography
 {
     /// <summary>
-    /// Represents a Jacobian-Chudnovsky projective point (x, y, z, z^2, z^3) that maps to the affine elliptic curve point (x/z^2, y/z^3).
+    /// Represents a Jacobian-Chudnovsky projective point (X, Y, Z, Z^2, Z^3) that maps to the affine elliptic curve point (X/Z^2, Y/Z^3).
     /// </summary>
     public class JacobianChudnovskyPoint
     {
@@ -28,17 +28,28 @@
         /// <summary>
         /// Creates a <seealso cref="JacobianChudnovskyPoint"/> from the extended Jacobian projective coordinates.
         /// </summary>
-        /// <param name="x">The projective x-coordinate.</param>
-        /// <param name="y">The projective y-coordinate.</param>
-        /// <param name="z">The projective z-coordinate.</param>
+        /// <param name="x">The projective X-coordinate.</param>
+        /// <param name="y">The projective Y-coordinate.</param>
+        /// <param name="z">The projective Z-coordinate.</param>
+        /// <param name="z2">The projective Z^2-coordinate.</param>
+        /// <param name="z3">The projective Z^3-coordinate.</param>
         /// <exception cref="NullReferenceException"></exception>
         public JacobianChudnovskyPoint(BigInteger x, BigInteger y, BigInteger z, BigInteger z2, BigInteger z3)
         {
             if (object.ReferenceEquals(x, null))
-                throw new NullReferenceException("The affine x-coordinate cannot be null.");
+                throw new NullReferenceException("The projective X-coordinate cannot be null.");
 
             if (object.ReferenceEquals(null, y))
-                throw new NullReferenceException("The affine y-coordinate cannot be null.");
+                throw new NullReferenceException("The projective Y-coordinate cannot be null.");
+
+            if (object.ReferenceEquals(z, null))
+                throw new NullReferenceException("The projective Z-coordinate cannot be null.");
+
+            if (object.ReferenceEquals(z2, null))
+                throw new NullReferenceException("The projective Z^2-coordinate cannot be null.");
+
+            if (object.ReferenceEquals(z3, null))
+                throw new NullReferenceException("The projective Z^3-coordinate cannot be null.");
 
             this.x = x;
             this.y = y;

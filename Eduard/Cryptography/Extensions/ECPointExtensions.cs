@@ -27,6 +27,113 @@
         }
 
         /// <summary>
+        /// Convert an extended projective point to an affine point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        {
+            if(point == ExtendedProjectivePoint.POINT_INFINITY || point.z == 0)
+                return ECPoint.POINT_INFINITY;
+
+            BigInteger p = curve.field;
+            BigInteger inv_Z = point.z.Inverse(p);
+
+            BigInteger X = (point.x * inv_Z) % p;
+            BigInteger Y = (point.y * inv_Z) % p;
+
+            if (X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
+        /// Convert a projective point to an affine point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ProjectivePoint point)
+        {
+            if (point == ProjectivePoint.POINT_INFINITY || point.z == 0)
+                return ECPoint.POINT_INFINITY;
+
+            BigInteger p = curve.field;
+            BigInteger inv_Z = point.z.Inverse(p);
+
+            BigInteger X = (point.x * inv_Z) % p;
+            BigInteger Y = (point.y * inv_Z) % p;
+
+            if(X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
+        /// Convert an affine point on the twisted Edwards curve to extended projective coordinates.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ExtendedProjectivePoint ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint point)
+        {
+            if(point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1)) 
+                return ExtendedProjectivePoint.POINT_INFINITY;
+
+            BigInteger p = curve.field;
+            BigInteger t = (point.x * point.y) % p;
+            return new ExtendedProjectivePoint(point.x, point.y, t, 1);
+        }
+
+        /// <summary>
+        /// Convert a point from homogeneous projective coordinates to extended projective coordinates on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ExtendedProjectivePoint ToExtendedProjective(this TwistedEdwardsCurve curve, ProjectivePoint point)
+        {
+            if (point == ProjectivePoint.POINT_INFINITY)
+                return ExtendedProjectivePoint.POINT_INFINITY;
+
+            BigInteger p = curve.field;
+            BigInteger xz = (point.x * point.z) % p;
+
+            BigInteger yz = (point.y * point.z) % p;
+            BigInteger xy = (point.x * point.y) % p;
+
+            BigInteger z2 = (point.z * point.z) % p;
+            return new ExtendedProjectivePoint(xz, yz, xy, z2);
+        }
+
+        /// <summary>
+        /// Convert an affine point on the twisted Edwards curve to homogeneous projective coordinates.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ProjectivePoint ToProjective(this TwistedEdwardsCurve curve, ECPoint point)
+        {
+            if (point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1))
+                return ProjectivePoint.POINT_INFINITY;
+
+            return new ProjectivePoint(point.x, point.y, 1);
+        }
+
+        /// <summary>
+        /// Convert a point from extended to homogeneous projective coordinates on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ProjectivePoint ToProjective(this TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        {
+            if (point == ExtendedProjectivePoint.POINT_INFINITY)
+                return ProjectivePoint.POINT_INFINITY;
+
+            return new ProjectivePoint(point.x, point.y, point.z);
+        }
+
+        /// <summary>
         /// Convert an affine point on the elliptic curve to Jacobian projective form.
         /// </summary>
         /// <param name="curve"></param>
