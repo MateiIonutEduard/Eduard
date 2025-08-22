@@ -9,13 +9,13 @@ namespace Eduard.Cryptography
     public static class TwistedEdwardsProjectiveMath
     {
         /// <summary>
-        /// Add two projective points on the twisted Edwards curve using the complete formula.
+        /// Add two projective points on the twisted Edwards curve using the unified formula.
         /// </summary>
         /// <param name="curve"></param>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ProjectivePoint CompleteAdd(TwistedEdwardsCurve curve, ProjectivePoint left, ProjectivePoint right)
+        public static ProjectivePoint UnifiedAdd(TwistedEdwardsCurve curve, ProjectivePoint left, ProjectivePoint right)
         {
             if (left == ProjectivePoint.POINT_INFINITY) return right;
             if (right == ProjectivePoint.POINT_INFINITY) return left;
@@ -47,13 +47,13 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Double the given point in projective coordinates on the twisted Edwards curve using the complete formula.
+        /// Double the given point in projective coordinates on the twisted Edwards curve using the unified formula.
         /// </summary>
         /// <param name="curve"></param>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ProjectivePoint CompleteDoubling(TwistedEdwardsCurve curve, ProjectivePoint point)
+        public static ProjectivePoint UnifiedDoubling(TwistedEdwardsCurve curve, ProjectivePoint point)
         {
             if (point == ProjectivePoint.POINT_INFINITY)
                 return ProjectivePoint.POINT_INFINITY;
