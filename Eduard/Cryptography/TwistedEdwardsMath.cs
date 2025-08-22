@@ -56,8 +56,12 @@ namespace Eduard.Cryptography
 
                 result = curve.ToAffine(auxPoint);
             }
+            else if (opMode == ECMode.EC_SECURE)
+                throw new NotImplementedException("Requires transformation to Montgomery form for improved performance.");
+            else
+                throw new NotImplementedException("Requires implementing a fractional sliding window and mixed projective point representations on the twisted Edwards curve.");
 
-            return result;
+                return result;
         }
 
         /// <summary>
