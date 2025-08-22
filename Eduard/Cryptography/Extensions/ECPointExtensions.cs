@@ -42,6 +42,8 @@
 
             BigInteger X = (point.x * inv_Z) % p;
             BigInteger Y = (point.y * inv_Z) % p;
+
+            if (X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
         }
 
@@ -61,6 +63,8 @@
 
             BigInteger X = (point.x * inv_Z) % p;
             BigInteger Y = (point.y * inv_Z) % p;
+
+            if(X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
         }
 
@@ -72,7 +76,7 @@
         /// <returns></returns>
         public static ExtendedProjectivePoint ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if(point == ECPoint.POINT_INFINITY) 
+            if(point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1)) 
                 return ExtendedProjectivePoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
@@ -109,7 +113,7 @@
         /// <returns></returns>
         public static ProjectivePoint ToProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY)
+            if (point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1))
                 return ProjectivePoint.POINT_INFINITY;
 
             return new ProjectivePoint(point.x, point.y, 1);
