@@ -15,6 +15,9 @@ namespace Eduard.Cryptography
         public BigInteger field, order;
         public BigInteger A, B, BInv, A24;
 
+        public BigInteger cofactor;
+        private ECPoint basePoint;
+
         private static RandomNumberGenerator rand;
         private static bool enableSpeedup;
 
@@ -24,7 +27,7 @@ namespace Eduard.Cryptography
         /// <param name="args"></param>
         public MontgomeryCurve(params BigInteger[] args)
         {
-            if (args.Length > 4)
+            if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
             rand = RandomNumberGenerator.Create();
@@ -33,6 +36,9 @@ namespace Eduard.Cryptography
 
             field = args[2];
             order = args[3];
+
+            basePoint = ECPoint.POINT_INFINITY;
+            cofactor = args[4];
 
             BInv = B.Inverse(field);
             BigInteger temp = new BigInteger(4).Inverse(field);
@@ -67,7 +73,7 @@ namespace Eduard.Cryptography
         /// <param name="val"></param>
         /// <param name="forceOutput"></param>
         /// <returns></returns>
-        private BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
             if (enableSpeedup)
