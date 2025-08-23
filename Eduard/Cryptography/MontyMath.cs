@@ -84,6 +84,39 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
+        /// Multiply an affine point on the Montgomery curve by a specified scalar.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="k"></param>
+        /// <param name="point"></param>
+        /// <param name="opMode"></param>
+        /// <returns></returns>
+        public static ECPoint Multiply(MontgomeryCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE)
+        {
+            if (k < 0) throw new ArgumentException("Bad input.");
+
+            if (k == 0 || point == ECPoint.POINT_INFINITY)
+                return ECPoint.POINT_INFINITY;
+
+            ECPoint temp = point;
+            ECPoint result = ECPoint.POINT_INFINITY;
+            int t = k.GetBits();
+
+            if (opMode == ECMode.EC_STANDARD_AFFINE)
+            {
+                for (int j = 0; j < t; j++)
+                {
+                    if (k.TestBit(j))
+                        result = Add(curve, result, temp);
+
+                    temp = Add(curve, temp, temp);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Compute the additive inverse of an affine point on the Montgomery curve.
         /// </summary>
         /// <param name="curve"></param>
