@@ -60,5 +60,24 @@ namespace Eduard.Cryptography
 
             return (result * BInv) % field;
         }
+
+        /// <summary>
+        /// Computes the modular square root of an integer in a prime field.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <param name="forceOutput"></param>
+        /// <returns></returns>
+        private BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        {
+            /* compute the modular square root using the optimized Rotaru-Iftene method */
+            if (enableSpeedup)
+                return OptimizedRotaruIftene.Sqrt(val);
+
+            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
+            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
+
+            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
+            return ModSqrtUtil.TonelliShanks(val, field);
+        }
     }
 }
