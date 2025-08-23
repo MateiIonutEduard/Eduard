@@ -12,7 +12,7 @@ namespace Eduard.Cryptography.Extensions
     public static class EllipticCurveExtensions
     {
         /// <summary>
-        /// Convert a valid Montgomery curve to its equivalent twisted Edwards curve.
+        /// Convert a Montgomery curve to the equivalent twisted Edwards curve.
         /// </summary>
         /// <param name="curve"></param>
         /// <returns></returns>
@@ -45,7 +45,10 @@ namespace Eduard.Cryptography.Extensions
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("The Montgomery curve is invalid.");
 
-            if (point.GetAffineX() == 0 && point.GetAffineY() == 0)
+            /* map the point at infinity on a Montgomery curve to its equivalent on the twisted Edwards curve */
+            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+
+            if (point.GetAffineX() == 0 || point.GetAffineY() == curve.field - 1)
                 throw new ArgumentException("This Montgomery curve point is exceptional and has no corresponding point on the equivalent twisted Edwards curve.");
 
             BigInteger p = curve.field;
@@ -59,6 +62,62 @@ namespace Eduard.Cryptography.Extensions
 
             BigInteger X = (((B_root * Xp) % p) * y_inv) % p;
             BigInteger Y = ((p + Xp - 1) * x1_inv) % p;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
+        /// Convert a twisted Edwards curve to the equivalent Montgomery curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static MontgomeryCurve ToMontgomeryCurve(this TwistedEdwardsCurve curve)
+        {
+            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The twisted Edwards curve is invalid.");
+
+            BigInteger order = curve.order;
+            BigInteger cofactor = curve.cofactor;
+
+            BigInteger field = curve.field;
+            BigInteger ad = (field + curve.a - curve.d) % field;
+
+            BigInteger ad_inv = ad.Inverse(field);
+            BigInteger B = (4 * ad_inv) % field;
+
+            BigInteger A = (2 * (curve.a + curve.d)) % field;
+            A = (A * ad_inv) % field;
+            return new MontgomeryCurve(A, B, field, order, cofactor);
+        }
+
+        /// <summary>
+        /// Convert an affine point on a twisted Edwards curve to the equivalent affine point on the Montgomery curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static ECPoint ToMontgomeryPoint(this TwistedEdwardsCurve curve, ECPoint point)
+        {
+            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The twisted Edwards curve is invalid.");
+
+            /* map the point at infinity on a twisted Edwards curve to its equivalent on the Montgomery curve */
+            if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
+
+            if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
+                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Montgomery curve.");
+
+            BigInteger Xp = point.GetAffineX();
+            BigInteger Yp = point.GetAffineY();
+
+            BigInteger p = curve.field;
+            BigInteger u = (Yp + 1) % p;
+
+            BigInteger v = (((p + 1 - Yp) % p) * Xp).Inverse(p);
+            BigInteger X = (u * (((Xp * v) % p) % p)) % p;
+
+            BigInteger Y = (u * v) % p;
             return new ECPoint(X, Y);
         }
     }
