@@ -112,6 +112,12 @@ namespace Eduard.Cryptography
                     temp = Add(curve, temp, temp);
                 }
             }
+            else if(opMode == ECMode.EC_STANDARD_PROJECTIVE)
+                throw new NotImplementedException("Requires implementation of projective point operations, not yet planned.");
+            else if(opMode == ECMode.EC_SECURE)
+                throw new NotImplementedException("Requires implementation of point operations in short projective coordinates, not yet planned.");
+            else
+                throw new NotImplementedException("Requires implementation of projective point operations in various coordinate systems, not yet planned.");
 
             return result;
         }
