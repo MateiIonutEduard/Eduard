@@ -12,6 +12,39 @@ namespace Eduard.Cryptography.Extensions
     public static class EllipticCurveExtensions
     {
         /// <summary>
+        /// Convert a Montgomery curve to the equivalent Weierstrass curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
+        {
+            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The Montgomery curve is invalid.");
+
+            BigInteger order = curve.order;
+            BigInteger cofactor = curve.cofactor;
+
+            BigInteger p = curve.field;
+            BigInteger A1 = (curve.A * curve.A) % p;
+
+            BigInteger A2 = (curve.A * A1) % p;
+            BigInteger A3 = (p + 3 - A1) % p;
+
+            BigInteger A4 = (p + ((2 * A2) % p) - ((9 * curve.A) % p)) % p;
+            BigInteger B1 = (curve.B * curve.B) % p;
+
+            BigInteger B2 = (B1 * curve.B) % p;
+            BigInteger B3 = ((27 * B2) % p).Inverse(p);
+
+            BigInteger B4 = (9 * curve.B) % p;
+            BigInteger a = (((A3 * B3) % p) * B4) % p;
+
+            BigInteger b = (A4 * B3) % p;
+            return new EllipticCurve(a, b, p, order, cofactor);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent twisted Edwards curve.
         /// </summary>
         /// <param name="curve"></param>
