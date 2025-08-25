@@ -107,23 +107,23 @@ namespace Eduard.Cryptography
             BigInteger A2 = (left.y * right.x) % p;
             BigInteger A3 = (curve.d * (A1 * A2)) % p;
 
-            BigInteger inv_x = (A3 + 1) % p;
-            if (inv_x == 0) return ECPoint.POINT_INFINITY;
+            BigInteger tx = (A3 + 1) % p;
+            if (tx == 0) return ECPoint.POINT_INFINITY;
 
-            BigInteger inv_y = (p + 1 - A3) % p;
-            if (inv_y < 0) inv_y += p;
+            BigInteger ty = (p + 1 - A3) % p;
+            if (ty < 0) ty += p;
 
-            if (inv_y == 0) return ECPoint.POINT_INFINITY;
-            inv_y = inv_y.Inverse(p);
+            if (ty == 0) return ECPoint.POINT_INFINITY;
+            BigInteger txy = ((tx * ty) % p).Inverse(p);
 
             BigInteger x = (A1 + A2) % p;
-            x = (x * inv_x.Inverse(p)) % p;
+            x = (((x * txy) % p) * ty) % p;
 
             BigInteger A4 = (left.y * right.y) % p;
             BigInteger A5 = (curve.a * ((left.x * right.x) % p)) % p;
 
             BigInteger y = (p + A4 - A5) % p;
-            y = (y * inv_y) % p;
+            y = (((y * txy) % p) * tx) % p;
             return new ECPoint(x, y);
         }
 
@@ -155,9 +155,11 @@ namespace Eduard.Cryptography
             BigInteger A10 = (p + A8 - A9) % p;
 
             if (A10 == 0) return ECPoint.POINT_INFINITY;
-            BigInteger x = (A5 * A6.Inverse(p)) % p;
+            BigInteger A11 = ((A6 * A10) % p).Inverse(p);
 
-            BigInteger y = (A7 * A10.Inverse(p)) % p;
+            BigInteger x = (((A5 * A10) % p) * A11) % p;
+
+            BigInteger y = (((A6 * A7) % p) * A11) % p;
             return new ECPoint(x, y);
         }
 
@@ -178,13 +180,14 @@ namespace Eduard.Cryptography
             BigInteger A4 = (A2 + A3) % p;
             if (A4 == 0) return ECPoint.POINT_INFINITY;
 
-            BigInteger x = (A1 * A4.Inverse(p)) % p;
-            BigInteger y = (p + A2 - A3) % p;
-
             BigInteger A5 = (p + 2 - A4) % p;
             if (A5 == 0) return ECPoint.POINT_INFINITY;
+            BigInteger A6 = ((A4 * A5) % p).Inverse(p);
 
-            y = (y * A5.Inverse(p)) % p;
+            BigInteger x = (((A1 * A5) % p) * A6) % p;
+            BigInteger y = (p + A2 - A3) % p;
+
+            y = (((y * A4) % p) * A6) % p;
             return new ECPoint(x, y);
         }
 
