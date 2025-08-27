@@ -29,14 +29,11 @@ namespace Eduard.Cryptography
             if (right == ECPoint.POINT_INFINITY)
                 return left;
 
-            if (left == Negate(curve, right))
-                return ECPoint.POINT_INFINITY;
-
             BigInteger lambda = -1;
             BigInteger xDiff = 0;
+
             BigInteger yDiff = 0;
             BigInteger inv = 0;
-
 
             if (left != right)
             {
@@ -62,6 +59,7 @@ namespace Eduard.Cryptography
                 yDiff = (curve.B * left.y) % curve.field;
                 yDiff = (2 * yDiff) % curve.field;
 
+                if (yDiff == 0) return ECPoint.POINT_INFINITY;
                 inv = yDiff.Inverse(curve.field);
                 lambda = (xDiff * inv) % curve.field;
             }

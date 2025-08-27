@@ -12,6 +12,71 @@ namespace Eduard.Cryptography.Extensions
     public static class EllipticCurveExtensions
     {
         /// <summary>
+        /// Convert a Montgomery curve to the equivalent Weierstrass curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
+        {
+            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The Montgomery curve is invalid.");
+
+            BigInteger order = curve.order;
+            BigInteger cofactor = curve.cofactor;
+
+            BigInteger p = curve.field;
+            BigInteger A1 = (curve.A * curve.A) % p;
+
+            BigInteger A2 = (curve.A * A1) % p;
+            BigInteger A3 = (p + 3 - A1) % p;
+
+            BigInteger A4 = (p + ((2 * A2) % p) - ((9 * curve.A) % p)) % p;
+            BigInteger B1 = (curve.B * curve.B) % p;
+
+            BigInteger B2 = (B1 * curve.B) % p;
+            BigInteger B3 = ((27 * B2) % p).Inverse(p);
+
+            BigInteger B4 = (9 * curve.B) % p;
+            BigInteger a = (((A3 * B3) % p) * B4) % p;
+
+            BigInteger b = (A4 * B3) % p;
+            return new EllipticCurve(a, b, p, order, cofactor);
+        }
+
+        /// <summary>
+        /// Convert an affine point on a Montgomery curve to its equivalent affine point on the Weierstrass curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static ECPoint ToWeierstrassPoint(this MontgomeryCurve curve, ECPoint point)
+        {
+            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The Montgomery curve is invalid.");
+
+            /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
+            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+
+            BigInteger p = curve.field;
+            BigInteger B3_inv = ((3 * curve.B) % p).Inverse(p);
+
+            BigInteger Xp = point.GetAffineX();
+            BigInteger Yp = point.GetAffineY();
+
+            BigInteger AB3 = (curve.A * B3_inv) % p;
+            BigInteger B_inv = (3 * B3_inv) % p;
+
+            /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
+            if (Xp == 0 && Yp == 0) return new ECPoint(AB3, 0);
+            BigInteger X = (((Xp * B_inv) % p) + AB3) % p;
+            
+            BigInteger Y = (Yp * B_inv) % p;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent twisted Edwards curve.
         /// </summary>
         /// <param name="curve"></param>
