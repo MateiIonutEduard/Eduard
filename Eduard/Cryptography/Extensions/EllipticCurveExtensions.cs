@@ -118,6 +118,54 @@ namespace Eduard.Cryptography.Extensions
         }
 
         /// <summary>
+        /// Convert an affine point on a twisted Edwards curve to its equivalent affine point on the Weierstrass curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
+        {
+            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The twisted Edwards curve is invalid.");
+
+            /* map the point at infinity on a twisted Edwards curve to its equivalent on the Weierstrass curve */
+            if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
+
+            if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
+                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Montgomery curve.");
+
+            BigInteger Xp = point.GetAffineX();
+            BigInteger Yp = point.GetAffineY();
+
+            BigInteger p = curve.field;
+            BigInteger u = (Yp + 1) % p;
+
+            BigInteger v = (((p + 1 - Yp) % p) * Xp).Inverse(p);
+            BigInteger Xm = (u * (((Xp * v) % p) % p)) % p;
+
+            BigInteger Ym = (u * v) % p;
+            BigInteger ad = (p + curve.a - curve.d) % p;
+
+            BigInteger ad_inv = ad.Inverse(p);
+            BigInteger B = (4 * ad_inv) % p;
+
+            BigInteger A = (2 * (curve.a + curve.d)) % p;
+            A = (A * ad_inv) % p;
+
+            BigInteger B3_inv = ((3 * B) % p).Inverse(p);
+            BigInteger AB3 = (A * B3_inv) % p;
+            BigInteger B_inv = (3 * B3_inv) % p;
+
+            /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
+            if (Xm == 0 && Ym == 0) return new ECPoint(AB3, 0);
+            BigInteger X = (((Xm * B_inv) % p) + AB3) % p;
+
+            BigInteger Y = (Ym * B_inv) % p;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent twisted Edwards curve.
         /// </summary>
         /// <param name="curve"></param>
