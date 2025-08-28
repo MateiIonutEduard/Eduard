@@ -133,7 +133,7 @@ namespace Eduard.Cryptography.Extensions
             if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
-                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Montgomery curve.");
+                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Weierstrass curve.");
 
             BigInteger Xp = point.GetAffineX();
             BigInteger Yp = point.GetAffineY();
