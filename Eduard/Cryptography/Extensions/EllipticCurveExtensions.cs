@@ -77,6 +77,95 @@ namespace Eduard.Cryptography.Extensions
         }
 
         /// <summary>
+        /// Convert a twisted Edwards curve to the equivalent Weierstrass curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static EllipticCurve ToWeierstrassCurve(this TwistedEdwardsCurve curve)
+        {
+            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The twisted Edwards curve is invalid.");
+
+            BigInteger order = curve.order;
+            BigInteger cofactor = curve.cofactor;
+
+            BigInteger p = curve.field;
+            BigInteger ad = (p + curve.a - curve.d) % p;
+
+            BigInteger ad_inv = ad.Inverse(p);
+            BigInteger B = (4 * ad_inv) % p;
+
+            BigInteger A = (2 * (curve.a + curve.d)) % p;
+            A = (A * ad_inv) % p;
+
+            BigInteger A1 = (A * A) % p;
+
+            BigInteger A2 = (A * A1) % p;
+            BigInteger A3 = (p + 3 - A1) % p;
+
+            BigInteger A4 = (p + ((2 * A2) % p) - ((9 * A) % p)) % p;
+            BigInteger B1 = (B * B) % p;
+
+            BigInteger B2 = (B1 * B) % p;
+            BigInteger B3 = ((27 * B2) % p).Inverse(p);
+
+            BigInteger B4 = (9 * B) % p;
+            BigInteger a = (((A3 * B3) % p) * B4) % p;
+
+            BigInteger b = (A4 * B3) % p;
+            return new EllipticCurve(a, b, p, order, cofactor);
+        }
+
+        /// <summary>
+        /// Convert an affine point on a twisted Edwards curve to its equivalent affine point on the Weierstrass curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
+        {
+            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The twisted Edwards curve is invalid.");
+
+            /* map the point at infinity on a twisted Edwards curve to its equivalent on the Weierstrass curve */
+            if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
+
+            if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
+                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Montgomery curve.");
+
+            BigInteger Xp = point.GetAffineX();
+            BigInteger Yp = point.GetAffineY();
+
+            BigInteger p = curve.field;
+            BigInteger u = (Yp + 1) % p;
+
+            BigInteger v = (((p + 1 - Yp) % p) * Xp).Inverse(p);
+            BigInteger Xm = (u * (((Xp * v) % p) % p)) % p;
+
+            BigInteger Ym = (u * v) % p;
+            BigInteger ad = (p + curve.a - curve.d) % p;
+
+            BigInteger ad_inv = ad.Inverse(p);
+            BigInteger B = (4 * ad_inv) % p;
+
+            BigInteger A = (2 * (curve.a + curve.d)) % p;
+            A = (A * ad_inv) % p;
+
+            BigInteger B3_inv = ((3 * B) % p).Inverse(p);
+            BigInteger AB3 = (A * B3_inv) % p;
+            BigInteger B_inv = (3 * B3_inv) % p;
+
+            /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
+            if (Xm == 0 && Ym == 0) return new ECPoint(AB3, 0);
+            BigInteger X = (((Xm * B_inv) % p) + AB3) % p;
+
+            BigInteger Y = (Ym * B_inv) % p;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent twisted Edwards curve.
         /// </summary>
         /// <param name="curve"></param>
