@@ -634,6 +634,13 @@ namespace Eduard.Cryptography
             Polynomial poly = Gcd(vtemp, self);
             if (poly == 1) return;
 
+            /* compute the roots of a polynomial early if the degree is 1 or 2 */
+            if (poly.Degree == 1 || poly.Degree == 2)
+            {
+                Solve(poly, ref roots);
+                return;
+            }
+
             if (poly.Degree >= 1 && poly != 0 && poly != this)
                 self = new Polynomial(poly);
 
