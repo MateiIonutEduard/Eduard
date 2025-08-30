@@ -43,6 +43,7 @@ namespace Eduard.Cryptography.Extensions
 
             W /= P;
             BigInteger alpha = 0;
+            bool found = false;
 
             Polynomial.Solve(W, ref roots);
             BigInteger s = 0;
@@ -53,8 +54,15 @@ namespace Eduard.Cryptography.Extensions
                 s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
 
                 /* find the root corresponding to the x-coordinate of the 4-torsion point */
-                if (BigInteger.Jacobi(s, p) == 1) break;
+                if (BigInteger.Jacobi(s, p) == 1)
+                {
+                    found = true;
+                    break;
+                }
             }
+
+            if(!found)
+                throw new ArgumentException("Weierstrass curve cannot be converted to Montgomery form.");
 
             s = curve.Sqrt(s).Inverse(p);
             BigInteger A = (3 * alpha * s) % p;
