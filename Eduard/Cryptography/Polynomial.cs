@@ -543,11 +543,11 @@ namespace Eduard.Cryptography
             {
                 BigInteger a = BigInteger.Next(rand, 1, field - 1);
                 Polynomial g = new Polynomial(1, a);
+                
                 Polynomial h = Pow(g, (field - 1) / 2, this);
                 Polynomial poly = h + 1;
 
-                if (poly.Degree == 0) continue;
-
+                if (poly == 1) continue;
                 Polynomial factor = Gcd(poly, this);
 
                 if (factor.Degree != 0)
@@ -584,11 +584,15 @@ namespace Eduard.Cryptography
                 ac4 = MulMod(ac4, poly.coeffs[0]);
                 BigInteger delta = AddMod(sb, ac4);
 
+                int jSymbol = BigInteger.Jacobi(delta, field);
+                if (jSymbol == -1) return -1;
+
                 BigInteger root = Sqrt(delta, true);
                 BigInteger val = MulMod(2, poly.coeffs[2]);
-                BigInteger inv = val.Inverse(field);
 
+                BigInteger inv = val.Inverse(field);
                 BigInteger t = AddMod(field - poly.coeffs[1], root);
+
                 t = MulMod(inv, t);
                 roots.Add(t);
 
@@ -628,9 +632,7 @@ namespace Eduard.Cryptography
             vtemp -= aux;
 
             Polynomial poly = Gcd(vtemp, self);
-
-            if (poly == 1)
-                return;
+            if (poly == 1) return;
 
             if (poly.Degree >= 1 && poly != 0 && poly != this)
                 self = new Polynomial(poly);
