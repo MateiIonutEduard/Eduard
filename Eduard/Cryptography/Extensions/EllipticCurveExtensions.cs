@@ -12,6 +12,58 @@ namespace Eduard.Cryptography.Extensions
     public static class EllipticCurveExtensions
     {
         /// <summary>
+        /// Convert a Weierstrass curve into its equivalent Montgomery curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static MontgomeryCurve ToMontgomeryCurve(this EllipticCurve curve)
+        {
+            if ((curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The Weierstrass curve is invalid.");
+
+            BigInteger order = curve.order;
+            BigInteger cofactor = curve.cofactor;
+
+            Polynomial.SetField(curve.field);
+            BigInteger p = curve.field;
+
+            var roots = new List<BigInteger>();
+            Polynomial W = new Polynomial(1, 0, curve.a, curve.b);
+
+            /* find the roots of the polynomial associated with the Weierstrass curve */
+            W.FindRoots(ref roots);
+            Polynomial P = 1;
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                Polynomial Q = new Polynomial(1, p - roots[i]);
+                P *= Q;
+            }
+
+            W /= P;
+            BigInteger alpha = 0;
+
+            Polynomial.Solve(W, ref roots);
+            BigInteger s = 0;
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                alpha = roots[i];
+                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+
+                /* find the root corresponding to the x-coordinate of the 4-torsion point */
+                if (BigInteger.Jacobi(s, p) == 1) break;
+            }
+
+            s = curve.Sqrt(s).Inverse(p);
+            BigInteger A = (3 * alpha * s) % p;
+
+            BigInteger B = s;
+            return new MontgomeryCurve(A, B, p, order, cofactor);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent Weierstrass curve.
         /// </summary>
         /// <param name="curve"></param>
