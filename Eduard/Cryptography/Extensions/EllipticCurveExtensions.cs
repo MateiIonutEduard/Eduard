@@ -200,6 +200,77 @@ namespace Eduard.Cryptography.Extensions
         }
 
         /// <summary>
+        /// Convert an affine point on a Weierstrass curve to the corresponding affine point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static ECPoint ToTwistedEdwardsPoint(this EllipticCurve curve, ECPoint point)
+        {
+            if ((curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The Weierstrass curve is invalid.");
+
+            Polynomial.SetField(curve.field);
+            BigInteger p = curve.field;
+
+            /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
+            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+
+            var roots = new List<BigInteger>();
+            Polynomial W = new Polynomial(1, 0, curve.a, curve.b);
+
+            /* find the roots of the polynomial associated with the Weierstrass curve */
+            W.FindRoots(ref roots);
+            Polynomial P = 1;
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                Polynomial Q = new Polynomial(1, p - roots[i]);
+                P *= Q;
+            }
+
+            W /= P;
+            BigInteger alpha = 0;
+            bool found = false;
+
+            Polynomial.Solve(W, ref roots);
+            BigInteger s = 0;
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                alpha = roots[i];
+                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+
+                /* find the root corresponding to the x-coordinate of the 4-torsion point */
+                if (BigInteger.Jacobi(s, p) == 1)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
+            if (!found) throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
+
+            s = curve.Sqrt(s).Inverse(p);
+            BigInteger Xp = point.GetAffineX();
+
+            BigInteger Yp = point.GetAffineY();
+            BigInteger Xm = (s * ((p + Xp - alpha) % p)) % p;
+
+            BigInteger Ym = (s * Yp) % p;
+            BigInteger B_root = curve.Sqrt(s);
+
+            BigInteger y_inv = Ym.Inverse(p);
+            BigInteger x1_inv = ((Xm + 1) % p).Inverse(p);
+
+            BigInteger X = (((B_root * Xm) % p) * y_inv) % p;
+            BigInteger Y = ((p + Xm - 1) * x1_inv) % p;
+            return new ECPoint(X, Y);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent Weierstrass curve.
         /// </summary>
         /// <param name="curve"></param>
