@@ -260,12 +260,11 @@ namespace Eduard.Cryptography.Extensions
             BigInteger Xm = (s * ((p + Xp - alpha) % p)) % p;
 
             BigInteger Ym = (s * Yp) % p;
-            BigInteger B_root = curve.Sqrt(s);
-
             BigInteger y_inv = Ym.Inverse(p);
-            BigInteger x1_inv = ((Xm + 1) % p).Inverse(p);
 
-            BigInteger X = (((B_root * Xm) % p) * y_inv) % p;
+            BigInteger x1_inv = ((Xm + 1) % p).Inverse(p);
+            BigInteger X = (Xm * y_inv) % p;
+
             BigInteger Y = ((p + Xm - 1) * x1_inv) % p;
             return new ECPoint(X, Y);
         }
@@ -473,7 +472,7 @@ namespace Eduard.Cryptography.Extensions
             BigInteger y_inv = Yp.Inverse(p);
             BigInteger x1_inv = ((Xp + 1) % p).Inverse(p);
 
-            BigInteger X = (((B_root * Xp) % p) * y_inv) % p;
+            BigInteger X = (Xp * y_inv) % p;
             BigInteger Y = ((p + Xp - 1) * x1_inv) % p;
             return new ECPoint(X, Y);
         }
