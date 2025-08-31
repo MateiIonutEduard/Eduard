@@ -136,6 +136,70 @@ namespace Eduard.Cryptography.Extensions
         }
 
         /// <summary>
+        /// Convert a Weierstrass curve to its equivalent twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this EllipticCurve curve)
+        {
+            if ((curve.cofactor & 0x3) != 0)
+                throw new ArgumentException("The Weierstrass curve is invalid.");
+
+            BigInteger order = curve.order;
+            BigInteger cofactor = curve.cofactor;
+
+            Polynomial.SetField(curve.field);
+            BigInteger p = curve.field;
+
+            var roots = new List<BigInteger>();
+            Polynomial W = new Polynomial(1, 0, curve.a, curve.b);
+
+            /* find the roots of the polynomial associated with the Weierstrass curve */
+            W.FindRoots(ref roots);
+            Polynomial P = 1;
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                Polynomial Q = new Polynomial(1, p - roots[i]);
+                P *= Q;
+            }
+
+            W /= P;
+            BigInteger alpha = 0;
+            bool found = false;
+
+            Polynomial.Solve(W, ref roots);
+            BigInteger s = 0;
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                alpha = roots[i];
+                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+
+                /* find the root corresponding to the x-coordinate of the 4-torsion point */
+                if (BigInteger.Jacobi(s, p) == 1)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+                throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
+
+            s = curve.Sqrt(s).Inverse(p);
+            BigInteger A = (3 * alpha * s) % p;
+
+            BigInteger B = s;
+            BigInteger B_inv = B.Inverse(p);
+
+            BigInteger a = ((A + 2) * B_inv) % p;
+            BigInteger d = ((p + A - 2) * B_inv) % p;
+            return new TwistedEdwardsCurve(a, d, p, order, cofactor);
+        }
+
+        /// <summary>
         /// Convert a Montgomery curve to the equivalent Weierstrass curve.
         /// </summary>
         /// <param name="curve"></param>
@@ -307,7 +371,7 @@ namespace Eduard.Cryptography.Extensions
             BigInteger B_inv = curve.B.Inverse(field);
 
             BigInteger a = ((curve.A + 2) * B_inv) % field;
-            BigInteger d = ((curve.A - 2) * B_inv) % field;
+            BigInteger d = ((field + curve.A - 2) * B_inv) % field;
             return new TwistedEdwardsCurve(a, d, field, order, cofactor);
         }
 
