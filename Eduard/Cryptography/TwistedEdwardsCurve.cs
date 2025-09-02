@@ -63,21 +63,20 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Evaluates the twisted Edwards curve at a given x-coordinate.
+        /// Evaluates the twisted Edwards curve at a given y-coordinate.
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
-        public BigInteger Evaluate(BigInteger x)
+        public BigInteger Evaluate(BigInteger y)
         {
-            BigInteger A1 = (x * x) % field;
-            BigInteger A2 = (a * A1) % field;
+            BigInteger A1 = (y * y) % field;
+            BigInteger A2 = (d * A1) % field;
 
-            BigInteger A3 = (d * A1) % field;
-            BigInteger Y2 = (field + 1 - A2) % field;
+            BigInteger A3 = (field + 1 - A1) % field;
+            BigInteger A4 = (field + a - A2) % field;
 
-            BigInteger temp = (field + 1 - A3) % field;
-            Y2 = (Y2 * temp.Inverse(field)) % field;
-            return Y2;
+            BigInteger X2 = (A3 * A4.Inverse(field)) % field;
+            return X2;
         }
 
         /// <summary>
@@ -95,18 +94,18 @@ namespace Eduard.Cryptography
 
                 do
                 {
-                    x = BigInteger.Next(rand, 0, field - 1);
-                    temp = Evaluate(x);
+                    y = BigInteger.Next(rand, 0, field - 1);
+                    temp = Evaluate(y);
 
                     if (temp < 2)
-                        return new ECPoint(x, temp);
+                        return new ECPoint(temp, y);
 
                     if (BigInteger.Jacobi(temp, field) == 1)
                     {
                         done = true;
-                        y = Sqrt(temp);
+                        x = Sqrt(temp);
 
-                        BigInteger eval = (y * y) % field;
+                        BigInteger eval = (x * x) % field;
                         if (temp != eval) done = false;
 
                         if (done)
@@ -124,14 +123,14 @@ namespace Eduard.Cryptography
             set
             {
                 ECPoint tempPoint = value;
-                var temp = Evaluate(tempPoint.GetAffineX());
+                var temp = Evaluate(tempPoint.GetAffineY());
 
                 if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
                     throw new Exception("The generator point is not on the twisted Edwards curve.");
                 else
                 {
-                    BigInteger y = tempPoint.GetAffineY();
-                    BigInteger eval = (y * y) % field;
+                    BigInteger x = tempPoint.GetAffineX();
+                    BigInteger eval = (x * x) % field;
 
                     if (eval != temp)
                         throw new Exception("Invalid generator point for the twisted Edwards curve.");
