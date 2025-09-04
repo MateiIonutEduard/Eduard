@@ -72,7 +72,7 @@ namespace Eduard.Cryptography
             BigInteger A4 = (left.t * right.z) % p;
             BigInteger A5 = (A4 + A3) % p;
 
-            BigInteger A6 = ((((left.x - right.y) * (right.x + right.y)) % p) + A2 - A1) % p;
+            BigInteger A6 = ((((left.x - left.y) * (right.x + right.y)) % p) + A2 - A1) % p;
             if (A6 < 0) A6 += p;
 
             BigInteger A7 = (A2 + curve.a * A1) % p;
