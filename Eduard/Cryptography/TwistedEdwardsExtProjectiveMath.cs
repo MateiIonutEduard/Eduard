@@ -89,6 +89,44 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
+        /// Add two extended projective points on the curve isomorphic to the twisted Edwards curve using the dedicated formula.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static ExtendedProjectivePoint TwistDedicatedAdd(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        {
+            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
+            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+            BigInteger p = curve.field;
+
+            BigInteger A1 = ((left.y - left.x) * (right.y + right.x)) % p;
+            if (A1 < 0) A1 += p;
+
+            BigInteger A2 = ((left.y + left.x) * (right.y - right.x)) % p;
+            if (A2 < 0) A2 += p;
+
+            BigInteger A3 = (2 * left.z * right.t) % p;
+            BigInteger A4 = (2 * left.t * right.z) % p;
+
+            BigInteger A5 = (A3 + A4) % p;
+            BigInteger A6 = (p + A2 - A1) % p;
+
+            BigInteger A7 = (A2 + A1) % p;
+            BigInteger A8 = (p + A4 - A3) % p;
+
+            BigInteger X = (A5 * A6) % p;
+            BigInteger Y = (A7 * A8) % p;
+
+            BigInteger T = (A5 * A8) % p;
+            BigInteger Z = (A6 * A7) % p;
+
+            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
+            return new ExtendedProjectivePoint(X, Y, T, Z);
+        }
+
+        /// <summary>
         /// Double the given extended projective point on the twisted Edwards curve using the dedicated formula.
         /// </summary>
         /// <param name="curve"></param>
