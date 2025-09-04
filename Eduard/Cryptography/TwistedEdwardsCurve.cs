@@ -52,12 +52,12 @@ namespace Eduard.Cryptography
             kt = aroot = 0;
 
             /* see Hisil et al. (2008) "Twisted Edwards curves revisited." pp. 326-343 */
-            if (BigInteger.Jacobi(field - a, field) == 1 && isComplete)
+            if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
             {
-                BigInteger inv_a = (field - a).Inverse(field);
-                kt = (2 * (field - d) * inv_a) % field;
-
                 aroot = Sqrt(field - a, true);
+                BigInteger ma = ((aroot * aroot) % field).Inverse(field);
+
+                kt = (2 * d * ma) % field;
                 computeOnTwist = true;
             }
         }
