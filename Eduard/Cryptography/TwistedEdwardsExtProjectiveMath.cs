@@ -12,6 +12,34 @@ namespace Eduard.Cryptography
     public static class TwistedEdwardsExtProjectiveMath
     {
         /// <summary>
+        /// Add two points in extended projective coordinates on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        public static ExtendedProjectivePoint Add(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        {
+            if (left == ExtendedProjectivePoint.POINT_INFINITY && right == ExtendedProjectivePoint.POINT_INFINITY)
+                return ExtendedProjectivePoint.POINT_INFINITY;
+
+            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
+            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+
+            if (left == Negate(curve, right))
+                return ExtendedProjectivePoint.POINT_INFINITY;
+
+            if (curve.isComplete)
+            {
+                if (curve.computeOnTwist) return TwistUnifiedAdd(curve, left, right);
+                else return UnifiedAdd(curve, left, right);
+            }
+
+            if (curve.computeOnTwist) return TwistDedicatedAdd(curve, left, right);
+            return DedicatedAdd(curve, left, right);
+        }
+
+        /// <summary>
         /// Add two extended projective points on the twisted Edwards curve using the unified formula.
         /// </summary>
         /// <param name="curve"></param>
