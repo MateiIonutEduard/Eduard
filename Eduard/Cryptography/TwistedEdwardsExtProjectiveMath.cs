@@ -89,6 +89,42 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
+        /// Double the given extended projective point on the twisted Edwards curve using the dedicated formula.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static ExtendedProjectivePoint DedicatedDoubling(TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        {
+            if (point == ExtendedProjectivePoint.POINT_INFINITY)
+                return ExtendedProjectivePoint.POINT_INFINITY;
+
+            BigInteger p = curve.field;
+            BigInteger A1 = (point.x * point.x) % p;
+
+            BigInteger A2 = (point.y * point.y) % p;
+            BigInteger A3 = (2 * point.z * point.z) % p;
+
+            BigInteger A4 = (curve.a * A1) % p;
+            BigInteger A5 = ((((point.x + point.y) * (point.x + point.y)) % p) - A1 - A2) % p;
+
+            if (A5 < 0) A5 += p;
+            BigInteger A6 = (A2 + A4) % p;
+
+            BigInteger A7 = (p + A6 - A3) % p;
+            BigInteger A8 = (p + A4 - A2) % p;
+
+            BigInteger X = (A5 * A7) % p;
+            BigInteger Y = (A6 * A8) % p;
+
+            BigInteger T = (A5 * A8) % p;
+            BigInteger Z = (A6 * A7) % p;
+
+            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
+            return new ExtendedProjectivePoint(X, Y, T, Z);
+        }
+
+        /// <summary>
         /// Compute the additive inverse of a point in extended projective coordinates on the twisted Edwards curve.
         /// </summary>
         /// <param name="curve"></param>
