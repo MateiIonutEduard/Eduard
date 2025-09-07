@@ -76,6 +76,53 @@ namespace Eduard.Cryptography
                 /* compute the lookup table */
                 for (i = 1; i < windowSize; i++)
                     table[i] = TwistedEdwardsExtProjectiveMath.Add(curve, table[i - 1], squarePoint);
+
+                for (i = nb - 1; i >= 1;)
+                {
+                    n = WindowUtil.NAFWindow(k, k3, i, ref nbs, ref nzs, windowSize);
+                    var projectivePoint = curve.ToProjective(auxPoint);
+
+                    for (j = 0; j < nbs - 1; j++)
+                        projectivePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, projectivePoint);
+
+                    if (nbs >= 1)
+                    {
+                        var tempPoint = curve.ToExtendedProjective(projectivePoint);
+                        auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
+                    }
+
+                    if (n > 0)
+                    {
+                        var table_point = table[n >> 1];
+                        auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, table_point, auxPoint);
+                    }
+                    if (n < 0)
+                    {
+                        var table_point = table[(-n) >> 1];
+                        var negative_point = TwistedEdwardsExtProjectiveMath.Negate(curve, table_point);
+                        auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, negative_point, auxPoint);
+                    }
+
+                    i -= nbs;
+
+                    if (nzs != 0)
+                    {
+                        var lastPoint = curve.ToProjective(auxPoint);
+                        i -= nzs;
+
+                        for (j = 0; j < nzs - 1; j++)
+                            lastPoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, lastPoint);
+
+                        if (nzs >= 1)
+                        {
+                            auxPoint = curve.ToExtendedProjective(lastPoint);
+                            auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, auxPoint);
+                        }
+
+                    }
+                }
+
+                result = curve.ToAffine(auxPoint);
             }
 
             return result;
