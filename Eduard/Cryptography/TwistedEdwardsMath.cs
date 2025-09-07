@@ -59,9 +59,26 @@ namespace Eduard.Cryptography
             else if (opMode == ECMode.EC_SECURE)
                 throw new NotImplementedException("Requires transformation to Montgomery form for improved performance.");
             else
-                throw new NotImplementedException("Requires implementing a fractional sliding window and mixed projective point representations on the twisted Edwards curve.");
+            {
+                int i, j, n;
+                int nb, nbs = 0, nzs = 0;
+                int windowSize = 8;
 
-                return result;
+                var table = new ExtendedProjectivePoint[windowSize];
+                table[0] = curve.ToExtendedProjective(point);
+
+                var squarePoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, table[0]);
+                ExtendedProjectivePoint auxPoint = ExtendedProjectivePoint.POINT_INFINITY;
+
+                BigInteger k3 = 3 * k;
+                nb = k3.GetBits();
+
+                /* compute the lookup table */
+                for (i = 1; i < windowSize; i++)
+                    table[i] = TwistedEdwardsExtProjectiveMath.Add(curve, table[i - 1], squarePoint);
+            }
+
+            return result;
         }
 
         /// <summary>
