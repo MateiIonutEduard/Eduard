@@ -59,9 +59,66 @@ namespace Eduard.Cryptography
             else if (opMode == ECMode.EC_SECURE)
                 throw new NotImplementedException("Requires transformation to Montgomery form for improved performance.");
             else
-                throw new NotImplementedException("Requires implementing a fractional sliding window and mixed projective point representations on the twisted Edwards curve.");
+            {
+                int i, j, n;
+                int nb, nbs = 0, nzs = 0;
+                int windowSize = 8;
 
-                return result;
+                var table = new ExtendedProjectivePoint[windowSize];
+                table[0] = curve.ToExtendedProjective(point);
+
+                var squarePoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, table[0]);
+                ExtendedProjectivePoint auxPoint = ExtendedProjectivePoint.POINT_INFINITY;
+
+                BigInteger k3 = 3 * k;
+                nb = k3.GetBits();
+
+                /* compute the lookup table */
+                for (i = 1; i < windowSize; i++)
+                    table[i] = TwistedEdwardsExtProjectiveMath.Add(curve, table[i - 1], squarePoint);
+
+                for (i = nb - 1; i >= 1;)
+                {
+                    n = WindowUtil.NAFWindow(k, k3, i, ref nbs, ref nzs, windowSize);
+                    var projectivePoint = curve.ToProjective(auxPoint);
+
+                    for (j = 0; j < nbs; j++)
+                        projectivePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, projectivePoint);
+
+                    if (nbs >= 1)
+                        auxPoint = curve.ToExtendedProjective(projectivePoint);
+
+                    if (n > 0)
+                    {
+                        var table_point = table[n >> 1];
+                        auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, table_point, auxPoint);
+                    }
+                    if (n < 0)
+                    {
+                        var table_point = table[(-n) >> 1];
+                        var negative_point = TwistedEdwardsExtProjectiveMath.Negate(curve, table_point);
+                        auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, negative_point, auxPoint);
+                    }
+
+                    i -= nbs;
+
+                    if (nzs != 0)
+                    {
+                        var lastPoint = curve.ToProjective(auxPoint);
+                        i -= nzs;
+
+                        for (j = 0; j < nzs; j++)
+                            lastPoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, lastPoint);
+
+                        if (nzs >= 1)
+                            auxPoint = curve.ToExtendedProjective(lastPoint);
+                    }
+                }
+
+                result = curve.ToAffine(auxPoint);
+            }
+
+            return result;
         }
 
         /// <summary>
