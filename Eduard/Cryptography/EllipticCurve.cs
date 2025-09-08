@@ -67,7 +67,19 @@ namespace Eduard.Cryptography
 
             field = args[2]; order = args[3];
             basePoint = ECPoint.POINT_INFINITY;
+
             cofactor = args[4];
+            BigInteger A2 = (a * a) % field;
+
+            BigInteger B2 = (b * b) % field;
+            BigInteger delta = (a * A2) % field;
+
+            delta = (4 * delta) % field;
+            BigInteger val = ((27 * B2) % field);
+            delta = (delta + val) % field;
+
+            if (delta == 0)
+                throw new Exception("Invalid curve: singular Weierstrass form.");
 
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
