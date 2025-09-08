@@ -97,6 +97,9 @@ namespace Eduard.Cryptography
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
+            if (!curve.ValidatePoint(point))
+                throw new ArgumentException("Generator point creates a small-order subgroup on the Weierstrass curve.");
+
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
             int t = k.GetBits();
