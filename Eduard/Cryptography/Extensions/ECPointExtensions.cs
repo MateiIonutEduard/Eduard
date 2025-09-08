@@ -105,6 +105,20 @@
             return new ExtendedProjectivePoint(xz, yz, xy, z2);
         }
 
+        public static ExtendedProjectivePoint GetPointCopy(this TwistedEdwardsCurve curve, ProjectivePoint point)
+        {
+            /* point at infinity */
+            if(point == ProjectivePoint.POINT_INFINITY)
+                return ExtendedProjectivePoint.POINT_INFINITY;
+
+            var res = new ExtendedProjectivePoint();
+            res.x = point.x; res.y = point.y;
+
+            /* T is not used in point doubling formula */
+            res.z = point.z; res.t = 0;
+            return res;
+        }
+
         /// <summary>
         /// Convert an affine point on the twisted Edwards curve to homogeneous projective coordinates.
         /// </summary>
