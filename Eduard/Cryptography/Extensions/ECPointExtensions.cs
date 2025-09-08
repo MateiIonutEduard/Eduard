@@ -105,6 +105,12 @@
             return new ExtendedProjectivePoint(xz, yz, xy, z2);
         }
 
+        /// <summary>
+        /// Convert a point from homogeneous to extended projective coordinates on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public static ExtendedProjectivePoint GetPointCopy(this TwistedEdwardsCurve curve, ProjectivePoint point)
         {
             /* point at infinity */
