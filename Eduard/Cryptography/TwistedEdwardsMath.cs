@@ -82,11 +82,14 @@ namespace Eduard.Cryptography
                     n = WindowUtil.NAFWindow(k, k3, i, ref nbs, ref nzs, windowSize);
                     var projectivePoint = curve.ToProjective(auxPoint);
 
-                    for (j = 0; j < nbs; j++)
+                    for (j = 0; j < nbs - 1; j++)
                         projectivePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, projectivePoint);
 
                     if (nbs >= 1)
-                        auxPoint = curve.ToExtendedProjective(projectivePoint);
+                    {
+                        var tempPoint = curve.GetPointCopy(projectivePoint);
+                        auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
+                    }
 
                     if (n > 0)
                     {
@@ -107,11 +110,14 @@ namespace Eduard.Cryptography
                         var lastPoint = curve.ToProjective(auxPoint);
                         i -= nzs;
 
-                        for (j = 0; j < nzs; j++)
+                        for (j = 0; j < nzs - 1; j++)
                             lastPoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, lastPoint);
 
                         if (nzs >= 1)
-                            auxPoint = curve.ToExtendedProjective(lastPoint);
+                        {
+                            var tempPoint = curve.GetPointCopy(lastPoint);
+                            auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
+                        }
                     }
                 }
 
