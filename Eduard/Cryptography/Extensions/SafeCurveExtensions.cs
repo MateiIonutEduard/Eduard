@@ -10,10 +10,26 @@ namespace Eduard.Cryptography.Extensions
     {
         internal static bool ValidatePoint(this EllipticCurve curve, ECPoint point)
         {
+            var Y2 = curve.Evaluate(point.GetAffineX());
+            int jSymbol = BigInteger.Jacobi(Y2, curve.field);
+
+            /* check if y-coordinate is defined */
+            if (jSymbol != 1 && Y2 > 0)
+                return false;
+            else
+            {
+                BigInteger y = point.GetAffineY();
+                BigInteger Yp2 = (y * y) % curve.field;
+
+                /* point not on this Weierstrass curve; likely on the twist */
+                if (Yp2 != Y2) return false;
+            }
+
             ECPoint result = ECPoint.POINT_INFINITY;
             int t = curve.cofactor.GetBits();
             BigInteger k = curve.cofactor;
 
+            /* check if the point generates a small-order subgroup */
             JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
             var basePoint = curve.ToModifiedJacobian(point);
 
