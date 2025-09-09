@@ -90,14 +90,14 @@ namespace Eduard.Cryptography
         /// <param name="point"></param>
         /// <param name="opMode"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE)
+        public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
             if (k < 0) throw new ArgumentException("Bad input.");
 
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
-            if (!curve.ValidatePoint(point))
+            if (!curve.ValidatePoint(point) && securityCheck)
                 throw new ArgumentException("Generator point creates a small-order subgroup on the Weierstrass curve.");
 
             ECPoint temp = point;
