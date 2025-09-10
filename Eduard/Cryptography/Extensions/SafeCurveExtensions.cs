@@ -44,5 +44,42 @@ namespace Eduard.Cryptography.Extensions
             result = curve.ToAffine(auxPoint);
             return (result != ECPoint.POINT_INFINITY);
         }
+
+        internal static bool ValidatePoint(this TwistedEdwardsCurve curve, ECPoint point)
+        {
+            var X2 = curve.Evaluate(point.GetAffineY());
+            int jSymbol = BigInteger.Jacobi(X2, curve.field);
+
+            /* check if x-coordinate is well defined */
+            if (jSymbol != 1 && X2 > 0)
+                return false;
+            else
+            {
+                BigInteger x = point.GetAffineX();
+                BigInteger Xp2 = (x * x) % curve.field;
+
+                /* the affine point does not lie on the twisted Edwards curve */
+                if (Xp2 != X2) return false;
+            }
+
+            ECPoint result = ECPoint.POINT_INFINITY;
+            int t = curve.cofactor.GetBits();
+            BigInteger k = curve.cofactor;
+
+            /* check if the point generates a small-order subgroup */
+            ProjectivePoint auxPoint = ProjectivePoint.POINT_INFINITY;
+            var basePoint = curve.ToProjective(point);
+
+            for (int j = 0; j < t; j++)
+            {
+                if (k.TestBit(j))
+                    auxPoint = TwistedEdwardsProjectiveMath.UnifiedAdd(curve, auxPoint, basePoint);
+
+                basePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, basePoint);
+            }
+
+            result = curve.ToAffine(auxPoint);
+            return (result != ECPoint.POINT_INFINITY);
+        }
     }
 }
