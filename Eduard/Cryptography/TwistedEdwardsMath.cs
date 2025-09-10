@@ -20,12 +20,15 @@ namespace Eduard.Cryptography
         /// <param name="point"></param>
         /// <param name="opMode"></param>
         /// <returns></returns>
-        public static ECPoint Multiply(TwistedEdwardsCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE)
+        public static ECPoint Multiply(TwistedEdwardsCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
             if (k < 0) throw new ArgumentException("Bad input.");
 
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
+
+            if (securityCheck && !curve.ValidatePoint(point))
+                throw new ArgumentException("The generator point on the twisted Edwards curve produces a small-order subgroup.");
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
