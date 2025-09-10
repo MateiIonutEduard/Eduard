@@ -42,6 +42,12 @@ namespace Eduard.Cryptography
             basePoint = ECPoint.POINT_INFINITY;
             cofactor = args[4];
 
+            BigInteger t = (field + a - d) % field;
+            t = (t * ((a * d) % field)) % field;
+
+            if((cofactor & 0x3) != 0 || t == 0)
+                throw new Exception("The twisted Edwards curve is invalid or singular.");
+
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
 
