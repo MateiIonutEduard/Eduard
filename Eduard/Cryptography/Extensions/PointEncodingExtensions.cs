@@ -98,6 +98,64 @@ namespace Eduard.Cryptography.Extensions
         }
 
         /// <summary>
+        /// Decompresses a byte array into an affine point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="curve"></param>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static ECPoint DecompressPoint(this TwistedEdwardsCurve curve, byte[] bytes)
+        {
+            if (bytes == null) throw new ArgumentNullException("The byte array cannot be null.");
+            int n = curve.field.ToByteArray().Length;
+
+            int index = bytes.Length - 1;
+            bool isCompressed = (bytes[index] == 2 || bytes[index] == 3);
+
+            bool valid = isCompressed || (bytes[index] == 4);
+            int len = (isCompressed ? n : 2 * n) + 1;
+
+            if (bytes.Length == 0 || bytes.Length > len)
+                throw new ArgumentException("Invalid byte array length or corrupted data.");
+
+            /* compressed form of affine point */
+            if (bytes[index] == 2 || bytes[index] == 3)
+            {
+                byte[] data = new byte[bytes.Length - 1];
+                Array.Copy(bytes, data, bytes.Length - 1);
+
+                BigInteger Yp = new BigInteger(data);
+                BigInteger Xp = curve.Sqrt(curve.Evaluate(Yp), true);
+
+                int sign = bytes[bytes.Length - 1] - 2;
+                int x_sign = Xp.TestBit(0) ? 1 : 0;
+
+                BigInteger p = curve.field;
+                if (x_sign != sign) Xp = p - Xp;
+
+                return new ECPoint(Xp, Yp);
+            }
+            else if (bytes[index] == 4)
+            {
+                /* uncompressed form */
+                byte[] xbuffer = new byte[n];
+
+                byte[] ybuffer = new byte[n];
+                Array.Copy(bytes, 0, xbuffer, 0, n);
+
+                Array.Copy(bytes, n, ybuffer, 0, n);
+                BigInteger Xp = new BigInteger(xbuffer);
+
+                BigInteger Yp = new BigInteger(ybuffer);
+                return new ECPoint(Xp, Yp);
+            }
+            else
+            {
+                /* invalid encoding of the affine point on the twisted Edwards curve */
+                throw new ArgumentException("Invalid encoding of the affine point on the twisted Edwards curve.");
+            }
+        }
+
+        /// <summary>
         /// Decompresses a byte array into an affine point on the Weierstrass curve.
         /// </summary>
         /// <param name="curve"></param>
