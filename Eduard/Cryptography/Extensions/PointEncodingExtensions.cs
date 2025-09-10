@@ -65,22 +65,51 @@ namespace Eduard.Cryptography.Extensions
             if(bytes == null) throw new ArgumentNullException("The byte array cannot be null.");
             int n = curve.field.ToByteArray().Length;
 
-            if (bytes.Length == 0 || bytes.Length > n)
+            int index = bytes.Length - 1;
+            bool isCompressed = (bytes[index] == 2 || bytes[index] == 3);
+
+            bool valid = isCompressed || (bytes[index] == 4);
+            int len = (isCompressed ? n : 2 * n) + 1;
+
+            if (bytes.Length == 0 || bytes.Length > len)
                 throw new ArgumentException("Invalid byte array length or corrupted data.");
 
-            byte[] data = new byte[bytes.Length - 1];
-            Array.Copy(bytes, data, bytes.Length - 1);
+            /* compressed form of affine point */
+            if (bytes[index] == 2 || bytes[index] == 3)
+            {
+                byte[] data = new byte[bytes.Length - 1];
+                Array.Copy(bytes, data, bytes.Length - 1);
 
-            BigInteger Xp = new BigInteger(data);
-            BigInteger Yp = curve.Sqrt(curve.Evaluate(Xp), true);
+                BigInteger Xp = new BigInteger(data);
+                BigInteger Yp = curve.Sqrt(curve.Evaluate(Xp), true);
 
-            int sign = bytes[bytes.Length - 1] - 2;
-            int y_sign = Yp.TestBit(0) ? 1 : 0;
+                int sign = bytes[bytes.Length - 1] - 2;
+                int y_sign = Yp.TestBit(0) ? 1 : 0;
 
-            BigInteger p = curve.field;
-            if (y_sign != sign) Yp = p - Yp;
+                BigInteger p = curve.field;
+                if (y_sign != sign) Yp = p - Yp;
 
-            return new ECPoint(Xp, Yp);
+                return new ECPoint(Xp, Yp);
+            }
+            else if (bytes[index] == 4)
+            {
+                /* uncompressed form */
+                byte[] xbuffer = new byte[n];
+
+                byte[] ybuffer = new byte[n];
+                Array.Copy(bytes, 0, xbuffer, 0, n);
+
+                Array.Copy(bytes, n, ybuffer, 0, n);
+                BigInteger Xp = new BigInteger(xbuffer);
+
+                BigInteger Yp = new BigInteger(ybuffer);
+                return new ECPoint(Xp, Yp);
+            }
+            else
+            {
+                /* invalid encoding of the affine point on the elliptic curve */
+                throw new ArgumentException("Invalid encoding of the affine point on the Weierstrass curve.");
+            }
         }
     }
 }
