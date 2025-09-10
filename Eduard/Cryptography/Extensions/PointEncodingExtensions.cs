@@ -17,20 +17,41 @@ namespace Eduard.Cryptography.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static byte[] CompressPoint(this EllipticCurve curve, ECPoint point)
+        public static byte[] CompressPoint(this EllipticCurve curve, ECPoint point, ECPointCompressionMode mode = ECPointCompressionMode.EC_POINT_COMPRESSED)
         {
             if (point == ECPoint.POINT_INFINITY)
                 throw new ArgumentException("Point at infinity cannot be compressed.");
 
-            byte[] bytes = point.GetAffineX().ToByteArray();
-            byte[] result = new byte[bytes.Length + 1];
+            if(mode == ECPointCompressionMode.EC_POINT_COMPRESSED)
+            {
+                /* compressed form */
+                byte[] bytes = point.GetAffineX().ToByteArray();
+                int n = curve.field.ToByteArray().Length;
 
-            Array.Copy(bytes, 0, result, 0, bytes.Length);
-            int sign = point.GetAffineY().TestBit(0) ? 1 : 0;
-            int lastIndex = result.Length - 1;
+                byte[] result = new byte[n + 1];
+                Array.Copy(bytes, 0, result, 0, bytes.Length);
 
-            result[lastIndex] = (byte)(sign + 2);
-            return result;
+                int sign = point.GetAffineY().TestBit(0) ? 1 : 0;
+                int lastIndex = result.Length - 1;
+
+                result[lastIndex] = (byte)(sign + 2);
+                return result;
+            }
+            else
+            {
+                /* uncompressed form */
+                int n = curve.field.ToByteArray().Length;
+                byte[] buffer = new byte[2 * n + 1];
+
+                byte[] xbuffer = point.GetAffineX().ToByteArray();
+                byte[] ybuffer = point.GetAffineY().ToByteArray();
+
+                Array.Copy(xbuffer, 0, buffer, 0, xbuffer.Length);
+                Array.Copy(ybuffer, 0, buffer, xbuffer.Length, ybuffer.Length);
+
+                buffer[2 * n] = 4;
+                return buffer;
+            }
         }
 
         /// <summary>
