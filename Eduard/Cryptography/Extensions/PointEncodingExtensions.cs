@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Eduard.Cryptography.Extensions
 {
+    /// <summary>
+    /// This class provides methods to compress and decompress affine points on the elliptic curve, needed for elliptic curve–based protocols.
+    /// </summary>
     public static class PointEncodingExtensions
     {
         /// <summary>
