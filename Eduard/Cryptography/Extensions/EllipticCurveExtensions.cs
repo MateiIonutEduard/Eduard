@@ -64,10 +64,10 @@ namespace Eduard.Cryptography.Extensions
             if(!found)
                 throw new ArgumentException("Weierstrass curve cannot be converted to Montgomery form.");
 
-            s = curve.Sqrt(s).Inverse(p);
-            BigInteger A = (3 * alpha * s) % p;
+            BigInteger t = curve.Sqrt(s, true).Inverse(p);
+            BigInteger A = (3 * alpha * t) % p;
 
-            BigInteger B = s;
+            BigInteger B = t;
             return new MontgomeryCurve(A, B, p, order, cofactor);
         }
 
