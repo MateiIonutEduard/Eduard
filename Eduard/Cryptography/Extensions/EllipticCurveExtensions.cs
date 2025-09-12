@@ -253,13 +253,13 @@ namespace Eduard.Cryptography.Extensions
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
             if (!found) throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
 
-            s = curve.Sqrt(s).Inverse(p);
+            BigInteger ts = curve.Sqrt(s, true).Inverse(p);
             BigInteger Xp = point.GetAffineX();
 
             BigInteger Yp = point.GetAffineY();
-            BigInteger Xm = (s * ((p + Xp - alpha) % p)) % p;
+            BigInteger Xm = (ts * ((p + Xp - alpha) % p)) % p;
 
-            BigInteger Ym = (s * Yp) % p;
+            BigInteger Ym = (ts * Yp) % p;
             BigInteger y_inv = Ym.Inverse(p);
 
             BigInteger x1_inv = ((Xm + 1) % p).Inverse(p);
