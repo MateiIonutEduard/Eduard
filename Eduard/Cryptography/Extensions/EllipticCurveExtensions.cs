@@ -125,13 +125,13 @@ namespace Eduard.Cryptography.Extensions
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
             if (!found) throw new ArgumentException("Weierstrass curve cannot be converted to Montgomery form.");
 
-            s = curve.Sqrt(s).Inverse(p);
+            BigInteger ts = curve.Sqrt(s, true).Inverse(p);
             BigInteger Xp = point.GetAffineX();
 
             BigInteger Yp = point.GetAffineY();
-            BigInteger X = (s * ((p + Xp - alpha) % p)) % p;
+            BigInteger X = (ts * ((p + Xp - alpha) % p)) % p;
 
-            BigInteger Y = (s * Yp) % p;
+            BigInteger Y = (ts * Yp) % p;
             return new ECPoint(X, Y);
         }
 
