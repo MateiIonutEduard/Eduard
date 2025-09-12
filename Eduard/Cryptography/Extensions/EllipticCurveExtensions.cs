@@ -188,10 +188,10 @@ namespace Eduard.Cryptography.Extensions
             if (!found)
                 throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
 
-            s = curve.Sqrt(s).Inverse(p);
-            BigInteger A = (3 * alpha * s) % p;
+            BigInteger t = curve.Sqrt(s, true).Inverse(p);
+            BigInteger A = (3 * alpha * t) % p;
 
-            BigInteger B = s;
+            BigInteger B = t;
             BigInteger B_inv = B.Inverse(p);
 
             BigInteger a = ((A + 2) * B_inv) % p;
