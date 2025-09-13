@@ -37,3 +37,12 @@ and <br/>mathematical validation. The following rules apply:
    - Pull requests targeting the <code>master</code> branch will be rejected without exception, <br/>irrespective of the contributor’s expertise.
    
 Deviation from rules (1)–(3) will result in the dismissal of the issue, the pull request, or both.
+
+## Research Context
+This software artifact is embedded in a broader program of research in:
+- Number Theory (arithmetic of large primes and modular structures),
+- Algebraic Geometry (curves over finite fields), and
+- Elliptic Curve Cryptography (protocol design, encryption schemes, and digital signatures).
+
+The development adheres to principles of mathematical rigor and computational reproducibility, 
+<br/>with the overarching goal of bridging theory and implementation in cryptographic research.
