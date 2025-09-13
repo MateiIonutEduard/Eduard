@@ -18,3 +18,22 @@ The library provides:
 
 It is not conceived as a general-purpose or production-ready framework, but rather as a research artifact <br/>
 emphasizing mathematical transparency, reproducibility, and fidelity to theoretical models.
+
+## Contribution and Issue Policy
+Given its origin as an academic research artifact, contributions are subject to strict methodological 
+and <br/>mathematical validation. The following rules apply:
+
+1. Notification of Exceptional Cases
+   - If partial or incorrect behavior is observed, please notify the maintainer via email: eduardmatei@outlook.com.
+   - Reports must include reproducible experimental results under the specified conditions.
+   - Proposals for additional components are welcome if substantiated by clear mathematical necessity.
+
+2. Issue Creation
+   - If the initial response is positive, a corresponding GitHub issue should be created to document either the <br/>proposed extension or the identified anomaly.
+
+3. Pull Requests
+   - Pull requests must conform strictly to the library’s implementation conventions.
+   - Submissions are accepted only to the <code>develop</code> branch.
+   - Pull requests targeting the <code>master</code> branch will be rejected without exception, <br/>irrespective of the contributor’s expertise.
+   
+Deviation from rules (1)–(3) will result in the dismissal of the issue, the pull request, or both.
