@@ -46,3 +46,7 @@ This software artifact is embedded in a broader program of research in:
 
 The development adheres to principles of mathematical rigor and computational reproducibility, 
 <br/>with the overarching goal of bridging theory and implementation in cryptographic research.
+
+## License Purpose
+This project is distributed for academic and research purposes. It is not open to unrestricted 
+<br/>community contributions and does not provide guarantees for production deployment.
