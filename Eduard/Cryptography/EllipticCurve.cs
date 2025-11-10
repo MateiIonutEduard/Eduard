@@ -201,6 +201,34 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
+        /// Sets the specified base point on the elliptic curve.
+        /// </summary>
+        /// <param name="point">The affine point to set as the generator.</param>
+        public void SetBasePoint(ECPoint point)
+        {
+            ECPoint tempPoint = point;
+            var Y2 = Evaluate(tempPoint.GetAffineX());
+
+            if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
+                throw new Exception("The generator point is not on the Weierstrass curve.");
+            else
+            {
+                BigInteger y = tempPoint.GetAffineY();
+                BigInteger eval = (y * y) % field;
+
+                if (eval != Y2)
+                    throw new Exception("Invalid generator point for Weierstrass curve.");
+                else
+                {
+                    ECPoint testPoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                    else
+                        throw new Exception("Chosen generator point yields small-order subgroup on Weierstrass curve.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Computes the modular square root of an integer over the prime field.
         /// </summary>
         /// <param name="val"></param>
