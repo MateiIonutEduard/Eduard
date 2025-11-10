@@ -86,69 +86,48 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Get a random base point or set a specified base point on the elliptic curve.
+        /// Generates a random base point on the twisted Edwards curve.
         /// </summary>
-        public ECPoint BasePoint
+        /// <param name="isGenerated">Specifies whether the base point on the twisted Edwards curve should be generated conditionally.</param>
+        /// <returns></returns>
+        public ECPoint GetBasePoint(bool isGenerated = false)
         {
-            get
-            {
-                bool done = false;
-                BigInteger x = 0;
+            bool done = false;
+            BigInteger x = 0;
 
-                BigInteger y = 0;
-                BigInteger temp = 0;
+            BigInteger y = 0;
+            BigInteger temp = 0;
 
-                do
-                {
-                    y = BigInteger.Next(rand, 0, field - 1);
-                    temp = Evaluate(y);
-
-                    if (temp < 2)
-                        return new ECPoint(temp, y);
-
-                    if (BigInteger.Jacobi(temp, field) == 1)
-                    {
-                        done = true;
-                        x = Sqrt(temp);
-
-                        BigInteger eval = (x * x) % field;
-                        if (temp != eval) done = false;
-
-                        if (done)
-                        {
-                            ECPoint tempPoint = new ECPoint(x, y);
-                            basePoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                            done = (basePoint != ECPoint.POINT_INFINITY);
-                        }
-                    }
-                }
-                while (!done);
-
+            if (isGenerated && basePoint != ECPoint.POINT_INFINITY)
                 return basePoint;
-            }
-            set
+
+            do
             {
-                ECPoint tempPoint = value;
-                var temp = Evaluate(tempPoint.GetAffineY());
+                y = BigInteger.Next(rand, 0, field - 1);
+                temp = Evaluate(y);
 
-                if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
-                    throw new Exception("The generator point is not on the twisted Edwards curve.");
-                else
+                if (temp < 2)
+                    return new ECPoint(temp, y);
+
+                if (BigInteger.Jacobi(temp, field) == 1)
                 {
-                    BigInteger x = tempPoint.GetAffineX();
-                    BigInteger eval = (x * x) % field;
+                    done = true;
+                    x = Sqrt(temp);
 
-                    if (eval != temp)
-                        throw new Exception("Invalid generator point for the twisted Edwards curve.");
-                    else
+                    BigInteger eval = (x * x) % field;
+                    if (temp != eval) done = false;
+
+                    if (done)
                     {
-                        ECPoint point = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                        if (point != ECPoint.POINT_INFINITY) basePoint = tempPoint;
-                        else
-                            throw new Exception("Chosen generator point yields a small-order subgroup on the twisted Edwards curve.");
+                        ECPoint tempPoint = new ECPoint(x, y);
+                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        done = (basePoint != ECPoint.POINT_INFINITY);
                     }
                 }
             }
+            while (!done);
+
+            return basePoint;
         }
 
         /// <summary>
