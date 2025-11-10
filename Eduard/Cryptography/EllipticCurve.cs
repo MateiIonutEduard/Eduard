@@ -158,9 +158,9 @@ namespace Eduard.Cryptography
         /// <summary>
         /// Generates a random base point on the elliptic curve.
         /// </summary>
-        /// <param name="genPoint">Specifies whether the base point on the elliptic curve should be generated conditionally.</param>
+        /// <param name="isGenerated">Specifies whether the base point on the elliptic curve should be generated conditionally.</param>
         /// <returns></returns>
-        public ECPoint GetBasePoint(bool genPoint = false)
+        public ECPoint GetBasePoint(bool isGenerated = false)
         {
             bool done = false;
             BigInteger x = 0;
@@ -168,7 +168,7 @@ namespace Eduard.Cryptography
             BigInteger y = 0;
             BigInteger temp = 0;
 
-            if(genPoint && basePoint != ECPoint.POINT_INFINITY)
+            if(isGenerated && basePoint != ECPoint.POINT_INFINITY)
                 return basePoint;
 
             do
