@@ -131,6 +131,34 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
+        /// Sets the specified base point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="point">The affine point to set as the generator.</param>
+        public void SetBasePoint(ECPoint point)
+        {
+            ECPoint tempPoint = point;
+            var temp = Evaluate(tempPoint.GetAffineY());
+
+            if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
+                throw new Exception("The generator point is not on the twisted Edwards curve.");
+            else
+            {
+                BigInteger x = tempPoint.GetAffineX();
+                BigInteger eval = (x * x) % field;
+
+                if (eval != temp)
+                    throw new Exception("Invalid generator point for the twisted Edwards curve.");
+                else
+                {
+                    ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                    else
+                        throw new Exception("Chosen generator point yields a small-order subgroup on the twisted Edwards curve.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Computes the modular square root of an integer over the prime field.
         /// </summary>
         /// <param name="val"></param>
