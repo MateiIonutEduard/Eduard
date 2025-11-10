@@ -156,67 +156,74 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Get a random base point or set a specified base point on the elliptic curve.
+        /// Generates a random base point on the elliptic curve.
         /// </summary>
-        public ECPoint BasePoint
+        /// <param name="isGenerated">Specifies whether the base point on the elliptic curve should be generated conditionally.</param>
+        /// <returns></returns>
+        public ECPoint GetBasePoint(bool isGenerated = false)
         {
-            get
+            bool done = false;
+            BigInteger x = 0;
+
+            BigInteger y = 0;
+            BigInteger temp = 0;
+
+            if(isGenerated && basePoint != ECPoint.POINT_INFINITY)
+                return basePoint;
+
+            do
             {
-                bool done = false;
-                BigInteger x = 0;
+                x = BigInteger.Next(rand, 0, field - 1);
+                temp = Evaluate(x);
 
-                BigInteger y = 0;
-                BigInteger temp = 0;
+                if (temp < 2)
+                    return new ECPoint(x, temp);
 
-                do
+                if (BigInteger.Jacobi(temp, field) == 1)
                 {
-                    x = BigInteger.Next(rand, 0, field - 1);
-                    temp = Evaluate(x);
-                    
-                    if (temp < 2)
-                        return new ECPoint(x, temp);
+                    done = true;
+                    y = Sqrt(temp);
 
-                    if (BigInteger.Jacobi(temp, field) == 1)
+                    BigInteger eval = (y * y) % field;
+                    if (temp != eval) done = false;
+
+                    if (done)
                     {
-                        done = true;
-                        y = Sqrt(temp);
-                        
-                        BigInteger eval = (y * y) % field;
-                        if (temp != eval) done = false;
-
-                        if(done)
-                        {
-                            ECPoint tempPoint = new ECPoint(x, y);
-                            basePoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                            done = (basePoint != ECPoint.POINT_INFINITY);
-                        }
+                        ECPoint tempPoint = new ECPoint(x, y);
+                        basePoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        done = (basePoint != ECPoint.POINT_INFINITY);
                     }
                 }
-                while (!done);
-
-                return basePoint;
             }
-            set
-            {
-                ECPoint tempPoint = value;
-                var Y2 = Evaluate(tempPoint.GetAffineX());
+            while (!done);
 
-                if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
-                    throw new Exception("The generator point is not on the Weierstrass curve.");
+            return basePoint;
+        }
+
+        /// <summary>
+        /// Sets the specified base point on the elliptic curve.
+        /// </summary>
+        /// <param name="point">The affine point to set as the generator.</param>
+        public void SetBasePoint(ECPoint point)
+        {
+            ECPoint tempPoint = point;
+            var Y2 = Evaluate(tempPoint.GetAffineX());
+
+            if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
+                throw new Exception("The generator point is not on the Weierstrass curve.");
+            else
+            {
+                BigInteger y = tempPoint.GetAffineY();
+                BigInteger eval = (y * y) % field;
+
+                if (eval != Y2)
+                    throw new Exception("Invalid generator point for Weierstrass curve.");
                 else
                 {
-                    BigInteger y = tempPoint.GetAffineY();
-                    BigInteger eval = (y * y) % field;
-
-                    if (eval != Y2)
-                        throw new Exception("Invalid generator point for Weierstrass curve.");
+                    ECPoint testPoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
                     else
-                    {
-                        ECPoint point = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                        if (point != ECPoint.POINT_INFINITY) basePoint = tempPoint;
-                        else
-                            throw new Exception("Chosen generator point yields small-order subgroup on Weierstrass curve.");
-                    }
+                        throw new Exception("Chosen generator point yields small-order subgroup on Weierstrass curve.");
                 }
             }
         }
