@@ -204,7 +204,6 @@ namespace Eduard
         private void BuildDecimal(string digits)
         {
             int sign = (digits[0] == '-' ? 1 : 0);
-            int N = digits.Length;
             BigInteger res = 0, mult = 1;
             const int size = 9;
 
