@@ -209,12 +209,13 @@ namespace Eduard
             const int size = 9;
 
             uint[] table = new uint[size];
+            int len = digits.Length;
             table[0] = 10;
 
             for (int i = 1; i < size; i++)
                 table[i] = table[i - 1] * 10;
 
-            for (int i = digits.Length; i > sign; i -= size)
+            for (int i = len; i > sign; i -= size)
             {
                 int startIndex = Math.Max(0, i - size);
                 int length = i - startIndex;
