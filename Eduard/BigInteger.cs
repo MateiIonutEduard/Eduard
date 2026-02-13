@@ -203,21 +203,30 @@ namespace Eduard
 
         private void BuildDecimal(string digits)
         {
-            int Sign = (digits[0] == '-' ? 1 : 0);
-            BigInteger result = new BigInteger();
-            BigInteger multiply = new BigInteger(1);
+            int sign = (digits[0] == '-' ? 1 : 0);
+            int N = digits.Length;
+            BigInteger res = 0, mult = 1;
+            const int size = 9;
 
-            for(int k = digits.Length - 1; k >= Sign; k--)
+            uint[] table = new uint[size];
+            table[0] = 10;
+
+            for (int i = 1; i < size; i++)
+                table[i] = table[i - 1] * 10;
+
+            for (int i = digits.Length; i > sign; i -= size)
             {
-                int digit = digits[k] - '0';
-                result += (multiply * digit);
-                multiply *= 10;
+                int startIndex = Math.Max(0, i - size);
+                int length = i - startIndex;
+
+                string chunk = digits.Substring(startIndex, length);
+                int value = int.Parse(chunk);
+
+                res += (value * mult);
+                mult *= table[length - 1];
             }
 
-            if (Sign == 1)
-                result = result.Negate();
-
-            data = result.data;
+            data = res.data;
         }
 
         private void BuildHexaDecimal(string digits)
