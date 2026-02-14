@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Eduard
 {
@@ -1818,17 +1819,15 @@ namespace Eduard
         /// <returns></returns>
         public string ToHexString()
         {
-            if (IsZero)
-                return "0";
+            if (IsZero) return "0";
+            var sb = new StringBuilder();
+            int len = data.Used - 1;
 
-            string result = "";
+            for (int j = 0; j < len; j++)
+                sb.Append(data[j].ToString("X8"));
 
-            for (int j = 0; j < data.Used - 1; j++)
-                result = data[j].ToString("X8") + result;
-
-            result = string.Format("{0:X}", data[data.Used - 1]) + result;
-
-            return result;
+            sb.Append(string.Format("{0:X}", data[len]));
+            return sb.ToString();
         }
 
         /// <summary>
