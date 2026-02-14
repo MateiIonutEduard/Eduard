@@ -1791,26 +1791,45 @@ namespace Eduard
         /// <returns></returns>
         public override string ToString()
         {
-            if (IsZero)
-                return "0";
-
+            if (IsZero) return "0";
             BigInteger self = Abs();
-            BigInteger Quotient, Remainder;
-            BigInteger Base = new BigInteger(10);
-            string result = "";
+            const int chunkSize = 9;
 
-            while(self.data.Used > 1 || (self.data.Used == 1 && self.data[0] != 0))
+            uint[] powers = new uint[chunkSize];
+            powers[0] = 10;
+
+            for (int i = 1; i < chunkSize; i++)
+                powers[i] = powers[i - 1] * 10;
+
+            BigInteger Base = 1000000000;
+            BigInteger Quotient, Remainder;
+            var chunks = new List<int>();
+
+            while (!self.IsZero)
             {
-                SingleDivide(self, Base, out Quotient, out Remainder);
-                char digit = (char)(Remainder.data[0] + 48);
-                result = digit + result;
+                SingleDivide(self, Base,
+                    out Quotient,
+                    out Remainder);
+
+                int chunk = (int)Remainder;
+                chunks.Add(chunk);
                 self = Quotient;
             }
 
-            if (IsNegative)
-                return "-" + result;
+            var sb = new StringBuilder();
 
-            return result;
+            if (chunks.Count > 0)
+            {
+                int len = chunks.Count - 2;
+                sb.Append(chunks[len + 1].ToString());
+
+                for (int i = len; i >= 0; i--)
+                    sb.Append(chunks[i].ToString("D9"));
+            }
+
+            return IsNegative ? "-" +
+                sb.ToString() :
+                sb.ToString();
         }
 
         /// <summary>
