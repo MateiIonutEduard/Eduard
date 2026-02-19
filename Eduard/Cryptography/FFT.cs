@@ -9,6 +9,9 @@
         static uint[][] s1, s2;
         static int logN, count;
 
+        static uint w1, w2;
+        static uint w3, msw, lsw;
+
         static int degree;
         static uint[][] t;
 
@@ -393,6 +396,24 @@
 
             InitCRT();
             return pr;
+        }
+
+        static bool InitBigIntFFT(int logn)
+        {
+            BigInteger maxc = (BigInteger)1 << 32;
+
+            if (InitFFT(logn, maxc, maxc) != 3)
+                return false;
+
+            w1 = Inverse(primes[0], primes[1]);
+            w2 = Inverse(primes[0], primes[2]);
+            w3 = Inverse(primes[1], primes[2]);
+
+            ulong tw = (ulong)primes[0] * (ulong)primes[1];
+            lsw = (uint)(tw & 0xFFFFFFFF);
+
+            msw = (uint)(tw >> 32);
+            return true;
         }
 
         static void dft(int logn, int pr, uint[] data)
