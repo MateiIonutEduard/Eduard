@@ -425,6 +425,145 @@
             return (uint)(res >> 32);
         }
 
+        public static BigInteger FastBigMult(BigInteger x, BigInteger y)
+        {
+            int i, pr, xl, yl, zl, newn, logn;
+            uint v1, v2, v3, p;
+
+            uint fac, inv, sz;
+            uint c1, c2, ic;
+
+            uint[] w = new uint[3];
+            newn = 1; logn = 0;
+
+            xl = x.data.Used;
+            yl = y.data.Used;
+            zl = xl + yl;
+
+            uint[] wptr = new uint[zl];
+            uint[] dptr = new uint[zl];
+
+            while (zl > newn)
+            {
+                newn <<= 1;
+                logn++;
+            }
+
+            if (logn > logN)
+            {
+                if (!InitBigIntFFT(logn))
+                    throw new OutOfMemoryException(
+                        "Numbers too big for FFT multiplication.");
+            }
+
+            for (pr = 0; pr < 3; pr++)
+            {
+                p = primes[pr];
+                inv = inverse[pr];
+
+                for (i = 0; i < xl; i++)
+                    dptr[i] = x.data[i] % p;
+
+                for (i = xl; i < newn; i++)
+                    dptr[i] = 0;
+
+                dft(logn, pr, dptr);
+
+                if (x != y)
+                {
+                    for (i = 0; i < yl; i++)
+                        wptr[i] = y.data[i] % p;
+
+                    for (i = yl; i < newn; i++)
+                        wptr[i] = 0;
+
+                    dft(logn, pr, wptr);
+                }
+                else
+                {
+                    for (i = 0; i < xl; i++)
+                        wptr[i] = dptr[i];
+                }
+
+                for (i = 0; i < newn; i++)
+                    MulAdd(dptr[i], wptr[i], 0, p, ref dptr[i]);
+
+                idft(logn, pr, dptr);
+
+                if (logN > logn)
+                {
+                    fac = (uint)1 << (logN - logn);
+                    inv = MulMod(fac, inv, p);
+                }
+
+                for (i = 0; i < newn; i++)
+                {
+                    MulAdd(dptr[i], inv, 0, p, ref t[pr][i]);
+                    long diff = 0;
+
+                    if (pr == 1)
+                    {
+                        diff = (long)t[1][i] - t[0][i];
+
+                        while (diff < 0)
+                            diff += primes[1];
+
+                        t[1][i] = (uint)((diff * w1) % primes[1]);
+                    }
+
+                    if (pr == 2)
+                    {
+                        diff = (long)t[2][i] - t[0][i];
+
+                        while (diff < 0)
+                            diff += primes[2];
+
+                        diff = (uint)((diff * w2) % primes[2]);
+                        diff -= t[1][i];
+
+                        while (diff < 0)
+                            diff += primes[2];
+
+                        t[2][i] = (uint)((diff * w3) % primes[2]);
+                    }
+                }
+            }
+
+            uint[] result = new uint[zl];
+            c1 = c2 = 0;
+
+            /* propagate the carries */
+            for (i = 0; i < zl; i++)
+            {
+                v1 = t[0][i];
+                v2 = t[1][i];
+                v3 = t[2][i];
+
+                v2 = MultDiv(v2, primes[0], v1, ref v1);
+                c1 += v1;
+
+                if (c1 < v1)
+                    v2++;
+
+                ic = c2 + MultDiv(lsw, v3, (uint)c1, ref result[i]);
+                uint temp_c = (uint)c1;
+
+                c2 = MultDiv(msw, v3, (uint)ic, ref temp_c);
+                c1 = temp_c;
+                c1 += v2;
+
+                if (c1 < v2)
+                    c2++;
+            }
+
+            bool sign = x.data.IsNegative
+                && y.data.IsNegative;
+
+            Data data = new Data(result);
+            BigInteger res = new BigInteger(data);
+            return sign ? -res : res;
+        }
+
         static void dft(int logn, int pr, uint[] data)
         {
             int mmax, m, j, k, istep, i, ii, jj, newn, offset;

@@ -14,7 +14,7 @@ namespace Eduard
 #endif
     public sealed class BigInteger
     {
-        private Data data;
+        internal Data data;
 
         /// <summary>
         /// Create a <seealso cref="BigInteger"/> with an integer value of 0.
