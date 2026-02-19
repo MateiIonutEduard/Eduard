@@ -430,7 +430,7 @@
             int i, pr, xl, yl, zl, newn, logn;
             uint v1, v2, v3, p;
 
-            uint fac, inv, sz;
+            uint fac, inv;
             uint c1, c2, ic;
 
             uint[] w = new uint[3];
@@ -440,14 +440,14 @@
             yl = y.data.Used;
             zl = xl + yl;
 
-            uint[] wptr = new uint[zl];
-            uint[] dptr = new uint[zl];
-
             while (zl > newn)
             {
                 newn <<= 1;
                 logn++;
             }
+
+            uint[] wptr = new uint[newn];
+            uint[] dptr = new uint[newn];
 
             if (logn > logN)
             {
