@@ -9,7 +9,9 @@ namespace Eduard
     /// <summary>
     /// Represents an arbitrarily large signed integer.
     /// </summary>
+ #if !USE_PROFILER
     [DebuggerStepThrough]
+#endif
     public sealed class BigInteger
     {
         private Data data;
@@ -177,7 +179,7 @@ namespace Eduard
             data.Update();
         }
 
-        private BigInteger(Data buffer)
+        internal BigInteger(Data buffer)
         {
             buffer.Update();
             data = buffer;
