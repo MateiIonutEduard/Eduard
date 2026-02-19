@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Eduard.Cryptography
 {
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public class PolyMod
     {
         public Polynomial poly;

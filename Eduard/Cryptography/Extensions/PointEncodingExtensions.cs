@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,9 @@ namespace Eduard.Cryptography.Extensions
     /// <summary>
     /// This class provides methods to compress and decompress affine points on the elliptic curve, needed for elliptic curve–based protocols.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class PointEncodingExtensions
     {
         /// <summary>

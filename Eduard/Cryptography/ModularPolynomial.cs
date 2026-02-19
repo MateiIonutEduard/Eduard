@@ -8,7 +8,9 @@ namespace Eduard.Cryptography
     /// <summary>
     /// Represents the modular bivariate polynomials.
     /// </summary>
-    //[DebuggerStepThrough]
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public sealed class ModularPolynomial
     {
         public Node head;

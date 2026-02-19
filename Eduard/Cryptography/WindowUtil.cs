@@ -1,8 +1,13 @@
-﻿namespace Eduard.Cryptography
+﻿using System.Diagnostics;
+
+namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides optimal features for the use of sliding windows and fractional sliding windows with NAF representation.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public class WindowUtil
     {
         /// <summary>

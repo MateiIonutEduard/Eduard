@@ -9,7 +9,7 @@ namespace Eduard
     /// <summary>
     /// Represents an arbitrarily large signed integer.
     /// </summary>
- #if !USE_PROFILER
+#if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public sealed class BigInteger

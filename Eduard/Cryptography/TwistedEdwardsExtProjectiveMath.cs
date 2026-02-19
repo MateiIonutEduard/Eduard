@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,9 @@ namespace Eduard.Cryptography
     /* Hisil, H., Wong, K. K. H., Carter, G., & Dawson, E. (2008, December). Twisted Edwards curves revisited. 
      * In International Conference on the Theory and Application of Cryptology and Information Security 
      * (pp. 326-343). Springer Berlin Heidelberg.*/
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class TwistedEdwardsExtProjectiveMath
     {
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,6 +11,9 @@ namespace Eduard.Cryptography
     /// <summary>
     /// Represents an elliptic curve given in twisted Edwards form.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public sealed class TwistedEdwardsCurve
     {
         public BigInteger a, d;
