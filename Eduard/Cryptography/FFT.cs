@@ -416,6 +416,15 @@
             return true;
         }
 
+        static uint MultDiv(uint a, uint b, uint c, ref uint rp)
+        {
+            ulong res = ((ulong)a * b) + c;
+            uint mask = 0xFFFFFFFF;
+
+            rp = (uint)(res & mask);
+            return (uint)(res >> 32);
+        }
+
         static void dft(int logn, int pr, uint[] data)
         {
             int mmax, m, j, k, istep, i, ii, jj, newn, offset;
