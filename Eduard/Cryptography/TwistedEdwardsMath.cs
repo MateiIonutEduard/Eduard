@@ -1,11 +1,7 @@
-﻿using Eduard;
-using Eduard.Cryptography.Extensions;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using Eduard;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Eduard.Cryptography.Extensions;
 
 namespace Eduard.Cryptography
 {

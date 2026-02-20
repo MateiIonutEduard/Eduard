@@ -1,7 +1,7 @@
-﻿using Eduard;
-using Eduard.Cryptography.Extensions;
-using System;
+﻿using System;
+using Eduard;
 using System.Diagnostics;
+using Eduard.Cryptography.Extensions;
 
 namespace Eduard.Cryptography
 {

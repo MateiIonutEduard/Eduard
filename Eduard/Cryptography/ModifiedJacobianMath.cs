@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Eduard;
+using System.Diagnostics;
 
 namespace Eduard.Cryptography
 {

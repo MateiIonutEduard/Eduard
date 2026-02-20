@@ -1,6 +1,4 @@
-﻿using Eduard;
-using Eduard;
-using Eduard.Cryptography;
+﻿using System;
 using System.Diagnostics;
 
 namespace Eduard

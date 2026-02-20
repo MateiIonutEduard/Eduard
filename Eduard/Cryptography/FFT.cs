@@ -1,4 +1,7 @@
-﻿namespace Eduard.Cryptography
+﻿using System;
+using Eduard;
+
+namespace Eduard.Cryptography
 {
     public class FFT
     {

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Eduard.Cryptography
+﻿namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides methods to store affine points on the elliptic curve.
