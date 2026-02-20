@@ -1,4 +1,5 @@
-﻿using Eduard.Cryptography;
+﻿using Eduard;
+using Eduard.Cryptography;
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography;

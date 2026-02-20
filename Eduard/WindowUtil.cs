@@ -1,6 +1,9 @@
-﻿using System.Diagnostics;
+﻿using Eduard;
+using Eduard;
+using Eduard.Cryptography;
+using System.Diagnostics;
 
-namespace Eduard.Cryptography
+namespace Eduard
 {
     /// <summary>
     /// Provides optimal features for the use of sliding windows and fractional sliding windows with NAF representation.
