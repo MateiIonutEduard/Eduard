@@ -530,7 +530,24 @@ namespace Eduard
 #if !USE_BENCHMARKING
             if(order >= (int)Threshold.BIGINT_FFT_THRESHOLD)
                 return FFT.FastBigMult(left, right);
-            else if(order >= (int)Threshold.BIGINT_KARATSUBA_THRESHOLD)
+            else if(order >= (int)Threshold.BIGINT_KARATSUBA_MULT_THRESHOLD)
+            {
+                bool Sign = (left.IsNegative != right.IsNegative);
+                left = left.Abs();
+                right = right.Abs();
+
+                BigInteger result = KMultiply(left, right);
+                return Sign ? -result : result;
+            }
+            else
+                return PlainMultiply(left, right);
+#else
+            int FFT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_FFT);
+            int KARATSUBA_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_KARATSUBA_MULTIPLY);
+
+            if (order >= FFT_THRESHOLD)
+                return FFT.FastBigMult(left, right);
+            else if (order >= KARATSUBA_THRESHOLD)
             {
                 bool Sign = (left.IsNegative != right.IsNegative);
                 left = left.Abs();
@@ -551,7 +568,18 @@ namespace Eduard
 #if !USE_BENCHMARKING
             if (order >= (int)Threshold.BIGINT_FFT_THRESHOLD)
                 return FFT.FastBigMult(val, val);
-            else if (order >= (int)Threshold.BIGINT_KARATSUBA_THRESHOLD)
+            else if (order >= (int)Threshold.BIGINT_KARATSUBA_SQUARE_THRESHOLD)
+                return KSquare(val);
+            else
+                return PlainSquare(val);
+
+#else
+            int FFT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_FFT);
+            int KARATSUBA_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_KARATSUBA_SQUARING);
+
+            if (order >= FFT_THRESHOLD)
+                return FFT.FastBigMult(val, val);
+            else if (order >= KARATSUBA_THRESHOLD)
                 return KSquare(val);
             else
                 return PlainSquare(val);
