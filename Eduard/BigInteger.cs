@@ -3,6 +3,8 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using Eduard.Cryptography;
+using Eduard;
 
 namespace Eduard
 {
@@ -523,9 +525,12 @@ namespace Eduard
 
         private static BigInteger Multiply(BigInteger left, BigInteger right)
         {
-            int order = left.data.Used + right.data.Used;
-            if(order <= 16) return PlainMultiply(left, right);
-            else
+            int order = Math.Min(left.data.Used, right.data.Used);
+
+#if !USE_BENCHMARKING
+            if(order >= (int)Threshold.BIGINT_FFT_THRESHOLD)
+                return FFT.FastBigMult(left, right);
+            else if(order >= (int)Threshold.BIGINT_KARATSUBA_THRESHOLD)
             {
                 bool Sign = (left.IsNegative != right.IsNegative);
                 left = left.Abs();
@@ -534,13 +539,23 @@ namespace Eduard
                 BigInteger result = KMultiply(left, right);
                 return Sign ? -result : result;
             }
+            else
+                return PlainMultiply(left, right);
+#endif
         }
 
         private static BigInteger Square(BigInteger val)
         {
-            if (2 * val.data.Used <= 16) return PlainSquare(val);
-            else
+            int order = val.data.Used;
+
+#if !USE_BENCHMARKING
+            if (order >= (int)Threshold.BIGINT_FFT_THRESHOLD)
+                return FFT.FastBigMult(val, val);
+            else if (order >= (int)Threshold.BIGINT_KARATSUBA_THRESHOLD)
                 return KSquare(val);
+            else
+                return PlainSquare(val);
+#endif
         }
 
         /// <summary>
