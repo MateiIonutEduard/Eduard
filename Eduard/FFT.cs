@@ -483,7 +483,7 @@ namespace Eduard
                 }
                 else
                 {
-                    for (i = 0; i < xl; i++)
+                    for (i = 0; i < newn; i++)
                         wptr[i] = dptr[i];
                 }
 
