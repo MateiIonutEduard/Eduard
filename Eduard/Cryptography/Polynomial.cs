@@ -194,7 +194,12 @@ namespace Eduard.Cryptography
 
         private static Polynomial Square(Polynomial val)
         {
-            if (val.Degree >= 256)
+#if !USE_BENCHMARKING
+            int FFT_POLY_SQUARE_THRESHOLD = (int)Threshold.POLY_FFT_SQUARE_THRESHOLD;
+#else
+            int FFT_POLY_SQUARE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_SQUARE);
+#endif
+            if (val.Degree >= FFT_POLY_SQUARE_THRESHOLD)
             {
                 BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs, field);
                 int deg = val.Degree << 1;
