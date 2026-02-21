@@ -528,37 +528,25 @@ namespace Eduard
             int order = Math.Min(left.data.Used, right.data.Used);
 
 #if !USE_BENCHMARKING
-            if(order >= (int)Threshold.BIGINT_FFT_THRESHOLD)
-                return FFT.FastBigMult(left, right);
-            else if(order >= (int)Threshold.BIGINT_KARATSUBA_MULT_THRESHOLD)
-            {
-                bool Sign = (left.IsNegative != right.IsNegative);
-                left = left.Abs();
-                right = right.Abs();
-
-                BigInteger result = KMultiply(left, right);
-                return Sign ? -result : result;
-            }
-            else
-                return PlainMultiply(left, right);
+            int FFT_THRESHOLD = (int)Threshold.BIGINT_FFT_THRESHOLD;
+            int KARATSUBA_THRESHOLD = (int)Threshold.BIGINT_KARATSUBA_MULT_THRESHOLD;
 #else
             int FFT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_FFT);
             int KARATSUBA_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_KARATSUBA_MULTIPLY);
+#endif
 
             if (order >= FFT_THRESHOLD)
                 return FFT.FastBigMult(left, right);
             else if (order >= KARATSUBA_THRESHOLD)
             {
-                bool Sign = (left.IsNegative != right.IsNegative);
-                left = left.Abs();
-                right = right.Abs();
+                bool sign = (left.IsNegative != right.IsNegative);
+                left = left.Abs(); right = right.Abs();
 
                 BigInteger result = KMultiply(left, right);
-                return Sign ? -result : result;
+                return sign ? -result : result;
             }
             else
                 return PlainMultiply(left, right);
-#endif
         }
 
         private static BigInteger Square(BigInteger val)
