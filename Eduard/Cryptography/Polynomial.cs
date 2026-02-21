@@ -165,9 +165,14 @@ namespace Eduard.Cryptography
 
         private static Polynomial Multiply(Polynomial left, Polynomial right)
         {
-            int min = (left.Degree < right.Degree) ? left.Degree : right.Degree;
+            int min = Math.Min(left.Degree, right.Degree);
 
-            if (min >= 256)
+#if !USE_BENCHMARKING
+            int FFT_POLY_MULT_THRESHOLD = (int)Threshold.POLY_FFT_MULT_THRESHOLD;
+#else
+            int FFT_POLY_MULT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_MULT);
+#endif
+            if (min >= FFT_POLY_MULT_THRESHOLD)
             {
                 int deg = left.Degree + right.Degree;
 
