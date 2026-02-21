@@ -13,6 +13,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
+    <DefineConstants>$(DefineConstants);USE_BENCHMARKING</DefineConstants>
   </PropertyGroup>
 
 </Project>

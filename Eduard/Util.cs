@@ -1,6 +1,6 @@
-﻿using Eduard;
+﻿using System;
 
-namespace Eduard.Cryptography
+namespace Eduard
 {
     public class Util
     {
