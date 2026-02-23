@@ -11,9 +11,10 @@ namespace Eduard
         BIGINT_FFT = 0,                // FFT multiplication threshold for big integers
         BIGINT_KARATSUBA_MULTIPLY = 1, // Karatsuba multiplication threshold for big integers
         BIGINT_KARATSUBA_SQUARING = 2, // Karatsuba squaring threshold for big integers
-        POLY_FFT_MULT = 3,             // FFT multiplication threshold for polynomials
-        POLY_FFT_SQUARE = 4,           // FFT squaring threshold for polynomials
-        POLY_FFT_MOD = 5               // FFT remainder threshold for polynomials
+        BIGINT_WORDS_THRESHOLD = 3,    // Big integer words count for sliding Window exponentiation
+        POLY_FFT_MULT = 4,             // FFT multiplication threshold for polynomials
+        POLY_FFT_SQUARE = 5,           // FFT squaring threshold for polynomials
+        POLY_FFT_MOD = 6               // FFT remainder threshold for polynomials
     }
 
     /// <summary>
@@ -30,8 +31,8 @@ namespace Eduard
         static PerfTuner()
         {
             thresholds = new int[] { 
-                1792, 16, 32, 
-                256, 256, 256 
+                1792, 16, 32, 10,
+                128, 96, 64
             };
         }
 

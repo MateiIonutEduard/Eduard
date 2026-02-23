@@ -1390,7 +1390,13 @@ namespace Eduard
                 negative = true;
             }
 
-            if (Modulus.data.Used >= 16)
+#if !USE_BENCHMARKING
+            int WORDS_THRESHOLD = (int)Threshold.BIGINT_WORDS_THRESHOLD;
+#else
+            int WORDS_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_WORDS_THRESHOLD);
+#endif
+
+            if (Modulus.data.Used >= WORDS_THRESHOLD)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);

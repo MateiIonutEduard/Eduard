@@ -40,7 +40,9 @@ namespace Eduard
         /// <summary>
         /// Minimum degree for FFT-based polynomial remainder operations.
         /// </summary>
-        POLY_FFT_MOD_THRESHOLD = 64
+        POLY_FFT_MOD_THRESHOLD = 64,
+
+        BIGINT_WORDS_THRESHOLD = 10
     }
 }
 #endif
