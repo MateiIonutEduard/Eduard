@@ -223,7 +223,13 @@ namespace Eduard.Cryptography
             int degm = m.Degree;
             int n = x.Degree;
 
-            if(degm < 256 || n - degm < 256)
+#if USE_BENCHMARKING
+            int FFT_POLY_MOD_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_MOD);
+#else
+            int FFT_POLY_MOD_THRESHOLD = (int)Threshold.POLY_FFT_MOD_THRESHOLD;
+#endif
+
+            if (degm < FFT_POLY_MOD_THRESHOLD || n - degm < FFT_POLY_MOD_THRESHOLD)
             {
                 Polynomial r = x % m;
                 return r;
@@ -258,8 +264,14 @@ namespace Eduard.Cryptography
         public static void SetPolyMod(Polynomial poly)
         {
             int m, n = poly.Degree;
-            if (n < 256) return;
 
+#if USE_BENCHMARKING
+            int FFT_POLY_MOD_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_MOD);
+#else
+            int FFT_POLY_MOD_THRESHOLD = (int)Threshold.POLY_FFT_MOD_THRESHOLD;
+#endif
+
+            if (n < FFT_POLY_MOD_THRESHOLD) return;
             Polynomial h = new Polynomial(poly);
             h.Reverse();
 

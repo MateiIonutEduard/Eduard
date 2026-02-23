@@ -30,12 +30,12 @@ namespace Eduard
         /// <summary>
         /// Minimum degree for FFT-based polynomial multiplication.
         /// </summary>
-        POLY_FFT_MULT_THRESHOLD = 256,
+        POLY_FFT_MULT_THRESHOLD = 128,
 
         /// <summary>
         /// Minimum degree for optimized FFT-based polynomial squaring.
         /// </summary>
-        POLY_FFT_SQUARE_THRESHOLD = 256,
+        POLY_FFT_SQUARE_THRESHOLD = 96,
 
         /// <summary>
         /// Minimum degree for FFT-based polynomial remainder operations.
