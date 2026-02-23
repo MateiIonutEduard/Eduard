@@ -7,16 +7,25 @@ using System.Security.Cryptography;
 namespace Eduard.Cryptography
 {
     /// <summary>
-    /// Represents the modular univariate polynomials.
+    /// Represents univariate polynomials with coefficients in a prime field.
     /// </summary>
+    /// <remarks>
+    /// All polynomial operations are performed modulo a prime field set via SetField().<br/>
+    /// Supports addition, subtraction, multiplication, division, modulus, GCD, exponentiation,<br/>
+    /// root finding, and FFT-based fast algorithms for large polynomials.<br/>
+    /// Coefficients are stored in descending order (constant term last).
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public sealed class Polynomial
     {
         /// <summary>
-        /// Represents the degree of modular univariate polynomial.
+        /// The degree of the polynomial (highest exponent with non-zero coefficient).
         /// </summary>
+        /// <remarks>
+        /// Automatically updated when coefficients change. A zero polynomial has degree 0.
+        /// </remarks>
         public int Degree;
         public BigInteger[] coeffs;
 
@@ -27,8 +36,9 @@ namespace Eduard.Cryptography
         internal static BigInteger field;
 
         /// <summary>
-        /// Creates an <seealso cref="Polynomial"/> value using integer value of 0.
+        /// Initializes a new polynomial instance representing the zero polynomial.
         /// </summary>
+        /// <remarks>Creates the polynomial 0 (constant zero). Equivalent to new Polynomial(0).</remarks>
         public Polynomial()
         {
             Degree = 0;
@@ -37,9 +47,14 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Creates an <seealso cref="Polynomial"/> value with a specified degree.
+        /// Initializes a new polynomial instance with all coefficients set to zero.
         /// </summary>
-        /// <param name="Degree"></param>
+        /// <param name="Degree">The degree of the polynomial.</param>
+        /// <remarks>
+        /// Creates a zero polynomial of the specified degree.<br/>
+        /// All coefficients are initialized to zero. Use this constructor<br/> 
+        /// when building polynomials coefficient by coefficient.
+        /// </remarks>
         public Polynomial(int Degree)
         {
             this.Degree = Degree;
@@ -50,9 +65,13 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Creates an <seealso cref="Polynomial"/> from another polynomial value.
+        /// Initializes a new polynomial instance by copying an existing polynomial.
         /// </summary>
-        /// <param name="poly"></param>
+        /// <param name="poly">The polynomial to copy.</param>
+        /// <remarks>
+        /// Creates a deep copy where modifications to the new instance<br/>
+        /// do not affect the original polynomial and vice versa.
+        /// </remarks>
         public Polynomial(Polynomial poly)
         {
             Degree = poly.Degree;
@@ -63,9 +82,13 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Creates an <seealso cref="Polynomial"/> using specified coefficients.
+        /// Initializes a new polynomial instance with specified coefficients.
         /// </summary>
-        /// <param name="coeffs"></param>
+        /// <param name="coeffs">Coefficients in descending order.</param>
+        /// <remarks>
+        /// Coefficients are automatically reduced modulo the current field.<br/>
+        /// Example: new Polynomial(3, -5, 6) represents 3*X^2 - 5*X + 6.
+        /// </remarks>
         public Polynomial(params BigInteger[] coeffs)
         {
             Degree = coeffs.Length - 1;
@@ -79,6 +102,14 @@ namespace Eduard.Cryptography
                 this.coeffs[i] = Reduce(list[i]);
         }
 
+        /// <summary>
+        /// Sets the finite field modulus for all polynomial operations.
+        /// </summary>
+        /// <param name="field">The prime field modulus.</param>
+        /// <remarks>
+        /// Initializes Barrett reduction constants and optimizes square root computations<br/>
+        /// based on field properties. Must be called before any polynomial operations.
+        /// </remarks>
         public static void SetField(BigInteger field)
         {
             Polynomial.field = field;
@@ -113,12 +144,15 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Adds two specified polynomials over an specified field.
+        /// Adds two polynomials over the current finite field.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="left">The first polynomial.</param>
+        /// <param name="right">The second polynomial.</param>
+        /// <returns>The sum polynomial reduced modulo the field.</returns>
+        /// <remarks>
+        /// Performs coefficient-wise addition with modular reduction.<br/>
+        /// The result degree is automatically trimmed to remove leading <br/>zero coefficients.
+        /// </remarks>
         public static Polynomial operator +(Polynomial left, Polynomial right)
         {
             int max = (left.Degree > right.Degree) ? left.Degree : right.Degree;
@@ -132,12 +166,11 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Subtracts a specified <seealso cref="Polynomial"/> value from another specified <seealso cref="Polynomial"/> value.
+        /// Subtracts one polynomial from another over the current finite field.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="left">The minuend polynomial.</param>
+        /// <param name="right">The subtrahend polynomial.</param>
+        /// <returns>The difference polynomial reduced modulo the field.</returns>
         public static Polynomial operator -(Polynomial left, Polynomial right)
         {
             int max = (left.Degree > right.Degree) ? left.Degree : right.Degree;
@@ -151,12 +184,15 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Multiplies two specified polynomials values over an specified field.
+        /// Multiplies two polynomials over the current finite field.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="left">Left operand.</param>
+        /// <param name="right">Right operand.</param>
+        /// <returns>Product polynomial reduced modulo the field.</returns>
+        /// <remarks>
+        /// Automatically selects between schoolbook or FFT multiplication<br/>
+        /// based on polynomial degrees for optimal performance.
+        /// </remarks>
         public static Polynomial operator *(Polynomial left, Polynomial right)
         {
             if (left == right) return Square(left);
@@ -218,6 +254,17 @@ namespace Eduard.Cryptography
                 return plain_square(val);
         }
 
+        /// <summary>
+        /// Reduces a polynomial modulo another polynomial over the current finite field.
+        /// </summary>
+        /// <param name="x">The polynomial to reduce.</param>
+        /// <param name="m">The modulus polynomial.</param>
+        /// <returns>The remainder of x divided by m.</returns>
+        /// <remarks>
+        /// Automatically selects between classical division and FFT-based reduction<br/>
+        /// based on polynomial degrees. For large polynomials meeting the FFT threshold,<br/>
+        /// uses optimized transform-based algorithm with precomputed reciprocals.
+        /// </remarks>
         public static Polynomial Reduce(Polynomial x, Polynomial m)
         {
             int degm = m.Degree;
@@ -261,6 +308,15 @@ namespace Eduard.Cryptography
             return res;
         }
 
+        /// <summary>
+        /// Configures FFT-based modular reduction for a given modulus polynomial.
+        /// </summary>
+        /// <param name="poly">The modulus polynomial.</param>
+        /// <remarks>
+        /// Precomputes reciprocal and other FFT parameters to accelerate subsequent<br/>
+        /// modular reductions. Only takes effect when polynomial degree meets the<br/>
+        /// FFT threshold. Called automatically by Reduce() when beneficial.
+        /// </remarks>
         public static void SetPolyMod(Polynomial poly)
         {
             int m, n = poly.Degree;
@@ -346,7 +402,16 @@ namespace Eduard.Cryptography
             return result;
         }
 
-        internal static Polynomial Mulxn(Polynomial poly, int words)
+        /// <summary>
+        /// Multiplies a polynomial by x^n, shifting coefficients upward.
+        /// </summary>
+        /// <param name="poly">The input polynomial.</param>
+        /// <param name="words">The exponent n (number of shifts).</param>
+        /// <returns>Polynomial result of multiplying by x^n (coefficients shifted up by n).</returns>
+        /// <remarks>
+        /// Used internally for polynomial arithmetic and FFT-based algorithms.
+        /// </remarks>
+        public static Polynomial Mulxn(Polynomial poly, int words)
         {
             BigInteger[] coeffs = new BigInteger[poly.coeffs.Length + words];
 
@@ -366,12 +431,13 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Returns the quotient value that results from division of two polynomials.
+        /// Divides two polynomials and returns the quotient.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="left">Dividend polynomial.</param>
+        /// <param name="right">Divisor polynomial.</param>
+        /// <returns>Quotient of polynomial division.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
+        /// <remarks>Returns only the quotient; use % operator for remainder.</remarks>
         public static Polynomial operator /(Polynomial left, Polynomial right)
         {
             if (left.Degree < right.Degree)
@@ -390,7 +456,7 @@ namespace Eduard.Cryptography
             }
 
             if (right.Degree == 1 && right.coeffs[0] == 0)
-                throw new DivideByZeroException("The polynomial must be not equal with 0.");
+                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             Polynomial quo, rem;
             Divide(left, right, out quo, out rem);
@@ -418,12 +484,12 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Returns the remainder value that results from division of two polynomials.
+        /// Returns the remainder after division of two polynomials.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="left">Dividend polynomial.</param>
+        /// <param name="right">Divisor polynomial.</param>
+        /// <returns>The remainder polynomial (degree less than divisor).</returns>
+        /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
         public static Polynomial operator %(Polynomial left, Polynomial right)
         {
             if (left.Degree < right.Degree)
@@ -433,7 +499,7 @@ namespace Eduard.Cryptography
                 return new Polynomial(0);
 
             if (right.Degree == 0 && right.coeffs[0] == 0)
-                throw new DivideByZeroException("The polynomial must be not equal with 0.");
+                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             Polynomial quo, rem;
             Divide(left, right, out quo, out rem);
@@ -512,12 +578,15 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Returns the greatest common divisor of two polynomials over specified field.
+        /// Computes the greatest common divisor of two polynomials over the current finite field.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="left">First polynomial.</param>
+        /// <param name="right">Second polynomial.</param>
+        /// <returns>A monic polynomial representing the GCD of the inputs.</returns>
+        /// <remarks>
+        /// Uses Euclidean algorithm for polynomial GCD.<br/>
+        /// The result is normalized to be monic (leading coefficient = 1).
+        /// </remarks>
         public static Polynomial Gcd(Polynomial left, Polynomial right)
         {
             Polynomial a, b;
@@ -555,10 +624,10 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Evaluates the polynomial in the specified value over specified field.
+        /// Evaluates the polynomial at a given point using Horner's method.
         /// </summary>
-        /// <param name="x"></param>
-        /// <returns></returns>
+        /// <param name="x">The point to evaluate at.</param>
+        /// <returns>The value of the polynomial at x modulo the field.</returns>
         public BigInteger Horner(BigInteger x)
         {
             BigInteger sum = coeffs[0];
@@ -593,11 +662,12 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Returns the roots of small degree polynomial.
+        /// Finds roots of polynomials with small degree over the current finite field.
         /// </summary>
-        /// <param name="poly"></param>
-        /// <param name="roots"></param>
-        /// <returns></returns>
+        /// <param name="poly">The polynomial to solve (degree 1 or 2).</param>
+        /// <param name="roots">List that will be populated with the roots found.</param>
+        /// <returns>1 if roots were found, 0 if polynomial degree > 2, -1 if no roots exist.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when field not initialized.</exception>
         public static int Solve(Polynomial poly, ref List<BigInteger> roots)
         {
             if (poly.Degree > 2)
@@ -657,10 +727,9 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Finds the <seealso cref="Polynomial"/> roots in a specified field.
+        /// Finds one or two roots of the polynomial in the current finite field.
         /// </summary>
-        /// <param name="field"></param>
-        /// <param name="roots"></param>
+        /// <param name="roots">List that will be populated with found roots.</param>
         public void FindRoots(ref List<BigInteger> roots)
         {
             Polynomial self = new Polynomial(this);
@@ -694,6 +763,12 @@ namespace Eduard.Cryptography
             }
         }
 
+        /// <summary>
+        /// Divides a polynomial by x^n, effectively shifting coefficients down.
+        /// </summary>
+        /// <param name="poly">The input polynomial.</param>
+        /// <param name="degn">The exponent n (number of shifts).</param>
+        /// <returns>Polynomial result of dividing by x^n (coefficients shifted down by n).</returns>
         public static Polynomial Divxn(Polynomial poly, int degn)
         {
             if (poly.Degree < degn) return 0;
@@ -708,6 +783,12 @@ namespace Eduard.Cryptography
             return result;
         }
 
+        /// <summary>
+        /// Computes polynomial modulo x^n, keeping only the lowest n coefficients.
+        /// </summary>
+        /// <param name="poly">The input polynomial.</param>
+        /// <param name="degn">The exponent n (number of coefficients to keep).</param>
+        /// <returns>Polynomial truncated to degree n-1.</returns>
         public static Polynomial Modxn(Polynomial poly, int degn)
         {
             if (poly.Degree < degn) return poly;
@@ -722,6 +803,16 @@ namespace Eduard.Cryptography
             return result;
         }
 
+        /// <summary>
+        /// Computes polynomial modulo x^n - 1, wrapping coefficients cyclically.
+        /// </summary>
+        /// <param name="poly">The input polynomial.</param>
+        /// <param name="degn">The exponent n (modulus is x^n - 1).</param>
+        /// <returns>Polynomial reduced modulo x^n - 1 with degree less than n.</returns>
+        /// <remarks>
+        /// Reduces poly modulo x^n - 1 by adding coefficient k to coefficient (k mod n).<br/>
+        /// This implements cyclic convolution and is used in NTT-based algorithms.
+        /// </remarks>
         public static Polynomial Modxn_l(Polynomial poly, int degn)
         {
             if (poly.Degree < degn) return poly;
@@ -734,7 +825,18 @@ namespace Eduard.Cryptography
             return result;
         }
 
-        internal static Polynomial Invmodxn(Polynomial poly, int degn)
+        /// <summary>
+        /// Computes the modular inverse of a polynomial modulo x^n using Newton iteration.
+        /// </summary>
+        /// <param name="poly">The polynomial to invert (constant term must be invertible).</param>
+        /// <param name="degn">The exponent n (inverse is computed modulo x^n).</param>
+        /// <returns>The polynomial A(x) such that poly * A = 1 (mod x^n).</returns>
+        /// <remarks>
+        /// Implements Newton's method for polynomial inversion: given an initial approximation <br/>
+        /// modulo x^1, each iteration doubles the precision. Complexity is O(n log n).
+        /// Used internally<br/> for FFT-based division and modular reduction algorithms.
+        /// </remarks>
+        public static Polynomial Invmodxn(Polynomial poly, int degn)
         {
             int k = 0;
             Polynomial result = new Polynomial(poly.GetCoeff(0).Inverse(field));
@@ -747,6 +849,15 @@ namespace Eduard.Cryptography
             return result;
         }
 
+        /// <summary>
+        /// Returns the leading coefficient (the highest-degree non-zero coefficient).
+        /// </summary>
+        /// <returns>The leading coefficient, or 0 if the polynomial is zero.</returns>
+        /// <remarks>
+        /// For a non-zero polynomial, returns the coefficient of the highest-degree term. <br/>
+        /// For the zero polynomial, returns 0. Used internally for normalization
+        /// and monic <br/> polynomial operations.
+        /// </remarks>
         internal BigInteger Min()
         {
             for(int k = coeffs.Length - 1; k >= 0; k--)
@@ -759,11 +870,11 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Differentiates a specified <seealso cref="Polynomial"/> over specified field.
+        /// Computes the formal derivative of a polynomial.
         /// </summary>
-        /// <param name="poly"></param>
-        /// <param name="field"></param>
-        /// <returns></returns>
+        /// <param name="poly">Input polynomial.</param>
+        /// <param name="field">Field modulus.</param>
+        /// <returns>The derivative polynomial.</returns>
         public static Polynomial Differentiate(Polynomial poly, BigInteger field)
         {
             Polynomial diff = new Polynomial(poly.Degree - 1);
@@ -775,32 +886,45 @@ namespace Eduard.Cryptography
         }
 
         /// <summary>
-        /// Determines whether two polynomials have the same value.
+        /// Determines whether two polynomial instances are equal.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first polynomial to compare.</param>
+        /// <param name="right">The second polynomial to compare.</param>
+        /// <returns>true if the polynomials have identical coefficients; otherwise false.</returns>
+        /// <remarks>
+        /// Two polynomials are considered equal if they have the same <br/>
+        /// coefficients for all terms, ignoring any trailing zero coefficients. <br/>
+        /// The comparison is performed coefficient-wise modulo the current field.
+        /// </remarks>
         public static bool operator ==(Polynomial left, Polynomial right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Determines whether two polynomials have not the same value.
+        /// Determines whether two polynomial instances are not equal.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first polynomial to compare.</param>
+        /// <param name="right">The second polynomial to compare.</param>
+        /// <returns>true if the polynomials differ in any coefficient; otherwise false.</returns>
+        /// <remarks>
+        /// Returns the logical negation of the equality operator.
+        /// </remarks>
         public static bool operator !=(Polynomial left, Polynomial right)
         {
             return !(left == right);
         }
 
         /// <summary>
-        /// Determines whether two polynomials have the same value.
+        /// Determines whether the specified object is equal to the current polynomial.
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
+        /// <param name="obj">The object to compare with the current polynomial.</param>
+        /// <returns>true if the specified object is a polynomial with identical coefficients; otherwise false.</returns>
+        /// <remarks>
+        /// Performs coefficient-wise comparison modulo the current field. <br/>Null objects
+        /// or non-polynomial types return false. Reference equality<br/> is checked first
+        /// for performance.
+        /// </remarks>
         public override bool Equals(object obj)
         {
             if (object.ReferenceEquals(this, (Polynomial)obj))
@@ -844,6 +968,17 @@ namespace Eduard.Cryptography
             return result;
         }
 
+        /// <summary>
+        /// Gets the coefficient at the specified degree.
+        /// </summary>
+        /// <param name="index">The degree of the term (0 = constant term).</param>
+        /// <returns>The coefficient at the specified degree, or 0 if index exceeds polynomial degree.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown when index is negative.</exception>
+        /// <remarks>
+        /// Returns 0 for indices greater than the polynomial degree, <br/>treating missing higher-degree
+        /// terms as zero coefficients. <br/>This simplifies polynomial arithmetic by allowing
+        /// access <br/>beyond the current degree without bounds checking.
+        /// </remarks>
         public BigInteger GetCoeff(int index)
         {
             if (index > Degree)
@@ -855,20 +990,42 @@ namespace Eduard.Cryptography
                 throw new IndexOutOfRangeException("Index out of range.");
         }
 
+        /// <summary>
+        /// Implicitly converts an integer to a constant polynomial.
+        /// </summary>
+        /// <param name="val">The integer value.</param>
+        /// <returns>A constant polynomial equal to the specified integer.</returns>
+        /// <remarks>
+        /// Allows natural usage of integers in polynomial contexts: <br/>
+        /// Polynomial p = 5;  // Creates constant polynomial 5
+        /// </remarks>
         public static implicit operator Polynomial(int val)
         {
             return new Polynomial((BigInteger)val);
         }
 
+        /// <summary>
+        /// Implicitly converts a big integer to a constant polynomial.
+        /// </summary>
+        /// <param name="val">The big integer value.</param>
+        /// <returns>A constant polynomial equal to the specified big integer.</returns>
+        /// <remarks>
+        /// Allows natural usage of big integers in polynomial contexts: <br/>
+        /// Polynomial p = new BigInteger(123);  // Creates constant polynomial 123
+        /// </remarks>
         public static implicit operator Polynomial(BigInteger val)
         {
             return new Polynomial(val);
         }
 
         /// <summary>
-        /// Returns the hash code for this instance.
+        /// Returns a hash code for this polynomial instance.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A 32-bit signed integer hash code.</returns>
+        /// <remarks>
+        /// The hash code is derived from the internal coefficient array.<br/>
+        /// Two equal polynomials will produce the same hash code.
+        /// </remarks>
         public override int GetHashCode()
         {
             return coeffs.GetHashCode();
