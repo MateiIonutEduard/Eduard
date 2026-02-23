@@ -35,8 +35,9 @@ namespace Eduard
             for (j = i - 1; j > i - w; j--)
             {
                 nbs++;
-                r *= 2;
-                if (x.TestBit(j)) r += 1;
+                r <<= 1;
+
+                if (x.TestBit(j)) r |= 1;
 
                 if ((r & 0x3) == 0)
                 {
