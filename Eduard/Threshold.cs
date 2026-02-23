@@ -42,6 +42,9 @@ namespace Eduard
         /// </summary>
         POLY_FFT_MOD_THRESHOLD = 64,
 
+        /// <summary>
+        /// Minimum words for sliding window exponentiation to outperform binary method.
+        /// </summary>
         BIGINT_WORDS_THRESHOLD = 10
     }
 }

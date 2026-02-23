@@ -440,10 +440,22 @@ namespace Eduard.Cryptography
             return rem;
         }
 
+        /// <summary>
+        /// Computes modular exponentiation of a polynomial raised to a big integer exponent.
+        /// </summary>
+        /// <param name="val">The base polynomial.</param>
+        /// <param name="exponent">The exponent value.</param>
+        /// <param name="mod">The modulus polynomial.</param>
+        /// <returns>The base polynomial raised to the exponent modulo the modulus.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial mod)
         {
             Polynomial nb = new Polynomial(val);
             Polynomial result = 1;
+
+            if(mod == 0)
+                throw new DivideByZeroException(
+                    "Modulus polynomial cannot be zero.");
 
             if (mod.Degree >= 16)
             {
