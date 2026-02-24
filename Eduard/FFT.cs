@@ -17,13 +17,14 @@ namespace Eduard
         static int degree;
         static uint[][] t;
 
-        static BigInteger[] C;
-        static BigInteger N;
+        static BigInteger[] Cres;
+        static BigInteger cmod;
 
         public static BigInteger[] FastPolyMult(BigInteger[] x, BigInteger[] y, BigInteger field)
         {
-            int i, j, newn, logn, np, degree;
-            uint inv, p, fac;
+            int i, j, newn, logn;
+            int primesCount, degree;
+            uint cinv, p, npt;
 
             newn = 1; 
             logn = 0;
@@ -39,12 +40,12 @@ namespace Eduard
             }
             
             if (logN < logn)
-                np = InitFFT(logn, field, field);
-            else np = count;
+                primesCount = InitFFT(logn, field, field);
+            else primesCount = count;
 
             uint[] wa = new uint[newn];
             
-            for (i = 0; i < np; i++)
+            for (i = 0; i < primesCount; i++)
             {
                 p = primes[i];
 
@@ -54,7 +55,7 @@ namespace Eduard
                 for (j = degx + 1; j < newn; j++)
                     wa[j] = 0;
 
-                dft(logn, i, wa);
+                DFT(logn, i, wa);
 
                 for (j = 0; j <= degy; j++)
                     t[i][j] = (uint)(y[j] % p);
@@ -62,22 +63,22 @@ namespace Eduard
                 for (j = degy + 1; j < newn; j++)
                     t[i][j] = 0;
 
-                dft(logn, i, t[i]);
+                DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
                     MulAdd(wa[j], t[i][j], 0, p, ref t[i][j]);
 
-                idft(logn, i, t[i]);
-                inv = inverse[i];
+                iDFT(logn, i, t[i]);
+                cinv = inverse[i];
 
                 if (logN > logn)
                 {
-                    fac = (uint)1 << (logN - logn);
-                    inv = MulMod(fac, inv, p);
+                    npt = (uint)1 << (logN - logn);
+                    cinv = MulMod(npt, cinv, p);
                 }
 
                 for (j = 0; j <= degree; j++)
-                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], cinv, 0, p, ref t[i][j]);
             }
 
             BigInteger[] res = new BigInteger[degree + 1];
@@ -87,11 +88,11 @@ namespace Eduard
                 res[j] = 0;
                 BigInteger coeff = 0;
 
-                for(i = 0; i < np; i++)
+                for(i = 0; i < primesCount; i++)
                 {
-                    BigInteger val = (t[i][j] * C[i]) % N;
+                    BigInteger val = (t[i][j] * Cres[i]) % cmod;
                     coeff += val;
-                    if (coeff >= N) coeff -= N;
+                    if (coeff >= cmod) coeff -= cmod;
                 }
 
                 res[j] = Util.BarrettReduction(coeff, field); 
@@ -102,11 +103,12 @@ namespace Eduard
 
         public static BigInteger[] FastPolySquare(BigInteger[] x, BigInteger field)
         {
-            int i, j, newn, logn, np, degree;
-            uint inv, p, fac;
+            int i, j, newn, logn;
+            int primesCount, degree;
+            uint cinv, p, npt;
 
-            int degx = x.Length - 1;
-            degree = degx << 1;
+            int degxPoly = x.Length - 1;
+            degree = degxPoly << 1;
             newn = 1; logn = 0;
 
             while (degree + 1 > newn)
@@ -116,33 +118,33 @@ namespace Eduard
             }
 
             if (logN < logn)
-                np = InitFFT(logn, field, field);
-            else np = count;
+                primesCount = InitFFT(logn, field, field);
+            else primesCount = count;
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < primesCount; i++)
             {
                 p = primes[i];
 
-                for (j = 0; j <= degx; j++)
+                for (j = 0; j <= degxPoly; j++)
                     t[i][j] = (uint)(x[j] % p);
 
-                for (j = degx + 1; j < newn; j++) t[i][j] = 0;
-                dft(logn, i, t[i]);
+                for (j = degxPoly + 1; j < newn; j++) t[i][j] = 0;
+                DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
                     MulAdd(t[i][j], t[i][j], 0, p, ref t[i][j]);
 
-                idft(logn, i, t[i]);
-                inv = inverse[i];
+                iDFT(logn, i, t[i]);
+                cinv = inverse[i];
 
                 if (logN > logn)
                 {
-                    fac = (uint)1 << (logN - logn);
-                    inv = MulMod(fac, inv, p);
+                    npt = (uint)1 << (logN - logn);
+                    cinv = MulMod(npt, cinv, p);
                 }
 
                 for (j = 0; j <= degree; j++)
-                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], cinv, 0, p, ref t[i][j]);
             }
 
             BigInteger[] res = new BigInteger[degree + 1];
@@ -152,11 +154,11 @@ namespace Eduard
                 res[j] = 0;
                 BigInteger coeff = 0;
 
-                for (i = 0; i < np; i++)
+                for (i = 0; i < primesCount; i++)
                 {
-                    BigInteger val = (t[i][j] * C[i]) % N;
+                    BigInteger val = (t[i][j] * Cres[i]) % cmod;
                     coeff += val;
-                    if (coeff >= N) coeff -= N;
+                    if (coeff >= cmod) coeff -= cmod;
                 }
 
                 res[j] = Util.BarrettReduction(coeff, field);
@@ -167,106 +169,110 @@ namespace Eduard
 
         public static bool FastPolyMod(BigInteger[] G, BigInteger[] R, BigInteger field)
         {
-            int i, j, newn, logn, np, n;
-            uint p, inv, fac;
+            int i, j, newn, logn;
+            uint q, cinv, npt;
+            int primesCount, degn;
 
-            n = degree;  /* degree of modulus */
-            if (n == 0) return false;
+            /* degree of modulus polynomial */
+            degn = degree;
 
-            int dg = G.Length - 1;
-            np = count;
+            if (degn == 0) 
+                return false;
+
+            int degG = G.Length - 1;
+            primesCount = count;
 
             newn = 1;
             logn = 0;
 
-            while (2 * n > newn)
+            while (2 * degn > newn)
             {
                 newn <<= 1;
                 logn++;
             }
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < primesCount; i++)
             {
-                p = primes[i];
+                q = primes[i];
 
-                for (j = n; j <= dg; j++)
-                    t[i][j - n] = (uint)(G[j] % p);
+                for (j = degn; j <= degG; j++)
+                    t[i][j - degn] = (uint)(G[j] % q);
 
-                for (j = dg - n + 1; j < newn; j++) 
+                for (j = degG - degn + 1; j < newn; j++) 
                     t[i][j] = 0;
 
-                dft(logn, i, t[i]);
+                DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    MulAdd(t[i][j], s1[i][j], 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], s1[i][j], 0, q, ref t[i][j]);
 
-                idft(logn, i, t[i]);
-                inv = inverse[i];
+                iDFT(logn, i, t[i]);
+                cinv = inverse[i];
 
                 if (logN > logn)
                 {
-                    fac = (uint)1 << (logN - logn);
-                    inv = MulMod(fac, inv, p);
+                    npt = (uint)1 << (logN - logn);
+                    cinv = MulMod(npt, cinv, q);
                 }
 
-                for (j = 0; j < n; j++)
-                    MulAdd(t[i][j + n - 1], inv, 0, p, ref t[i][j + n - 1]);
+                for (j = 0; j < degn; j++)
+                    MulAdd(t[i][j + degn - 1], cinv, 0, q, ref t[i][j + degn - 1]);
             }
 
-            for (j = 0; j < n; j++)
+            for (j = 0; j < degn; j++)
             {
                 R[j] = 0;
 
-                for (i = 0; i < np; i++)
+                for (i = 0; i < primesCount; i++)
                 {
-                    BigInteger ts = (t[i][j + n - 1] * C[i]) % N;
+                    BigInteger ts = (t[i][j + degn - 1] * Cres[i]) % cmod;
                     R[j] += ts;
-                    if (R[j] >= N) R[j] -= N;
+                    if (R[j] >= cmod) R[j] -= cmod;
                 }
 
                 R[j] = Util.BarrettReduction(R[j], field);
             }
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < primesCount; i++)
             {
-                p = primes[i];
+                q = primes[i];
 
-                for (j = 0; j < n; j++)
-                    t[i][j] = (uint)(R[j] % p);
+                for (j = 0; j < degn; j++)
+                    t[i][j] = (uint)(R[j] % q);
 
-                for (j = n; j < 1 + newn / 2; j++)
+                for (j = degn; j < 1 + newn / 2; j++)
                     t[i][j] = 0;
 
-                dft(logn - 1, i, t[i]);
+                DFT(logn - 1, i, t[i]);
 
                 for (j = 0; j < newn / 2; j++)
-                    MulAdd(t[i][j], s2[i][j], 0, p, ref t[i][j]);
+                    MulAdd(t[i][j], s2[i][j], 0, q, ref t[i][j]);
 
-                idft(logn - 1, i, t[i]);
+                iDFT(logn - 1, i, t[i]);
 
-                inv = inverse[i];
+                cinv = inverse[i];
 
                 if (logN > logn - 1)
                 {
-                    fac = (uint)1 << (logN - logn + 1);
-                    inv = MulMod(fac, inv, p);
+                    npt = (uint)1 << (logN - logn + 1);
+                    cinv = MulMod(npt, cinv, q);
                 }
 
-                for (j = 0; j < n; j++)
-                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
+                for (j = 0; j < degn; j++)
+                    MulAdd(t[i][j], cinv, 0, q, ref t[i][j]);
             }
 
-            Modxn(newn >> 1, dg, G, field);
+            Modxn(newn >> 1, degG, G, field);
 
-            for (j = 0; j < n; j++)
+            for (j = 0; j < degn; j++)
             {
                 R[j] = 0;
 
-                for (i = 0; i < np; i++)
+                for (i = 0; i < primesCount; i++)
                 {
-                    BigInteger ts = (t[i][j] * C[i]) % N;
+                    BigInteger ts = (t[i][j] * Cres[i]) % cmod;
                     R[j] += ts;
-                    if (R[j] >= N) R[j] -= N;
+                    if (R[j] >= cmod) R[j] -= cmod;
                 }
 
                 BigInteger diff = (G[j] - R[j]) % field;
@@ -277,127 +283,131 @@ namespace Eduard
             return true;
         }
 
-        public static void SetPolyMod(int n, BigInteger[] rf, BigInteger[] f, BigInteger field)
+        public static void SetPolyMod(int degn, BigInteger[] rf, BigInteger[] f, BigInteger field)
         {
-            int i, j, np, newn, logn, deg;
+            int i, j, newn, logn;
+            int primesCount, maxDegree;
             BigInteger[] F;
-            uint p;
+            uint q;
 
-            deg = 2 * n;
+            maxDegree = 2 * degn;
             newn = 1; logn = 0;
 
-            while (deg > newn)
+            while (maxDegree > newn)
             {
                 newn <<= 1;
                 logn++;
             }
 
             if (logN < logn)
-                np = InitFFT(logn, field, field);
-            else np = count;
+                primesCount = InitFFT(logn, field, field);
+            else primesCount = count;
 
-            degree = n;
-            s1 = new uint[np][];
-            s2 = new uint[np][];
-            F = new BigInteger[n + 1];
+            degree = degn;
+            s1 = new uint[primesCount][];
+            s2 = new uint[primesCount][];
+            F = new BigInteger[degn + 1];
 
-            for (i = 0; i <= n; i++)
+            for (i = 0; i <= degn; i++)
                 F[i] = f[i];
 
-            Modxn(newn >> 1, n, F, field);
+            Modxn(newn >> 1, degn, F, field);
 
-            for (i = 0; i < np; i++)
+            for (i = 0; i < primesCount; i++)
             {
                 s1[i] = new uint[newn];
                 s2[i] = new uint[1 + (newn >> 1)];
-                p = primes[i];
+                q = primes[i];
 
-                for (j = 0; j < n; j++)
-                    s1[i][j] = (uint)(rf[j] % p);
+                for (j = 0; j < degn; j++)
+                    s1[i][j] = (uint)(rf[j] % q);
 
-                dft(logn, i, s1[i]);
+                DFT(logn, i, s1[i]);
 
-                for (j = 0; j <= n; j++)
-                    s2[i][j] = (uint)(F[j] % p);
+                for (j = 0; j <= degn; j++)
+                    s2[i][j] = (uint)(F[j] % q);
 
-                dft(logn - 1, i, s2[i]);
+                DFT(logn - 1, i, s2[i]);
             }
         }
 
-        static void Modxn(int n, int deg, BigInteger[] x, BigInteger field)
+        static void Modxn(int degn, int maxDeg, BigInteger[] x, BigInteger field)
         {
-            for (int i = 0; n + i <= deg; i++)
+            for (int i = 0; degn + i <= maxDeg; i++)
             {
-                x[i] += x[n + i];
-                if (x[i] >= field) x[i] -= field;
-                x[n + i] = 0;
+                x[i] += x[degn + i];
+
+                if (x[i] >= field) 
+                    x[i] -= field;
+
+                x[degn + i] = 0;
             }
         }
 
         static int InitFFT(int logn, BigInteger m1, BigInteger m2)
         {
             uint newn = (uint)1 << logn;
-            uint kk = (uint)1 << (31 - logn);
+            uint kmask = (uint)1 << (31 - logn);
             int i, j;
 
-            uint p = 0;
-            BigInteger w5 = m1 * m2;
-            int pr = 0;
+            uint qprime = 0;
+            BigInteger temp = m1 * m2;
+            int primes = 0;
 
-            while(w5 > 0)
+            while(temp > 0)
             {
                 do
                 {
-                    kk--;
-                    p = kk * newn + 1;
+                    kmask--;
+                    qprime = kmask * newn + 1;
                 }
-                while (!BigInteger.IsProbablePrime(p));
+                while (!BigInteger.IsProbablePrime(qprime));
 
-                w5 /= p;
-                pr++;
+                temp /= qprime;
+                primes++;
             }
 
-            if (logn <= logN && count == pr) 
-                return pr;
+            if (logn <= logN && count == primes) 
+                return primes;
 
-            primes = new uint[pr];
-            inverse = new uint[pr];
+            FFT.primes = new uint[primes];
+            inverse = new uint[primes];
 
-            t = new uint[pr][];
-            roots = new uint[pr][];
-            kk = (uint)1 << (31 - logn);
+            t = new uint[primes][];
+            roots = new uint[primes][];
+            kmask = (uint)1 << (31 - logn);
 
-            for(i = 0; i < pr; i++)
+            for(i = 0; i < primes; i++)
             {
                 roots[i] = new uint[newn];
                 t[i] = new uint[newn];
 
                 do
                 {
-                    kk--;
-                    p = kk * newn + 1;
+                    kmask--;
+                    qprime = kmask * newn + 1;
                 }
-                while (!BigInteger.IsProbablePrime(p));
+                while (!BigInteger.IsProbablePrime(qprime));
 
-                primes[i] = p;
-                uint root = p - 1;
+                FFT.primes[i] = qprime;
+                uint root = qprime - 1;
 
                 for (j = 1; j < logn; j++)
-                    root = ModSquareRoot(root, p);
+                    root = ModSquareRoot(root, qprime);
 
                 roots[i][0] = root;
 
                 for(j = 1; j < newn; j++)
-                    roots[i][j] = MulMod(roots[i][j - 1], root, p);
+                    roots[i][j] = MulMod(roots[i][j - 1], root, qprime);
 
-                inverse[i] = Inverse(newn, p);
+                inverse[i] = Inverse(newn, qprime);
             }
 
             logN = logn;
-            count = pr;
+            count = primes;
 
             InitCRT();
-            return pr;
+            return primes;
         }
 
         static bool InitBigIntFFT(int logn)
@@ -429,27 +439,28 @@ namespace Eduard
 
         public static BigInteger FastBigMult(BigInteger x, BigInteger y)
         {
-            int i, pr, xl, yl, zl, newn, logn;
-            uint v1, v2, v3, p;
+            int i, primeIndex, xwLen, ywLen;
+            int zwLen, newn, logn;
+            uint v1, v2, v3, qprime;
 
-            uint fac, inv;
-            uint c1, c2, ic;
+            uint npt, inv;
+            uint carry1, carry2, icarry;
 
             uint[] w = new uint[3];
             newn = 1; logn = 0;
 
-            xl = x.data.Used;
-            yl = y.data.Used;
-            zl = xl + yl;
+            xwLen = x.data.Used;
+            ywLen = y.data.Used;
+            zwLen = xwLen + ywLen;
 
-            while (zl > newn)
+            while (zwLen > newn)
             {
                 newn <<= 1;
                 logn++;
             }
 
-            uint[] wptr = new uint[newn];
-            uint[] dptr = new uint[newn];
+            uint[] fptr = new uint[newn];
+            uint[] sptr = new uint[newn];
 
             if (logn > logN)
             {
@@ -458,52 +469,52 @@ namespace Eduard
                         "Numbers too big for FFT multiplication.");
             }
 
-            for (pr = 0; pr < 3; pr++)
+            for (primeIndex = 0; primeIndex < 3; primeIndex++)
             {
-                p = primes[pr];
-                inv = inverse[pr];
+                qprime = primes[primeIndex];
+                inv = inverse[primeIndex];
 
-                for (i = 0; i < xl; i++)
-                    dptr[i] = x.data[i] % p;
+                for (i = 0; i < xwLen; i++)
+                    sptr[i] = x.data[i] % qprime;
 
-                for (i = xl; i < newn; i++)
-                    dptr[i] = 0;
+                for (i = xwLen; i < newn; i++)
+                    sptr[i] = 0;
 
-                dft(logn, pr, dptr);
+                DFT(logn, primeIndex, sptr);
 
                 if (x != y)
                 {
-                    for (i = 0; i < yl; i++)
-                        wptr[i] = y.data[i] % p;
+                    for (i = 0; i < ywLen; i++)
+                        fptr[i] = y.data[i] % qprime;
 
-                    for (i = yl; i < newn; i++)
-                        wptr[i] = 0;
+                    for (i = ywLen; i < newn; i++)
+                        fptr[i] = 0;
 
-                    dft(logn, pr, wptr);
+                    DFT(logn, primeIndex, fptr);
                 }
                 else
                 {
                     for (i = 0; i < newn; i++)
-                        wptr[i] = dptr[i];
+                        fptr[i] = sptr[i];
                 }
 
                 for (i = 0; i < newn; i++)
-                    MulAdd(dptr[i], wptr[i], 0, p, ref dptr[i]);
+                    MulAdd(sptr[i], fptr[i], 0, qprime, ref sptr[i]);
 
-                idft(logn, pr, dptr);
+                iDFT(logn, primeIndex, sptr);
 
                 if (logN > logn)
                 {
-                    fac = (uint)1 << (logN - logn);
-                    inv = MulMod(fac, inv, p);
+                    npt = (uint)1 << (logN - logn);
+                    inv = MulMod(npt, inv, qprime);
                 }
 
                 for (i = 0; i < newn; i++)
                 {
-                    MulAdd(dptr[i], inv, 0, p, ref t[pr][i]);
+                    MulAdd(sptr[i], inv, 0, qprime, ref t[primeIndex][i]);
                     long diff = 0;
 
-                    if (pr == 1)
+                    if (primeIndex == 1)
                     {
                         diff = (long)t[1][i] - t[0][i];
 
@@ -513,7 +524,7 @@ namespace Eduard
                         t[1][i] = (uint)((diff * w1) % primes[1]);
                     }
 
-                    if (pr == 2)
+                    if (primeIndex == 2)
                     {
                         diff = (long)t[2][i] - t[0][i];
 
@@ -531,31 +542,31 @@ namespace Eduard
                 }
             }
 
-            uint[] result = new uint[zl];
-            c1 = c2 = 0;
+            uint[] result = new uint[zwLen];
+            carry1 = carry2 = 0;
 
             /* propagate the carries */
-            for (i = 0; i < zl; i++)
+            for (i = 0; i < zwLen; i++)
             {
                 v1 = t[0][i];
                 v2 = t[1][i];
                 v3 = t[2][i];
 
                 v2 = MultDiv(v2, primes[0], v1, ref v1);
-                c1 += v1;
+                carry1 += v1;
 
-                if (c1 < v1)
+                if (carry1 < v1)
                     v2++;
 
-                ic = c2 + MultDiv(lsw, v3, (uint)c1, ref result[i]);
-                uint temp_c = (uint)c1;
+                icarry = carry2 + MultDiv(lsw, v3, (uint)carry1, ref result[i]);
+                uint temp_c = (uint)carry1;
 
-                c2 = MultDiv(msw, v3, (uint)ic, ref temp_c);
-                c1 = temp_c;
-                c1 += v2;
+                carry2 = MultDiv(msw, v3, (uint)icarry, ref temp_c);
+                carry1 = temp_c;
+                carry1 += v2;
 
-                if (c1 < v2)
-                    c2++;
+                if (carry1 < v2)
+                    carry2++;
             }
 
             bool sign = x.data.IsNegative
@@ -566,12 +577,13 @@ namespace Eduard
             return sign ? -res : res;
         }
 
-        static void dft(int logn, int pr, uint[] data)
+        static void DFT(int logn, int primeIndex, uint[] data)
         {
-            int mmax, m, j, k, istep, i, ii, jj, newn, offset;
-            uint w, temp, prime;
+            int mmax, m, j, k, istep;
+            int i, ti, tj, newn, offset;
+            uint w, temp, qprime;
 
-            prime = primes[pr];
+            qprime = primes[primeIndex];
             newn = 1 << logn;
 
             offset = logN - logn;
@@ -581,42 +593,43 @@ namespace Eduard
             {
                 istep = mmax;
                 mmax >>= 1;
-                ii = newn;
-                jj = newn / istep;
-                ii -= jj;
+                ti = newn;
+                tj = newn / istep;
+                ti -= tj;
 
                 for (i = 0; i < newn; i += istep)
                 {
                     j = i + mmax;
-                    temp = DiffMod(data[i], data[j], prime);
-                    data[i] = AddMod(data[i], data[j], prime);
+                    temp = DiffMod(data[i], data[j], qprime);
+                    data[i] = AddMod(data[i], data[j], qprime);
                     data[j] = temp;
                 }
 
                 for (m = 1; m < mmax; m++)
                 {
 
-                    w = roots[pr][(ii << offset) - 1];
-                    ii -= jj;
+                    w = roots[primeIndex][(ti << offset) - 1];
+                    ti -= tj;
 
                     for (i = m; i < newn; i += istep)
                     {
                         j = i + mmax;
-                        temp = DiffMod(data[i], data[j], prime);
-                        data[i] = AddMod(data[i], data[j], prime);
-                        MulAdd(w, temp, 0, prime, ref data[j]);
+                        temp = DiffMod(data[i], data[j], qprime);
+                        data[i] = AddMod(data[i], data[j], qprime);
+                        MulAdd(w, temp, 0, qprime, ref data[j]);
                     }
                 }
 
             }
         }
 
-        static void idft(int logn, int pr, uint[] data)
+        static void iDFT(int logn, int primeIndex, uint[] data)
         {
-            int mmax, m, j, k, i, istep, ii, jj, newn, offset;
-            uint w, temp = 0, prime;
+            int mmax, m, j, k, i, istep;
+            int ti, tj, newn, offset;
+            uint w, temp = 0, qprime;
 
-            prime = primes[pr];
+            qprime = primes[primeIndex];
             offset = logN - logn;
 
             newn = 1 << logn;
@@ -625,32 +638,32 @@ namespace Eduard
             for (k = 0; k < logn; k++)
             {
                 istep = mmax << 1;
-                ii = 0;
+                ti = 0;
 
-                jj = newn / istep;
-                ii += jj;
+                tj = newn / istep;
+                ti += tj;
 
                 for (i = 0; i < newn; i += istep)
                 {
                     j = i + mmax;
                     temp = data[j];
 
-                    data[j] = DiffMod(data[i], temp, prime);
-                    data[i] = AddMod(data[i], temp, prime);
+                    data[j] = DiffMod(data[i], temp, qprime);
+                    data[i] = AddMod(data[i], temp, qprime);
                 }
 
                 for (m = 1; m < mmax; m++)
                 {
-                    w = roots[pr][(ii << offset) - 1];
-                    ii += jj;
+                    w = roots[primeIndex][(ti << offset) - 1];
+                    ti += tj;
 
                     for (i = m; i < newn; i += istep)
                     {
                         j = i + mmax;
-                        MulAdd(w, data[j], 0, prime, ref temp);
+                        MulAdd(w, data[j], 0, qprime, ref temp);
 
-                        data[j] = DiffMod(data[i], temp, prime);
-                        data[i] = AddMod(data[i], temp, prime);
+                        data[j] = DiffMod(data[i], temp, qprime);
+                        data[i] = AddMod(data[i], temp, qprime);
                     }
                 }
 
@@ -660,17 +673,17 @@ namespace Eduard
 
         static void InitCRT()
         {
-            N = 1;
-            C = new BigInteger[count];
+            cmod = 1;
+            Cres = new BigInteger[count];
 
             for (int i = 0; i < count; i++)
-                N *= primes[i];
+                cmod *= primes[i];
 
             for(int i = 0; i < count; i++)
             {
-                BigInteger rev = N / primes[i];
+                BigInteger rev = cmod / primes[i];
                 BigInteger inv = rev.Inverse(primes[i]);
-                C[i] = (rev * inv) % N;
+                Cres[i] = (rev * inv) % cmod;
             }
         }
 
@@ -688,24 +701,24 @@ namespace Eduard
             return (uint)s;
         }
 
-        public static uint ModSquareRoot(uint x, uint m)
+        public static uint ModSquareRoot(uint val, uint mod)
         {
             uint z, y, v, w, t, q;
             int i, e, n, r;
 
-            if ((m & 3) == 3)
-                return pow(x, (m + 1) >> 2, m);
+            if ((mod & 3) == 3)
+                return pow(val, (mod + 1) >> 2, mod);
 
-            if((m & 7) == 5)
+            if((mod & 7) == 5)
             {
-                t = pow(x, (m - 1) >> 2, m);
-                if (t == 1) return pow(x, (m + 3) >> 3, m);
+                t = pow(val, (mod - 1) >> 2, mod);
+                if (t == 1) return pow(val, (mod + 3) >> 3, mod);
 
-                if (t == m - 1)
+                if (t == mod - 1)
                 {
-                    MulAdd(4, x, 0, m, ref t);
-                    t = pow(t, (m + 3) >> 3, m);
-                    MulAdd(t, (m + 1) >> 1, 0, m, ref t);
+                    MulAdd(4, val, 0, mod, ref t);
+                    t = pow(t, (mod + 3) >> 3, mod);
+                    MulAdd(t, (mod + 1) >> 1, 0, mod, ref t);
                     return t;
                 }
 
@@ -713,7 +726,7 @@ namespace Eduard
             }
 
             bool pp = true;
-            q = m - 1;
+            q = mod - 1;
             e = 0;
 
             while ((q & 1) == 0)
@@ -726,7 +739,7 @@ namespace Eduard
 
             for (r = 2; ; r++)
             {
-                z = pow((uint)r, q, m);
+                z = pow((uint)r, q, mod);
                 if (z == 1) continue;
 
                 t = z;
@@ -734,57 +747,57 @@ namespace Eduard
 
                 for (i = 1; i < e; i++)
                 {
-                    if (t == m - 1) pp = true;
-                    MulAdd(t, t, 0, m, ref t);
+                    if (t == mod - 1) pp = true;
+                    MulAdd(t, t, 0, mod, ref t);
                     if (t == 1 && !pp) return 0;
                 }
 
-                if (t == m - 1) break;
+                if (t == mod - 1) break;
                 if (!pp) return 0;   /* m is not prime */
             }
 
             y = z;
             r = e;
-            v = pow(x, (q + 1) >> 1, m);
-            w = pow(x, q, m);
+            v = pow(val, (q + 1) >> 1, mod);
+            w = pow(val, q, mod);
 
             while (w != 1)
             {
                 t = w;
                 for (n = 0; t != 1; n++) 
-                    MulAdd(t, t, 0, m, ref t);
+                    MulAdd(t, t, 0, mod, ref t);
 
                 if (n >= r) return 0;
-                y = pow(y, (uint)1 << (r - n - 1), m);
-                MulAdd(v, y, 0, m, ref v);
-                MulAdd(y, y, 0, m, ref y);
-                MulAdd(w, y, 0, m, ref w);
+                y = pow(y, (uint)1 << (r - n - 1), mod);
+                MulAdd(v, y, 0, mod, ref v);
+                MulAdd(y, y, 0, mod, ref y);
+                MulAdd(w, y, 0, mod, ref w);
                 r = n;
             }
 
             return v;
         }
 
-        static uint MulAdd(uint a, uint b, uint c, uint m, ref uint rp)
+        static uint MulAdd(uint x, uint y, uint z, uint m, ref uint resm)
         {
             uint q;
-            ulong p = (ulong)a * b + c;
+            ulong p = (ulong)x * y + z;
             q = (uint)(p / m);
-            rp = (uint)(p - (ulong)q * m);
+            resm = (uint)(p - (ulong)q * m);
             return q;
         }
 
-        static uint pow(uint x, uint n, uint m)
+        static uint pow(uint a, uint e, uint m)
         {
             ulong res = 1;
-            ulong t = x;
+            ulong t = a;
 
-            while(n > 0)
+            while(e > 0)
             {
-                if ((n & 1) == 1)
+                if ((e & 1) == 1)
                     res = (res * t) % m;
 
-                n >>= 1;
+                e >>= 1;
                 t = (t * t) % m;
             }
 
