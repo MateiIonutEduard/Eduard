@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Eduard;
+using System.Diagnostics;
 
 namespace Eduard.Cryptography
 {
     /* Bernstein, D.J., Birkner, P., Joye, M., Lange, T. and Peters, C., 2008, June. Twisted edwards curves. 
      * In International conference on cryptology in Africa (pp. 389-405). Springer Berlin Heidelberg. */
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class TwistedEdwardsProjectiveMath
     {
         /// <summary>

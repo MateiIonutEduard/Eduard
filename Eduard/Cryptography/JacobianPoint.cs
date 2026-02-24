@@ -1,4 +1,7 @@
-﻿namespace Eduard.Cryptography
+﻿using System;
+using Eduard;
+
+namespace Eduard.Cryptography
 {
     /// <summary>
     /// Represents a projective Jacobian point (X, Y, Z) that maps to the affine elliptic curve point (X/Z^2, Y/Z^3).

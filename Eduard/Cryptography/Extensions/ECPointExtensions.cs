@@ -1,8 +1,13 @@
-﻿namespace Eduard.Cryptography.Extensions
+﻿using System.Diagnostics;
+
+namespace Eduard.Cryptography.Extensions
 {
     /// <summary>
     /// This class is a utility for converting projective points to affine form and vice versa.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class ECPointExtensions
     {
         /// <summary>

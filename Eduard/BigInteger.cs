@@ -1,17 +1,22 @@
-﻿using Eduard.Cryptography;
-using System;
+﻿using System;
+using System.Text;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.Security.Cryptography;
+using Eduard.Cryptography;
+using Eduard;
 
 namespace Eduard
 {
     /// <summary>
     /// Represents an arbitrarily large signed integer.
     /// </summary>
+#if !USE_PROFILER
     [DebuggerStepThrough]
+#endif
     public sealed class BigInteger
     {
-        private Data data;
+        internal Data data;
 
         /// <summary>
         /// Create a <seealso cref="BigInteger"/> with an integer value of 0.
@@ -176,7 +181,7 @@ namespace Eduard
             data.Update();
         }
 
-        private BigInteger(Data buffer)
+        internal BigInteger(Data buffer)
         {
             buffer.Update();
             data = buffer;
@@ -203,21 +208,30 @@ namespace Eduard
 
         private void BuildDecimal(string digits)
         {
-            int Sign = (digits[0] == '-' ? 1 : 0);
-            BigInteger result = new BigInteger();
-            BigInteger multiply = new BigInteger(1);
+            int sign = (digits[0] == '-' ? 1 : 0);
+            BigInteger res = 0, mult = 1;
+            const int size = 9;
 
-            for(int k = digits.Length - 1; k >= Sign; k--)
+            uint[] table = new uint[size];
+            int len = digits.Length;
+            table[0] = 10;
+
+            for (int i = 1; i < size; i++)
+                table[i] = table[i - 1] * 10;
+
+            for (int i = len; i > sign; i -= size)
             {
-                int digit = digits[k] - '0';
-                result += (multiply * digit);
-                multiply *= 10;
+                int startIndex = Math.Max(0, i - size);
+                int length = i - startIndex;
+
+                string chunk = digits.Substring(startIndex, length);
+                int value = int.Parse(chunk);
+
+                res += (value * mult);
+                mult *= table[length - 1];
             }
 
-            if (Sign == 1)
-                result = result.Negate();
-
-            data = result.data;
+            data = res.data;
         }
 
         private void BuildHexaDecimal(string digits)
@@ -511,24 +525,48 @@ namespace Eduard
 
         private static BigInteger Multiply(BigInteger left, BigInteger right)
         {
-            int order = left.data.Used + right.data.Used;
-            if(order <= 16) return PlainMultiply(left, right);
-            else
+            int order = Math.Min(left.data.Used, right.data.Used);
+
+#if !USE_BENCHMARKING
+            int FFT_THRESHOLD = (int)Threshold.BIGINT_FFT_THRESHOLD;
+            int KARATSUBA_THRESHOLD = (int)Threshold.BIGINT_KARATSUBA_MULT_THRESHOLD;
+#else
+            int FFT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_FFT);
+            int KARATSUBA_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_KARATSUBA_MULTIPLY);
+#endif
+
+            if (order >= FFT_THRESHOLD)
+                return FFT.FastBigMult(left, right);
+            else if (order >= KARATSUBA_THRESHOLD)
             {
-                bool Sign = (left.IsNegative != right.IsNegative);
-                left = left.Abs();
-                right = right.Abs();
+                bool sign = (left.IsNegative != right.IsNegative);
+                left = left.Abs(); right = right.Abs();
 
                 BigInteger result = KMultiply(left, right);
-                return Sign ? -result : result;
+                return sign ? -result : result;
             }
+            else
+                return PlainMultiply(left, right);
         }
 
         private static BigInteger Square(BigInteger val)
         {
-            if (2 * val.data.Used <= 16) return PlainSquare(val);
-            else
+            int order = val.data.Used;
+
+#if !USE_BENCHMARKING
+            int FFT_THRESHOLD = (int)Threshold.BIGINT_FFT_THRESHOLD;
+            int KARATSUBA_THRESHOLD = (int)Threshold.BIGINT_KARATSUBA_SQUARE_THRESHOLD;
+#else
+            int FFT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_FFT);
+            int KARATSUBA_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_KARATSUBA_SQUARING);
+#endif
+
+            if (order >= FFT_THRESHOLD)
+                return FFT.FastBigMult(val, val);
+            else if (order >= KARATSUBA_THRESHOLD)
                 return KSquare(val);
+            else
+                return PlainSquare(val);
         }
 
         /// <summary>
@@ -1352,7 +1390,13 @@ namespace Eduard
                 negative = true;
             }
 
-            if (Modulus.data.Used >= 16)
+#if !USE_BENCHMARKING
+            int WORDS_THRESHOLD = (int)Threshold.BIGINT_WORDS_THRESHOLD;
+#else
+            int WORDS_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_WORDS_THRESHOLD);
+#endif
+
+            if (Modulus.data.Used >= WORDS_THRESHOLD)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
@@ -1781,26 +1825,45 @@ namespace Eduard
         /// <returns></returns>
         public override string ToString()
         {
-            if (IsZero)
-                return "0";
-
+            if (IsZero) return "0";
             BigInteger self = Abs();
-            BigInteger Quotient, Remainder;
-            BigInteger Base = new BigInteger(10);
-            string result = "";
+            const int chunkSize = 9;
 
-            while(self.data.Used > 1 || (self.data.Used == 1 && self.data[0] != 0))
+            uint[] powers = new uint[chunkSize];
+            powers[0] = 10;
+
+            for (int i = 1; i < chunkSize; i++)
+                powers[i] = powers[i - 1] * 10;
+
+            BigInteger Base = 1000000000;
+            BigInteger Quotient, Remainder;
+            var chunks = new List<int>();
+
+            while (!self.IsZero)
             {
-                SingleDivide(self, Base, out Quotient, out Remainder);
-                char digit = (char)(Remainder.data[0] + 48);
-                result = digit + result;
+                SingleDivide(self, Base,
+                    out Quotient,
+                    out Remainder);
+
+                int chunk = (int)Remainder;
+                chunks.Add(chunk);
                 self = Quotient;
             }
 
-            if (IsNegative)
-                return "-" + result;
+            var sb = new StringBuilder();
 
-            return result;
+            if (chunks.Count > 0)
+            {
+                int len = chunks.Count - 2;
+                sb.Append(chunks[len + 1].ToString());
+
+                for (int i = len; i >= 0; i--)
+                    sb.Append(chunks[i].ToString("D9"));
+            }
+
+            return IsNegative ? "-" +
+                sb.ToString() :
+                sb.ToString();
         }
 
         /// <summary>
@@ -1809,17 +1872,15 @@ namespace Eduard
         /// <returns></returns>
         public string ToHexString()
         {
-            if (IsZero)
-                return "0";
+            if (IsZero) return "0";
+            var sb = new StringBuilder();
+            int len = data.Used - 1;
 
-            string result = "";
+            for (int j = 0; j < len; j++)
+                sb.Append(data[j].ToString("X8"));
 
-            for (int j = 0; j < data.Used - 1; j++)
-                result = data[j].ToString("X8") + result;
-
-            result = string.Format("{0:X}", data[data.Used - 1]) + result;
-
-            return result;
+            sb.Append(string.Format("{0:X}", data[len]));
+            return sb.ToString();
         }
 
         /// <summary>

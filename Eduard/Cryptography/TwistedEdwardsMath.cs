@@ -1,15 +1,16 @@
-﻿using Eduard.Cryptography.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Eduard;
+using System.Diagnostics;
+using Eduard.Cryptography.Extensions;
 
 namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides mathematical operations for points on the twisted Edwards curve.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class TwistedEdwardsMath
     {
         /// <summary>

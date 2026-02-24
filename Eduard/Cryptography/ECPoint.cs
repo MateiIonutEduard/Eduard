@@ -1,4 +1,5 @@
 ﻿using System;
+using Eduard;
 
 namespace Eduard.Cryptography
 {

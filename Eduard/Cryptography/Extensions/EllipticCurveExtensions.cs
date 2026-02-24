@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,9 @@ namespace Eduard.Cryptography.Extensions
     /// <summary>
     /// This class provides utilities to convert elliptic curves between families and map points to an isomorphic curve via isogenies.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class EllipticCurveExtensions
     {
         /// <summary>

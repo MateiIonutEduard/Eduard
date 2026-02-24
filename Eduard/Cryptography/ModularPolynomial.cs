@@ -1,14 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Eduard;
 using System.Diagnostics;
-using Eduard;
+using System.Collections.Generic;
 
 namespace Eduard.Cryptography
 {
     /// <summary>
     /// Represents the modular bivariate polynomials.
     /// </summary>
-    //[DebuggerStepThrough]
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public sealed class ModularPolynomial
     {
         public Node head;

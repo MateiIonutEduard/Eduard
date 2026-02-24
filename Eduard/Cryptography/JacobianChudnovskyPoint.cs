@@ -1,4 +1,7 @@
-﻿namespace Eduard.Cryptography
+﻿using System;
+using Eduard;
+
+namespace Eduard.Cryptography
 {
     /// <summary>
     /// Represents a Jacobian-Chudnovsky projective point (X, Y, Z, Z^2, Z^3) that maps to the affine elliptic curve point (X/Z^2, Y/Z^3).

@@ -7,7 +7,9 @@ namespace Eduard
     /// <summary>
     /// Represents the sieve of Atkin.
     /// </summary>
+#if !USE_PROFILER
     [DebuggerStepThrough]
+#endif
     public sealed class Sieve
     {
         private List<int> list;

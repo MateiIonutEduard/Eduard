@@ -4,7 +4,9 @@ using System.Collections.Generic;
 
 namespace Eduard
 {
+#if !USE_PROFILER
     [DebuggerStepThrough]
+#endif
     internal struct Data
     {
         private uint[] data;

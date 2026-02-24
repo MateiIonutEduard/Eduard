@@ -1,6 +1,12 @@
-﻿namespace Eduard.Cryptography
+﻿using Eduard;
+using System.Diagnostics;
+
+namespace Eduard.Cryptography
 {
     /* Hankerson, D.R., Vanstone, S.A., Menezes, A.J. (2004): Guide to elliptic curve cryptography. Springer, New York, NY. */
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class JacobianMath
     {
         public static JacobianPoint Add(EllipticCurve curve, JacobianPoint left, JacobianPoint right)

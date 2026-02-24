@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Eduard;
+using System.Diagnostics;
 
 namespace Eduard.Cryptography
 {
     /// <summary>
     /// Provides mathematical operations for points on the Montgomery curve.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class MontyMath
     {
         /// <summary>

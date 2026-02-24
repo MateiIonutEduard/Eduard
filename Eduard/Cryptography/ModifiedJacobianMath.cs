@@ -1,6 +1,12 @@
-﻿namespace Eduard.Cryptography
+﻿using Eduard;
+using System.Diagnostics;
+
+namespace Eduard.Cryptography
 {
     /* Cohen–Miyaji–Ono (1998) "Efficient elliptic curve exponentiation using mixed coordinates" */
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public static class ModifiedJacobianMath
     {
         public static ModifiedJacobianPoint Add(EllipticCurve curve, ModifiedJacobianPoint left, ModifiedJacobianPoint right)

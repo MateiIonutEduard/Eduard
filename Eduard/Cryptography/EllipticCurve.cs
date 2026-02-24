@@ -1,10 +1,16 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using Eduard;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace Eduard.Cryptography
 {
     /// <summary>
     /// Represents an elliptic curve given in Weierstrass form.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public sealed class EllipticCurve
     {
         public BigInteger a, b;

@@ -1,5 +1,16 @@
-﻿namespace Eduard.Cryptography
+﻿using System;
+
+namespace Eduard
 {
+    /// <summary>
+    /// Provides Number Theoretic Transform (NTT) based algorithms for fast polynomial
+    /// and integer arithmetic over finite fields.
+    /// </summary>
+    /// <remarks>
+    /// Implements FFT-based multiplication for polynomials and integers using multiple
+    /// prime moduli and <br/>Chinese Remainder Theorem (CRT) reconstruction.
+    /// Enables O(n log n) complexity for large operands <br/>where classical methods become prohibitive.
+    /// </remarks>
     public class FFT
     {
         static uint[] primes;
@@ -9,12 +20,27 @@
         static uint[][] s1, s2;
         static int logN, count;
 
+        static uint w1, w2;
+        static uint w3, msw, lsw;
+
         static int degree;
         static uint[][] t;
 
         static BigInteger[] C;
         static BigInteger N;
 
+        /// <summary>
+        /// Multiplies two polynomials using NTT with multiple prime moduli.
+        /// </summary>
+        /// <param name="x">Coefficients of first polynomial.</param>
+        /// <param name="y">Coefficients of second polynomial.</param>
+        /// <param name="field">The finite field modulus.</param>
+        /// <returns>Product polynomial coefficients.</returns>
+        /// <remarks>
+        /// Transforms both polynomials to NTT domain, performs point-wise multiplication, <br/>
+        /// inverse transform, and CRT reconstruction to recover exact integer coefficients <br/>
+        /// modulo the target field. Automatically selects optimal transform size.
+        /// </remarks>
         public static BigInteger[] FastPolyMult(BigInteger[] x, BigInteger[] y, BigInteger field)
         {
             int i, j, newn, logn, np, degree;
@@ -95,6 +121,17 @@
             return res;
         }
 
+        /// <summary>
+        /// Squares a polynomial using NTT for improved performance.
+        /// </summary>
+        /// <param name="x">Coefficients of input polynomial.</param>
+        /// <param name="field">The finite field modulus.</param>
+        /// <returns>Squared polynomial coefficients.</returns>
+        /// <remarks>
+        /// Optimized version of polynomial multiplication for squaring operations. <br/>
+        /// Requires only one forward transform of the input polynomial, reducing <br/>
+        /// computational cost by approximately 30% compared to generic multiplication.
+        /// </remarks>
         public static BigInteger[] FastPolySquare(BigInteger[] x, BigInteger field)
         {
             int i, j, newn, logn, np, degree;
@@ -160,6 +197,18 @@
             return res;
         }
 
+        /// <summary>
+        /// Computes polynomial remainder using FFT-based division algorithm.
+        /// </summary>
+        /// <param name="G">Dividend polynomial coefficients (modified in-place).</param>
+        /// <param name="R">Output remainder polynomial coefficients.</param>
+        /// <param name="field">The finite field modulus.</param>
+        /// <returns>true if reduction was performed, false if modulus is zero.</returns>
+        /// <remarks>
+        /// Implements fast polynomial modulus using precomputed reciprocals. <br/>
+        /// Operates in-place on G to minimize memory allocations. Used internally <br/>
+        /// by Polynomial.Reduce() for large-degree moduli.
+        /// </remarks>
         public static bool FastPolyMod(BigInteger[] G, BigInteger[] R, BigInteger field)
         {
             int i, j, newn, logn, np, n;
@@ -272,6 +321,18 @@
             return true;
         }
 
+        /// <summary>
+        /// Precomputes FFT parameters for a given modulus polynomial.
+        /// </summary>
+        /// <param name="n">Degree of the modulus polynomial.</param>
+        /// <param name="rf">Reciprocal polynomial coefficients.</param>
+        /// <param name="f">Modulus polynomial coefficients.</param>
+        /// <param name="field">The finite field modulus.</param>
+        /// <remarks>
+        /// Computes and stores the NTT of both the modulus and its reciprocal <br/>
+        /// for efficient repeated modular reductions. Called automatically when <br/>
+        /// a new modulus polynomial is encountered in reduction operations.
+        /// </remarks>
         public static void SetPolyMod(int n, BigInteger[] rf, BigInteger[] f, BigInteger field)
         {
             int i, j, np, newn, logn, deg;
@@ -393,6 +454,185 @@
 
             InitCRT();
             return pr;
+        }
+
+        static bool InitBigIntFFT(int logn)
+        {
+            BigInteger maxc = (BigInteger)1 << 32;
+
+            if (InitFFT(logn, maxc, maxc) != 3)
+                return false;
+
+            w1 = Inverse(primes[0], primes[1]);
+            w2 = Inverse(primes[0], primes[2]);
+            w3 = Inverse(primes[1], primes[2]);
+
+            ulong tw = (ulong)primes[0] * (ulong)primes[1];
+            lsw = (uint)(tw & 0xFFFFFFFF);
+
+            msw = (uint)(tw >> 32);
+            return true;
+        }
+
+        static uint MultDiv(uint a, uint b, uint c, ref uint rp)
+        {
+            ulong res = ((ulong)a * b) + c;
+            uint mask = 0xFFFFFFFF;
+
+            rp = (uint)(res & mask);
+            return (uint)(res >> 32);
+        }
+
+        /// <summary>
+        /// Multiplies two large integers using FFT and CRT reconstruction.
+        /// </summary>
+        /// <param name="x">First integer operand.</param>
+        /// <param name="y">Second integer operand.</param>
+        /// <returns>Product of x and y.</returns>
+        /// <remarks>
+        /// Implements Schönhage-Strassen style multiplication using three prime moduli <br/>
+        /// and Garner's algorithm for CRT reconstruction. Provides O(n log n) complexity <br/>
+        /// for integers exceeding Karatsuba threshold. Used internally by BigInteger <br/>
+        /// multiplication for large operands.
+        /// </remarks>
+        /// <exception cref="OutOfMemoryException">Thrown when operands exceed maximum supported size.</exception>
+        public static BigInteger FastBigMult(BigInteger x, BigInteger y)
+        {
+            int i, pr, xl, yl, zl, newn, logn;
+            uint v1, v2, v3, p;
+
+            uint fac, inv;
+            uint c1, c2, ic;
+
+            uint[] w = new uint[3];
+            newn = 1; logn = 0;
+
+            xl = x.data.Used;
+            yl = y.data.Used;
+            zl = xl + yl;
+
+            while (zl > newn)
+            {
+                newn <<= 1;
+                logn++;
+            }
+
+            uint[] wptr = new uint[newn];
+            uint[] dptr = new uint[newn];
+
+            if (logn > logN)
+            {
+                if (!InitBigIntFFT(logn))
+                    throw new OutOfMemoryException(
+                        "Numbers too big for FFT multiplication.");
+            }
+
+            for (pr = 0; pr < 3; pr++)
+            {
+                p = primes[pr];
+                inv = inverse[pr];
+
+                for (i = 0; i < xl; i++)
+                    dptr[i] = x.data[i] % p;
+
+                for (i = xl; i < newn; i++)
+                    dptr[i] = 0;
+
+                dft(logn, pr, dptr);
+
+                if (x != y)
+                {
+                    for (i = 0; i < yl; i++)
+                        wptr[i] = y.data[i] % p;
+
+                    for (i = yl; i < newn; i++)
+                        wptr[i] = 0;
+
+                    dft(logn, pr, wptr);
+                }
+                else
+                {
+                    for (i = 0; i < newn; i++)
+                        wptr[i] = dptr[i];
+                }
+
+                for (i = 0; i < newn; i++)
+                    MulAdd(dptr[i], wptr[i], 0, p, ref dptr[i]);
+
+                idft(logn, pr, dptr);
+
+                if (logN > logn)
+                {
+                    fac = (uint)1 << (logN - logn);
+                    inv = MulMod(fac, inv, p);
+                }
+
+                for (i = 0; i < newn; i++)
+                {
+                    MulAdd(dptr[i], inv, 0, p, ref t[pr][i]);
+                    long diff = 0;
+
+                    if (pr == 1)
+                    {
+                        diff = (long)t[1][i] - t[0][i];
+
+                        while (diff < 0)
+                            diff += primes[1];
+
+                        t[1][i] = (uint)((diff * w1) % primes[1]);
+                    }
+
+                    if (pr == 2)
+                    {
+                        diff = (long)t[2][i] - t[0][i];
+
+                        while (diff < 0)
+                            diff += primes[2];
+
+                        diff = (uint)((diff * w2) % primes[2]);
+                        diff -= t[1][i];
+
+                        while (diff < 0)
+                            diff += primes[2];
+
+                        t[2][i] = (uint)((diff * w3) % primes[2]);
+                    }
+                }
+            }
+
+            uint[] result = new uint[zl];
+            c1 = c2 = 0;
+
+            /* propagate the carries */
+            for (i = 0; i < zl; i++)
+            {
+                v1 = t[0][i];
+                v2 = t[1][i];
+                v3 = t[2][i];
+
+                v2 = MultDiv(v2, primes[0], v1, ref v1);
+                c1 += v1;
+
+                if (c1 < v1)
+                    v2++;
+
+                ic = c2 + MultDiv(lsw, v3, (uint)c1, ref result[i]);
+                uint temp_c = (uint)c1;
+
+                c2 = MultDiv(msw, v3, (uint)ic, ref temp_c);
+                c1 = temp_c;
+                c1 += v2;
+
+                if (c1 < v2)
+                    c2++;
+            }
+
+            bool sign = x.data.IsNegative
+                && y.data.IsNegative;
+
+            Data data = new Data(result);
+            BigInteger res = new BigInteger(data);
+            return sign ? -res : res;
         }
 
         static void dft(int logn, int pr, uint[] data)
@@ -517,7 +757,7 @@
             return (uint)s;
         }
 
-        public static uint ModSquareRoot(uint x, uint m)
+        static uint ModSquareRoot(uint x, uint m)
         {
             uint z, y, v, w, t, q;
             int i, e, n, r;

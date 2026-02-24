@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using Eduard;
+using System.Diagnostics;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Eduard.Cryptography
 {
     /// <summary>
     /// Represents an elliptic curve given in Montgomery form.
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public sealed class MontgomeryCurve
     {
         public BigInteger field, order;
