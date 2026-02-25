@@ -157,9 +157,11 @@ namespace Eduard.Cryptography
             }
             else
             {
-                int i, j, n;
-                int nb, nbs = 0, nzs = 0;
+                int i, j, win;
+                int bc, ubits = 0;
+
                 int windowSize = 8;
+                int tbits = 0;
 
                 var table = new JacobianChudnovskyPoint[windowSize];
                 table[0] = curve.ToJacobianChudnovsky(point);
@@ -167,47 +169,47 @@ namespace Eduard.Cryptography
                 var squarePoint = JacobianChudnovskyMath.Doubling(curve, table[0]);
                 JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
 
-                BigInteger k3 = 3 * k;
-                nb = k3.GetBits();
+                BigInteger exp3 = 3 * k;
+                bc = exp3.GetBits();
 
                 /* compute the lookup table */
                 for (i = 1; i < windowSize; i++)
                     table[i] = JacobianChudnovskyMath.Add(curve, table[i - 1], squarePoint);
 
-                for (i = nb - 1; i >= 1;)
+                for (i = bc - 1; i >= 1;)
                 {
-                    n = WindowUtil.NAFWindow(k, k3, i, ref nbs, ref nzs, windowSize);
+                    win = WindowUtil.NAFWindow(k, exp3, i, ref ubits, ref tbits, windowSize);
                     var auxModifiedJacobianPoint = curve.ToModifiedJacobian(auxPoint);
 
-                    for (j = 0; j < nbs - 1; j++)
+                    for (j = 0; j < ubits - 1; j++)
                         auxModifiedJacobianPoint = ModifiedJacobianMath.Doubling(curve, auxModifiedJacobianPoint);
 
-                    if (nbs >= 1)
+                    if (ubits >= 1)
                         auxPoint = JacobianMath.Doubling(curve, curve.ToJacobian(auxModifiedJacobianPoint));
 
-                    if (n > 0)
+                    if (win > 0)
                     {
-                        var table_point = curve.ToJacobian(table[n >> 1]);
+                        var table_point = curve.ToJacobian(table[win >> 1]);
                         auxPoint = JacobianMath.Add(curve, table_point, auxPoint);
                     }
-                    if (n < 0)
+                    if (win < 0)
                     {
-                        var table_point = curve.ToJacobian(table[(-n) >> 1]);
+                        var table_point = curve.ToJacobian(table[(-win) >> 1]);
                         var negative_point = JacobianMath.Negate(curve, table_point);
                         auxPoint = JacobianMath.Add(curve, negative_point, auxPoint);
                     }
 
-                    i -= nbs;
+                    i -= ubits;
 
-                    if (nzs != 0)
+                    if (tbits != 0)
                     {
                         var lastPoint = curve.ToModifiedJacobian(auxPoint);
-                        i -= nzs;
+                        i -= tbits;
 
-                        for (j = 0; j < nzs - 1; j++)
+                        for (j = 0; j < tbits - 1; j++)
                             lastPoint = ModifiedJacobianMath.Doubling(curve, lastPoint);
 
-                        if (nzs >= 1)
+                        if (tbits >= 1)
                         {
                             auxPoint = curve.ToJacobian(lastPoint);
                             auxPoint = JacobianMath.Doubling(curve, auxPoint);

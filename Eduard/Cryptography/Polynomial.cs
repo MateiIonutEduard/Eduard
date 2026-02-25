@@ -511,49 +511,49 @@ namespace Eduard.Cryptography
         /// </summary>
         /// <param name="val">The base polynomial.</param>
         /// <param name="exponent">The exponent value.</param>
-        /// <param name="mod">The modulus polynomial.</param>
+        /// <param name="modulus">The modulus polynomial.</param>
         /// <returns>The base polynomial raised to the exponent modulo the modulus.</returns>
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
-        public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial mod)
+        public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial modulus)
         {
             Polynomial nb = new Polynomial(val);
             Polynomial result = 1;
 
-            if(mod == 0)
+            if(modulus == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
-            if (mod.Degree >= 16)
+            if (modulus.Degree >= 16)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
 
                 Polynomial[] table = new Polynomial[store];
-                table[0] = nb % mod;
-                Polynomial b2 = Reduce(table[0] * table[0], mod);
+                table[0] = nb % modulus;
+                Polynomial b2 = Reduce(table[0] * table[0], modulus);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
-                    table[i] = Reduce(table[i - 1] * b2, mod);
+                    table[i] = Reduce(table[i - 1] * b2, modulus);
 
                 int bits = exponent.GetBits();
-                int nbw = 0, nzs = 0;
+                int ubits = 0, tbits = 0;
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int n = WindowUtil.Window(exponent, i, ref nbw, ref nzs);
+                    int win = WindowUtil.Window(exponent, i, ref ubits, ref tbits);
 
-                    for (int j = 0; j < nbw; j++)
-                        result = Reduce(result * result, mod);
+                    for (int j = 0; j < ubits; j++)
+                        result = Reduce(result * result, modulus);
 
-                    if (n != 0)
-                        result = Reduce(result * table[n >> 1], mod);
-                    i -= nbw;
-                    if (nzs != 0)
+                    if (win != 0)
+                        result = Reduce(result * table[win >> 1], modulus);
+                    i -= ubits;
+                    if (tbits != 0)
                     {
-                        for (int j = 0; j < nzs; j++)
-                            result = Reduce(result * result, mod);
-                        i -= nzs;
+                        for (int j = 0; j < tbits; j++)
+                            result = Reduce(result * result, modulus);
+                        i -= tbits;
                     }
                 }
             }
@@ -566,11 +566,11 @@ namespace Eduard.Cryptography
                     if (exponent.TestBit(k))
                     {
                         Polynomial temp = nb * result;
-                        result = temp % mod;
+                        result = temp % modulus;
                     }
 
                     nb = nb * nb;
-                    nb %= mod;
+                    nb %= modulus;
                 }
             }
 

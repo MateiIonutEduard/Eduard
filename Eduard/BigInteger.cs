@@ -3,8 +3,6 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using Eduard.Cryptography;
-using Eduard;
 
 namespace Eduard
 {
@@ -1353,40 +1351,40 @@ namespace Eduard
         /// <summary>
         /// Performs modulus division on a number raised to the power of another number.
         /// </summary>
-        /// <param name="Base">The number to raise to the exponent power.</param>
-        /// <param name="Exponent">The exponent to raise value by.</param>
-        /// <param name="Modulus">The number by which to divide value raised to the exponent power.</param>
+        /// <param name="val">The number to raise to the exponent power.</param>
+        /// <param name="exponent">The exponent to raise value by.</param>
+        /// <param name="modulus">The number by which to divide value raised to the exponent power.</param>
         /// <exception cref="DivideByZeroException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArithmeticException"></exception>
         /// <returns></returns>
-        public static BigInteger Pow(BigInteger Base, BigInteger Exponent, BigInteger Modulus)
+        public static BigInteger Pow(BigInteger val, BigInteger exponent, BigInteger modulus)
         {
-            if (Modulus.IsZero)
+            if (modulus.IsZero)
                 throw new DivideByZeroException("Attempted to divide by zero.");
 
-            if (Base.IsZero && Exponent.IsZero)
+            if (val.IsZero && exponent.IsZero)
                 throw new ArithmeticException("Arithmetic operation unsupported.");
 
-            if (Exponent.IsNegative)
+            if (exponent.IsNegative)
                 throw new ArgumentOutOfRangeException("The exponent must be positive.");
 
-            if (Modulus.IsNegative)
-                Modulus = -Modulus;
+            if (modulus.IsNegative)
+                modulus = -modulus;
 
-            int k = Modulus.data.Used << 1;
+            int k = modulus.data.Used << 1;
             Data buffer = new Data(k + 1, k + 1);
             buffer[k] = 0x0001;
 
-            BigInteger Constant = new BigInteger(buffer);
-            Constant /= Modulus;
+            BigInteger bconst = new BigInteger(buffer);
+            bconst /= modulus;
 
             BigInteger result = 1;
             bool negative = false;
 
-            if (Base.IsNegative)
+            if (val.IsNegative)
             {
-                Base = -Base;
+                val = -val;
                 negative = true;
             }
 
@@ -1396,43 +1394,43 @@ namespace Eduard
             int WORDS_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_WORDS_THRESHOLD);
 #endif
 
-            if (Modulus.data.Used >= WORDS_THRESHOLD)
+            if (modulus.data.Used >= WORDS_THRESHOLD)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
 
                 BigInteger[] table = new BigInteger[store];
-                table[0] = Base % Modulus;
-                BigInteger b2 = BarrettReduction(table[0] * table[0], Modulus, Constant);
+                table[0] = val % modulus;
+                BigInteger b2 = BarrettReduction(table[0] * table[0], modulus, bconst);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
-                    table[i] = BarrettReduction(table[i - 1] * b2, Modulus, Constant);
+                    table[i] = BarrettReduction(table[i - 1] * b2, modulus, bconst);
 
-                int bits = Exponent.GetBits();
-                int nbw = 0, nzs = 0;
+                int bits = exponent.GetBits();
+                int ubits = 0, tbits = 0;
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int n = WindowUtil.Window(Exponent, i, ref nbw, ref nzs, 5);
+                    int win = WindowUtil.Window(exponent, i, ref ubits, ref tbits, 5);
 
-                    for (int j = 0; j < nbw; j++)
-                        result = BarrettReduction(result * result, Modulus, Constant);
+                    for (int j = 0; j < ubits; j++)
+                        result = BarrettReduction(result * result, modulus, bconst);
 
-                    if (n != 0)
-                        result = BarrettReduction(result * table[n >> 1], Modulus, Constant);
-                    i -= nbw;
-                    if (nzs != 0)
+                    if (win != 0)
+                        result = BarrettReduction(result * table[win >> 1], modulus, bconst);
+                    i -= ubits;
+                    if (tbits != 0)
                     {
-                        for (int j = 0; j < nzs; j++)
-                            result = BarrettReduction(result * result, Modulus, Constant);
-                        i -= nzs;
+                        for (int j = 0; j < tbits; j++)
+                            result = BarrettReduction(result * result, modulus, bconst);
+                        i -= tbits;
                     }
                 }
             }
             else
             {
-                Data data = Exponent.data;
+                Data data = exponent.data;
                 uint temp = 0;
 
                 for (int i = 0; i < data.Used - 1; i++)
@@ -1442,9 +1440,9 @@ namespace Eduard
                     for (int j = 0; j < 32; j++)
                     {
                         if ((temp & 1) == 1)
-                            result = BarrettReduction(result * Base, Modulus, Constant);
+                            result = BarrettReduction(result * val, modulus, bconst);
 
-                        Base = BarrettReduction(Base * Base, Modulus, Constant);
+                        val = BarrettReduction(val * val, modulus, bconst);
                         temp >>= 1;
                     }
                 }
@@ -1454,14 +1452,14 @@ namespace Eduard
                 while (temp != 0)
                 {
                     if ((temp & 1) == 1)
-                        result = BarrettReduction(result * Base, Modulus, Constant);
+                        result = BarrettReduction(result * val, modulus, bconst);
 
-                    Base = BarrettReduction(Base * Base, Modulus, Constant);
+                    val = BarrettReduction(val * val, modulus, bconst);
                     temp >>= 1;
                 }
             }
 
-            if (negative && (Exponent.data[0] & 0x1) != 0)
+            if (negative && (exponent.data[0] & 0x1) != 0)
                 return -result;
 
             return result;

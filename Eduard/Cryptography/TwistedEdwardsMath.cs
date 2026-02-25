@@ -64,9 +64,11 @@ namespace Eduard.Cryptography
                 throw new NotImplementedException("Requires transformation to Montgomery form for improved performance.");
             else
             {
-                int i, j, n;
-                int nb, nbs = 0, nzs = 0;
+                int i, j, win;
+                int bc, ubits = 0;
+
                 int windowSize = 8;
+                int tbits = 0;
 
                 var table = new ExtendedProjectivePoint[windowSize];
                 table[0] = curve.ToExtendedProjective(point);
@@ -74,50 +76,50 @@ namespace Eduard.Cryptography
                 var squarePoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, table[0]);
                 ExtendedProjectivePoint auxPoint = ExtendedProjectivePoint.POINT_INFINITY;
 
-                BigInteger k3 = 3 * k;
-                nb = k3.GetBits();
+                BigInteger exp3 = 3 * k;
+                bc = exp3.GetBits();
 
                 /* compute the lookup table */
                 for (i = 1; i < windowSize; i++)
                     table[i] = TwistedEdwardsExtProjectiveMath.Add(curve, table[i - 1], squarePoint);
 
-                for (i = nb - 1; i >= 1;)
+                for (i = bc - 1; i >= 1;)
                 {
-                    n = WindowUtil.NAFWindow(k, k3, i, ref nbs, ref nzs, windowSize);
+                    win = WindowUtil.NAFWindow(k, exp3, i, ref ubits, ref tbits, windowSize);
                     var projectivePoint = curve.ToProjective(auxPoint);
 
-                    for (j = 0; j < nbs - 1; j++)
+                    for (j = 0; j < ubits - 1; j++)
                         projectivePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, projectivePoint);
 
-                    if (nbs >= 1)
+                    if (ubits >= 1)
                     {
                         var tempPoint = curve.GetPointCopy(projectivePoint);
                         auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
                     }
 
-                    if (n > 0)
+                    if (win > 0)
                     {
-                        var table_point = table[n >> 1];
+                        var table_point = table[win >> 1];
                         auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, table_point, auxPoint);
                     }
-                    if (n < 0)
+                    if (win < 0)
                     {
-                        var table_point = table[(-n) >> 1];
+                        var table_point = table[(-win) >> 1];
                         var negative_point = TwistedEdwardsExtProjectiveMath.Negate(curve, table_point);
                         auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, negative_point, auxPoint);
                     }
 
-                    i -= nbs;
+                    i -= ubits;
 
-                    if (nzs != 0)
+                    if (tbits != 0)
                     {
                         var lastPoint = curve.ToProjective(auxPoint);
-                        i -= nzs;
+                        i -= tbits;
 
-                        for (j = 0; j < nzs - 1; j++)
+                        for (j = 0; j < tbits - 1; j++)
                             lastPoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, lastPoint);
 
-                        if (nzs >= 1)
+                        if (tbits >= 1)
                         {
                             var tempPoint = curve.GetPointCopy(lastPoint);
                             auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
