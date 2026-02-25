@@ -16,6 +16,13 @@ namespace Eduard
         /// Pre-computed Barrett constant μ = ⌊2^(2k)/mod⌋.
         /// </summary>
         public static BigInteger k;
+        private static bool isEnabled;
+
+        static BarrettReducer()
+        {
+            isEnabled = false;
+            mod = k = 0;
+        }
 
         /// <summary>
         /// Initializes the reducer with a new modulus and pre-computes its Barrett constant.
@@ -24,6 +31,7 @@ namespace Eduard
         public static void SetModulus(BigInteger field)
         {
             k = BigInteger.BarrettConstant(field);
+            isEnabled = true;
             mod = field;
         }
 
@@ -36,7 +44,7 @@ namespace Eduard
         /// <returns>val mod field in range [0, field-1].</returns>
         public static BigInteger Reduce(BigInteger val, BigInteger field)
         {
-            if (mod == null || field == mod) SetModulus(field);
+            if (!isEnabled) SetModulus(field);
             return BigInteger.BarrettReduction(val, mod, k);
         }
     }
