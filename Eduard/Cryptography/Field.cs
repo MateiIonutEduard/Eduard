@@ -141,7 +141,11 @@ namespace Eduard.Cryptography
         /// </summary>
         public override bool Equals(object obj)
         {
-            return Equals((Field)obj);
+            if (!(obj is Field))
+                return false;
+
+            Field other = (Field)obj;
+            return Equals(other);
         }
 
         /// <summary>
