@@ -953,10 +953,14 @@ namespace Eduard.Cryptography
         /// </remarks>
         public override bool Equals(object obj)
         {
-            if (object.ReferenceEquals(this, (Polynomial)obj))
+            if (ReferenceEquals(this, obj))
                 return true;
 
-            return Equals((Polynomial)obj);
+            if (!(obj is Polynomial))
+                return false;
+
+            Polynomial other = (Polynomial)obj;
+            return Equals(other);
         }
 
         internal static BigInteger AddMod(BigInteger left, BigInteger right)
