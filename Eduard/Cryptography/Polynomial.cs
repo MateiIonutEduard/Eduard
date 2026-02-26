@@ -32,9 +32,6 @@ namespace Eduard.Cryptography
         internal static RandomNumberGenerator rand = RandomNumberGenerator.Create();
         private static bool enableSpeedup;
 
-        private static BigInteger constant;
-        internal static BigInteger field;
-
         /// <summary>
         /// Initializes a new polynomial instance representing the zero polynomial.
         /// </summary>
@@ -112,15 +109,14 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static void SetField(BigInteger field)
         {
-            Polynomial.field = field;
-            constant = BigInteger.BarrettConstant(field);
-
+            BarrettReducer.SetModulus(field);
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
         }
 
         internal static BigInteger Reduce(BigInteger val)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger temp = val % field;
 
             if (temp < 0)
@@ -159,7 +155,7 @@ namespace Eduard.Cryptography
             Polynomial result = new Polynomial(max);
 
             for (int i = 0; i <= max; i++)
-                result.coeffs[i] = AddMod(left.GetCoeff(i), right.GetCoeff(i));
+                result.coeffs[i] = BarrettReducer.AddMod(left.GetCoeff(i), right.GetCoeff(i));
 
             result.Update();
             return result;
@@ -177,7 +173,7 @@ namespace Eduard.Cryptography
             Polynomial result = new Polynomial(max);
 
             for (int i = 0; i <= max; i++)
-                result.coeffs[i] = SubMod(left.GetCoeff(i), right.GetCoeff(i));
+                result.coeffs[i] = BarrettReducer.SubMod(left.GetCoeff(i), right.GetCoeff(i));
 
             result.Update();
             return result;
@@ -202,6 +198,7 @@ namespace Eduard.Cryptography
         private static Polynomial Multiply(Polynomial left, Polynomial right)
         {
             int min = Math.Min(left.Degree, right.Degree);
+            BigInteger field = BarrettReducer.GetModulus();
 
 #if !USE_BENCHMARKING
             int FFT_POLY_MULT_THRESHOLD = (int)Threshold.POLY_FFT_MULT_THRESHOLD;
@@ -211,7 +208,6 @@ namespace Eduard.Cryptography
             if (min >= FFT_POLY_MULT_THRESHOLD)
             {
                 int deg = left.Degree + right.Degree;
-
                 BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs, field);
 
                 while (deg > 0 && coeffs[deg] == 0)
@@ -237,6 +233,7 @@ namespace Eduard.Cryptography
 #endif
             if (val.Degree >= FFT_POLY_SQUARE_THRESHOLD)
             {
+                BigInteger field = BarrettReducer.GetModulus();
                 BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs, field);
                 int deg = val.Degree << 1;
 
@@ -284,6 +281,7 @@ namespace Eduard.Cryptography
 
             BigInteger[] G = new BigInteger[n + 1];
             BigInteger[] R = new BigInteger[degm + 1];
+            BigInteger field = BarrettReducer.GetModulus();
 
             for (int i = 0; i <= n; i++)
                 G[i] = x.coeffs[i];
@@ -319,6 +317,7 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static void SetPolyMod(Polynomial poly)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             int m, n = poly.Degree;
 
 #if USE_BENCHMARKING
@@ -371,7 +370,7 @@ namespace Eduard.Cryptography
                 for (int k = 0; k <= right.Degree; k++)
                 {
                     if (right.GetCoeff(k) == 0) continue;
-                    result.coeffs[j + k] = AddMod(result.coeffs[j + k], MulMod(left.GetCoeff(j), right.GetCoeff(k)));
+                    result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MulMod(left.GetCoeff(j), right.GetCoeff(k)));
                 }
             }
 
@@ -385,7 +384,7 @@ namespace Eduard.Cryptography
             Polynomial result = new Polynomial(degree);
 
             for (int i = 0; i <= poly.Degree; i++)
-                result.coeffs[2 * i] = MulMod(poly.GetCoeff(i), poly.GetCoeff(i));
+                result.coeffs[2 * i] = BarrettReducer.MulMod(poly.GetCoeff(i), poly.GetCoeff(i));
 
             for(int j = 0; j < poly.Degree; j++)
             {
@@ -393,8 +392,8 @@ namespace Eduard.Cryptography
 
                 for(int k = j + 1; k <= poly.Degree; k++)
                 {
-                    BigInteger t = MulMod(poly.GetCoeff(j), poly.GetCoeff(k));
-                    result.coeffs[j + k] = AddMod(result.coeffs[j + k], MulMod(2, t));
+                    BigInteger t = BarrettReducer.MulMod(poly.GetCoeff(j), poly.GetCoeff(k));
+                    result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MulMod(2, t));
                 }
             }
 
@@ -445,11 +444,12 @@ namespace Eduard.Cryptography
 
             if(right.Degree == 0)
             {
+                BigInteger field = BarrettReducer.GetModulus();
                 BigInteger vn = right.coeffs[right.Degree].Inverse(field);
                 List<BigInteger> words = new List<BigInteger>();
 
                 for (int i = 0; i <= left.Degree; i++)
-                    words.Add(MulMod(left.coeffs[i], vn));
+                    words.Add(BarrettReducer.MulMod(left.coeffs[i], vn));
 
                 words.Reverse();
                 return new Polynomial(words.ToArray());
@@ -467,16 +467,19 @@ namespace Eduard.Cryptography
         {
             int m = left.Degree;
             int n = right.Degree;
+
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger inv = right.coeffs[right.Degree].Inverse(field);
+
             quo = new Polynomial(m - n);
             rem = new Polynomial(left);
             
             for (int k = m - n; k >= 0; k--)
             {
-                quo.coeffs[k] = MulMod(rem.coeffs[n + k], inv);
+                quo.coeffs[k] = BarrettReducer.MulMod(rem.coeffs[n + k], inv);
 
                 for(int j = n + k; j >= k; j--)
-                    rem.coeffs[j] = SubMod(rem.coeffs[j], MulMod(quo.coeffs[k], right.coeffs[j - k]));
+                    rem.coeffs[j] = BarrettReducer.SubMod(rem.coeffs[j], BarrettReducer.MulMod(quo.coeffs[k], right.coeffs[j - k]));
             }
 
             quo.Update();
@@ -618,7 +621,9 @@ namespace Eduard.Cryptography
                 b = new Polynomial(r);
             }
 
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger inv = a.coeffs[a.Degree].Inverse(field);
+
             a *= inv;
             return a;
         }
@@ -635,9 +640,9 @@ namespace Eduard.Cryptography
 
             for(int k = 1; k <= Degree; k++)
             {
-                val = MulMod(val, x);
-                BigInteger test = MulMod(val, coeffs[k]);
-                sum = AddMod(sum, test);
+                val = BarrettReducer.MulMod(val, x);
+                BigInteger test = BarrettReducer.MulMod(val, coeffs[k]);
+                sum = BarrettReducer.AddMod(sum, test);
             }
 
             return sum;
@@ -647,6 +652,7 @@ namespace Eduard.Cryptography
         {
             while(true)
             {
+                BigInteger field = BarrettReducer.GetModulus();
                 BigInteger a = BigInteger.Next(rand, 1, field - 1);
                 Polynomial g = new Polynomial(1, a);
                 
@@ -670,6 +676,8 @@ namespace Eduard.Cryptography
         /// <exception cref="InvalidOperationException">Thrown when field not initialized.</exception>
         public static int Solve(Polynomial poly, ref List<BigInteger> roots)
         {
+            BigInteger field = BarrettReducer.GetModulus();
+
             if (poly.Degree > 2)
                 return 0;
 
@@ -677,7 +685,7 @@ namespace Eduard.Cryptography
             {
                 BigInteger inv = poly.coeffs[1].Inverse(field);
                 BigInteger b = field - poly.coeffs[0];
-                BigInteger root = MulMod(b, inv);
+                BigInteger root = BarrettReducer.MulMod(b, inv);
 
                 roots.Add(root);
                 return 1;
@@ -685,26 +693,26 @@ namespace Eduard.Cryptography
             
             if(poly.Degree == 2)
             {
-                BigInteger sb = MulMod(poly.coeffs[1], poly.coeffs[1]);
-                BigInteger ac4 = MulMod(field - 4, poly.coeffs[2]);
+                BigInteger sb = BarrettReducer.MulMod(poly.coeffs[1], poly.coeffs[1]);
+                BigInteger ac4 = BarrettReducer.MulMod(field - 4, poly.coeffs[2]);
 
-                ac4 = MulMod(ac4, poly.coeffs[0]);
-                BigInteger delta = AddMod(sb, ac4);
+                ac4 = BarrettReducer.MulMod(ac4, poly.coeffs[0]);
+                BigInteger delta = BarrettReducer.AddMod(sb, ac4);
 
                 int jSymbol = BigInteger.Jacobi(delta, field);
                 if (jSymbol == -1) return -1;
 
                 BigInteger root = Sqrt(delta, true);
-                BigInteger val = MulMod(2, poly.coeffs[2]);
+                BigInteger val = BarrettReducer.MulMod(2, poly.coeffs[2]);
 
                 BigInteger inv = val.Inverse(field);
-                BigInteger t = AddMod(field - poly.coeffs[1], root);
+                BigInteger t = BarrettReducer.AddMod(field - poly.coeffs[1], root);
 
-                t = MulMod(inv, t);
+                t = BarrettReducer.MulMod(inv, t);
                 roots.Add(t);
 
-                t = AddMod(field - poly.coeffs[1], field - root);
-                t = MulMod(inv, t);
+                t = BarrettReducer.AddMod(field - poly.coeffs[1], field - root);
+                t = BarrettReducer.MulMod(inv, t);
 
                 roots.Add(t);
                 return 1;
@@ -720,6 +728,7 @@ namespace Eduard.Cryptography
                 return OptimizedRotaruIftene.Sqrt(val);
 
             /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
+            BigInteger field = BarrettReducer.GetModulus();
             if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
 
             /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
@@ -734,6 +743,8 @@ namespace Eduard.Cryptography
         {
             Polynomial self = new Polynomial(this);
             Polynomial aux = new Polynomial(1, 0);
+
+            BigInteger field = BarrettReducer.GetModulus();
             Polynomial vtemp = Pow(aux, field, self);
             vtemp -= aux;
 
@@ -819,7 +830,7 @@ namespace Eduard.Cryptography
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k + degn <= poly.Degree; k++)
-                result.coeffs[k] = AddMod(poly.GetCoeff(k), poly.GetCoeff(k + degn));
+                result.coeffs[k] = BarrettReducer.AddMod(poly.GetCoeff(k), poly.GetCoeff(k + degn));
 
             result.Update();
             return result;
@@ -839,6 +850,7 @@ namespace Eduard.Cryptography
         public static Polynomial Invmodxn(Polynomial poly, int degn)
         {
             int k = 0;
+            BigInteger field = BarrettReducer.GetModulus();
             Polynomial result = new Polynomial(poly.GetCoeff(0).Inverse(field));
             while ((1 << k) < degn) k++;
 
@@ -880,7 +892,7 @@ namespace Eduard.Cryptography
             Polynomial diff = new Polynomial(poly.Degree - 1);
 
             for (int k = 1; k <= poly.Degree; k++)
-                diff.coeffs[k - 1] = MulMod(k, poly.coeffs[k]);
+                diff.coeffs[k - 1] = BarrettReducer.MulMod(k, poly.coeffs[k]);
 
             return diff;
         }
@@ -961,32 +973,6 @@ namespace Eduard.Cryptography
 
             Polynomial other = (Polynomial)obj;
             return Equals(other);
-        }
-
-        internal static BigInteger AddMod(BigInteger left, BigInteger right)
-        {
-            BigInteger result = left + right;
-
-            if (result >= field)
-                result -= field;
-
-            return result;
-        }
-
-        internal static BigInteger SubMod(BigInteger left, BigInteger right)
-        {
-            BigInteger result = left - right;
-
-            if (result < 0)
-                result += field;
-
-            return result;
-        }
-
-        internal static BigInteger MulMod(BigInteger left, BigInteger right)
-        {
-            BigInteger result = BigInteger.BarrettReduction(left * right, field, constant);
-            return result;
         }
 
         /// <summary>

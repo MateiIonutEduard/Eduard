@@ -126,7 +126,7 @@ namespace Eduard.Cryptography
 
             while(head != null)
             {
-                BigInteger coeff = Polynomial.MulMod(head.coeff, head.degx);
+                BigInteger coeff = BarrettReducer.MulMod(head.coeff, head.degx);
 
                 if (coeff != 0)
                     result.AddTerm(coeff, head.degx - 1, head.degy);
@@ -149,7 +149,7 @@ namespace Eduard.Cryptography
 
             while (head != null)
             {
-                BigInteger coeff = Polynomial.MulMod(head.coeff, head.degy);
+                BigInteger coeff = BarrettReducer.MulMod(head.coeff, head.degy);
 
                 if (coeff != 0)
                     result.AddTerm(coeff, head.degx, head.degy - 1);
@@ -181,7 +181,7 @@ namespace Eduard.Cryptography
             py[0] = 1;
 
             for (int i = 1; i < py.Length; i++)
-                py[i] = Polynomial.MulMod(py[i - 1], y);
+                py[i] = BarrettReducer.MulMod(py[i - 1], y);
 
             head = this.head;
             BigInteger[] coeffs = new BigInteger[head.degx + 1];
@@ -191,7 +191,7 @@ namespace Eduard.Cryptography
 
             while(head != null)
             {
-                coeffs[head.degx] = Polynomial.AddMod(coeffs[head.degx], Polynomial.MulMod(head.coeff, py[head.degy]));
+                coeffs[head.degx] = BarrettReducer.AddMod(coeffs[head.degx], BarrettReducer.MulMod(head.coeff, py[head.degy]));
                 head = head.next;
             }
 
@@ -323,11 +323,11 @@ namespace Eduard.Cryptography
             Node lptr = temp.head;
             Node rptr = right.head;
 
-            BigInteger inv = rptr.coeff.Inverse(Polynomial.field);
+            BigInteger inv = rptr.coeff.Inverse(BarrettReducer.GetModulus());
 
             while (lptr != null && lptr.degx >= rptr.degx && lptr.degy >= rptr.degy)
             {
-                BigInteger q = Polynomial.MulMod(lptr.coeff, inv);
+                BigInteger q = BarrettReducer.MulMod(lptr.coeff, inv);
                 int degx = lptr.degx - rptr.degx;
 
                 int degy = lptr.degy - rptr.degy;
@@ -358,11 +358,12 @@ namespace Eduard.Cryptography
             Node lptr = result.head;
             Node rptr = right.head;
 
-            BigInteger inv = rptr.coeff.Inverse(Polynomial.field);
+            BigInteger field = BarrettReducer.GetModulus();
+            BigInteger inv = rptr.coeff.Inverse(field);
 
             while(lptr != null && lptr.degx >= rptr.degx && lptr.degy >= rptr.degy)
             {
-                BigInteger q = Polynomial.MulMod(lptr.coeff, inv);
+                BigInteger q = BarrettReducer.MulMod(lptr.coeff, inv);
                 int degx = lptr.degx - rptr.degx;
 
                 int degy = lptr.degy - rptr.degy;
@@ -448,7 +449,7 @@ namespace Eduard.Cryptography
 
             if(head.degx == degx && head.degy == degy)
             {
-                BigInteger sum = Polynomial.AddMod(head.coeff, coeff);
+                BigInteger sum = BarrettReducer.AddMod(head.coeff, coeff);
 
                 if(sum == 0)
                 {
@@ -470,7 +471,7 @@ namespace Eduard.Cryptography
             {
                 if(head.degx == degx && head.degy == degy)
                 {
-                    BigInteger sum = Polynomial.AddMod(head.coeff, coeff);
+                    BigInteger sum = BarrettReducer.AddMod(head.coeff, coeff);
 
                     if(sum == 0)
                     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection.Metadata;
 
 namespace Eduard
 {
@@ -10,29 +11,122 @@ namespace Eduard
         /// <summary>
         /// Cached modulus from last operation.
         /// </summary>
-        public static BigInteger mod;
+        private static BigInteger field;
 
         /// <summary>
         /// Pre-computed Barrett constant μ = ⌊2^(2k)/mod⌋.
         /// </summary>
-        public static BigInteger k;
+        private static BigInteger k;
         private static bool isEnabled;
 
         static BarrettReducer()
         {
             isEnabled = false;
-            mod = k = 0;
+            field = k = 0;
         }
 
         /// <summary>
         /// Initializes the reducer with a new modulus and pre-computes its Barrett constant.
         /// </summary>
-        /// <param name="field">The modulus for subsequent reductions.</param>
-        public static void SetModulus(BigInteger field)
+        /// <param name="p">The modulus for subsequent reductions.</param>
+        public static void SetModulus(BigInteger p)
         {
-            k = BigInteger.BarrettConstant(field);
-            isEnabled = true;
-            mod = field;
+            k = BigInteger.BarrettConstant(p);
+            isEnabled = true; field = p;
+        }
+
+        /// <summary>
+        /// Retrieves the currently cached modulus.
+        /// </summary>
+        /// <returns>The modulus currently used for Barrett reduction.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when no modulus has been initialized via <see cref="SetModulus"/> or <see cref="Reduce"/>.
+        /// </exception>
+        /// <remarks>
+        /// Call <see cref="SetModulus"/> or <see cref="Reduce"/> before invoking this method.
+        /// </remarks>
+        public static BigInteger GetModulus()
+        {
+            if (!isEnabled)
+                throw new InvalidOperationException(
+                    "Barrett reducer modulus not initialized." 
+                    + " Call SetModulus() or Reduce() first.");
+
+            return field;
+        }
+
+        /// <summary>
+        /// Adds two integers modulo the cached field.
+        /// </summary>
+        /// <param name="left">First operand.</param>
+        /// <param name="right">Second operand.</param>
+        /// <returns>(left + right) mod field.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
+        /// <remarks>
+        /// Performs addition followed by conditional subtraction when result exceeds modulus.<br/>
+        /// Assumes both inputs are already reduced in [0, field-1].
+        /// </remarks>
+        internal static BigInteger AddMod(BigInteger left, BigInteger right)
+        {
+            if (!isEnabled)
+                throw new InvalidOperationException(
+                    "Barrett reducer modulus not initialized."
+                    + " Call SetModulus() or Reduce() first.");
+
+            BigInteger result = left + right;
+
+            if (result >= field)
+                result -= field;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Subtracts two integers modulo the cached field.
+        /// </summary>
+        /// <param name="left">First operand.</param>
+        /// <param name="right">Second operand.</param>
+        /// <returns>(left - right) mod field.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
+        /// <remarks>
+        /// Performs subtraction followed by conditional addition when result is negative.<br/>
+        /// Assumes both inputs are already reduced in [0, field-1].
+        /// </remarks>
+        internal static BigInteger SubMod(BigInteger left, BigInteger right)
+        {
+            if (!isEnabled)
+                throw new InvalidOperationException(
+                    "Barrett reducer modulus not initialized."
+                    + " Call SetModulus() or Reduce() first.");
+
+            BigInteger result = left - right;
+
+            if (result < 0)
+                result += field;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Multiplies two integers modulo the cached field using Barrett reduction.
+        /// </summary>
+        /// <param name="left">First operand.</param>
+        /// <param name="right">Second operand.</param>
+        /// <returns>(left * right) mod field.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
+        /// <remarks>
+        /// Performs multiplication followed by Barrett reduction. More efficient than<br/>
+        /// using <see cref="Reduce"/> separately when both<br/> operands are already reduced.
+        /// </remarks>
+        internal static BigInteger MulMod(BigInteger left, BigInteger right)
+        {
+            if (!isEnabled)
+                throw new InvalidOperationException(
+                    "Barrett reducer modulus not initialized."
+                    + " Call SetModulus() or Reduce() first.");
+
+            BigInteger result = Reduce(left * right, field);
+            return result;
         }
 
         /// <summary>
@@ -40,12 +134,12 @@ namespace Eduard
         /// Automatically caches the modulus on first use for subsequent calls.
         /// </summary>
         /// <param name="val">The value to reduce.</param>
-        /// <param name="field">The modulus. Cached after first invocation.</param>
-        /// <returns>val mod field in range [0, field-1].</returns>
-        public static BigInteger Reduce(BigInteger val, BigInteger field)
+        /// <param name="p">The modulus. Cached after first invocation.</param>
+        /// <returns>val mod p in range [0, p-1].</returns>
+        public static BigInteger Reduce(BigInteger val, BigInteger p)
         {
-            if (!isEnabled) SetModulus(field);
-            return BigInteger.BarrettReduction(val, mod, k);
+            if (!isEnabled) SetModulus(p);
+            return BigInteger.BarrettReduction(val, p, k);
         }
     }
 }
