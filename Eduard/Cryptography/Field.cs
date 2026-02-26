@@ -9,8 +9,9 @@ namespace Eduard.Cryptography
     /// </summary>
     /// <remarks>
     /// This struct implements field arithmetic for cryptographic operations.<br/> The modulus
-    /// must be set via <see cref="modulo"/> before any field operations.<br/> All arithmetic
-    /// is performed in constant-time where possible to prevent side-channel attacks.
+    /// must be set via <see cref="BarrettReducer.SetModulus"/><br/>
+    /// or <see cref="Polynomial.SetField"/> before any field operations.<br/> All arithmetic
+    /// is performed in constant-time where possible to <br/>prevent side-channel attacks.
     /// </remarks>
     public struct Field : IEquatable<Field>
     {
@@ -19,17 +20,17 @@ namespace Eduard.Cryptography
         /// </summary>
         public BigInteger fn;
 
-        static BigInteger field;
-        static BigInteger brc;
-
         /// <summary>
         /// Creates a field element from a value, automatically reduced modulo p.
         /// </summary>
         /// <param name="val">Integer value to convert to field element.</param>
         public Field(BigInteger val)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             fn = val % field;
-            if (fn < 0) fn += field;
+
+            if (fn < 0) 
+                fn += field;
         }
 
         /// <summary>
@@ -40,18 +41,8 @@ namespace Eduard.Cryptography
         /// <returns>b^k mod p.</returns>
         public static Field Pow(Field b, BigInteger k)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             return BigInteger.Pow(b.fn, k, field);
-        }
-
-        /// <summary>
-        /// Sets the prime modulus for all field operations and pre-computes <br/>the Barrett constant.
-        /// Must be called before any field arithmetic.
-        /// </summary>
-        /// <param name="mod">Prime modulus p.</param>
-        public static void modulo(BigInteger mod)
-        {
-            field = mod;
-            brc = BigInteger.BarrettConstant(mod);
         }
 
         /// <summary>
@@ -59,8 +50,7 @@ namespace Eduard.Cryptography
         /// </summary>
         public static Field operator +(Field left, Field right)
         {
-            BigInteger sum = left.fn + right.fn;
-            if (sum >= field) sum -= field;
+            BigInteger sum = BarrettReducer.AddMod(left.fn, right.fn);
             return sum;
         }
 
@@ -69,8 +59,7 @@ namespace Eduard.Cryptography
         /// </summary>
         public static Field operator -(Field left, Field right)
         {
-            BigInteger diff = left.fn - right.fn;
-            if (diff < 0) diff += field;
+            BigInteger diff = BarrettReducer.SubMod(left.fn, right.fn);
             return diff;
         }
 
@@ -79,6 +68,7 @@ namespace Eduard.Cryptography
         /// </summary>
         public static Field operator -(Field val)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger fn = field - val.fn;
             return new Field(fn);
         }
@@ -88,8 +78,7 @@ namespace Eduard.Cryptography
         /// </summary>
         public static Field operator *(Field left, Field right)
         {
-            BigInteger val = left.fn * right.fn;
-            val = BigInteger.BarrettReduction(val, field, brc);
+            BigInteger val = BarrettReducer.MulMod(left.fn, right.fn);
             return val;
         }
 
@@ -98,8 +87,9 @@ namespace Eduard.Cryptography
         /// </summary>
         public static Field operator /(Field left, Field right)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger inv = right.fn.Inverse(field);
-            BigInteger val = BigInteger.BarrettReduction(inv * left.fn, field, brc);
+            BigInteger val = BarrettReducer.MulMod(inv, left.fn);
             return val;
         }
 
