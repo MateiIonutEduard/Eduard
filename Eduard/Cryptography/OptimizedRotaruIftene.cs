@@ -11,10 +11,10 @@ namespace Eduard.Cryptography
         static int s, k, q;
         static int step, rem;
 
-        static BigInteger p, t, a, b, norm;
-        static BigInteger a_modp, b_modp, alpha;
+        static BigInteger p, t;
+        static BigInteger a_modp, b_modp;
 
-        static BigInteger beta, d_prec, A_prec;
+        static BigInteger d_prec, A_prec;
         static BigInteger aux_A, aux_ACC;
 
         static BigInteger[] D_modp, A_modp, ACC;
