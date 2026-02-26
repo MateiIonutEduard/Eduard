@@ -7,6 +7,11 @@ namespace Eduard.Cryptography
     /// Represents an element of a prime field Fp with automatic Barrett reduction caching.<br/>
     /// Provides efficient arithmetic operations using pre-computed Barrett constants.
     /// </summary>
+    /// <remarks>
+    /// This struct implements field arithmetic for cryptographic operations.<br/> The modulus
+    /// must be set via <see cref="modulo"/> before any field operations.<br/> All arithmetic
+    /// is performed in constant-time where possible to prevent side-channel attacks.
+    /// </remarks>
     public struct Field : IEquatable<Field>
     {
         /// <summary>
@@ -129,6 +134,30 @@ namespace Eduard.Cryptography
         public bool Equals(Field other)
         {
             return (fn == other.fn);
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current field element.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            return Equals((Field)obj);
+        }
+
+        /// <summary>
+        /// Returns the hash code for this field element.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return fn.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns the string representation of this field element.
+        /// </summary>
+        public override string ToString()
+        {
+            return fn.ToString();
         }
 
         /// <summary>
