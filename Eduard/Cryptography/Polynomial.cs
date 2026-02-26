@@ -18,7 +18,7 @@ namespace Eduard.Cryptography
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public sealed class Polynomial
+    public sealed class Polynomial : IEquatable<Polynomial>
     {
         /// <summary>
         /// The degree of the polynomial (highest exponent with non-zero coefficient).
@@ -912,7 +912,33 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static bool operator !=(Polynomial left, Polynomial right)
         {
-            return !(left == right);
+            return !left.Equals(right);
+        }
+
+        /// <summary>
+        /// Determines whether the current polynomial is equal to another polynomial.
+        /// </summary>
+        /// <param name="other">The polynomial to compare with the current polynomial.</param>
+        /// <returns>true if the polynomials have identical coefficients; otherwise false.</returns>
+        /// <remarks>
+        /// Performs coefficient-wise comparison modulo the current field.<br/>
+        /// Two polynomials are considered equal if they have the same coefficients<br/>
+        /// for all terms up to the maximum degree, treating missing terms as zero.
+        /// </remarks>
+        public bool Equals(Polynomial other)
+        {
+            if (this.Degree != other.Degree)
+                return false;
+
+            int degree = other.Degree;
+
+            for (int i = 0; i <= degree; i++)
+            {
+                if (this.coeffs[i] != other.coeffs[i])
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -930,16 +956,7 @@ namespace Eduard.Cryptography
             if (object.ReferenceEquals(this, (Polynomial)obj))
                 return true;
 
-            Polynomial right = (Polynomial)obj;
-            int degree = (this.Degree > right.Degree) ? this.Degree : right.Degree;
-
-            for (int i = 0; i <= degree; i++)
-            {
-                if (this.GetCoeff(i) != right.GetCoeff(i))
-                    return false;
-            }
-
-            return true;
+            return Equals((Polynomial)obj);
         }
 
         internal static BigInteger AddMod(BigInteger left, BigInteger right)
