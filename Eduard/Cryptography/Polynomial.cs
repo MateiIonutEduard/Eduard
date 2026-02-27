@@ -246,6 +246,7 @@ namespace Eduard.Cryptography
         /// <param name="x">The polynomial to reduce.</param>
         /// <param name="m">The modulus polynomial.</param>
         /// <returns>The remainder of x divided by m.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         /// <remarks>
         /// Automatically selects between classical division and FFT-based reduction<br/>
         /// based on polynomial degrees. For large polynomials meeting the FFT threshold,<br/>
@@ -253,6 +254,9 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static Polynomial Reduce(Polynomial x, Polynomial m)
         {
+            if (m.degree == 0 && m.coeffs[0] == 0)
+                throw new DivideByZeroException("Modulus polynomial cannot be zero.");
+
             int degm = m.degree;
             int n = x.degree;
 
@@ -299,6 +303,7 @@ namespace Eduard.Cryptography
         /// Configures FFT-based modular reduction for a given modulus polynomial.
         /// </summary>
         /// <param name="poly">The modulus polynomial.</param>
+        /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         /// <remarks>
         /// Precomputes reciprocal and other FFT parameters to accelerate subsequent<br/>
         /// modular reductions. Only takes effect when polynomial degree meets the<br/>
@@ -306,6 +311,9 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static void SetPolyMod(Polynomial poly)
         {
+            if (poly.degree == 0 && poly.coeffs[0] == 0)
+                throw new DivideByZeroException("Modulus polynomial cannot be zero.");
+
             BigInteger field = BarrettReducer.GetModulus();
             int m, n = poly.degree;
 
@@ -428,6 +436,9 @@ namespace Eduard.Cryptography
         /// <remarks>Returns only the quotient; use % operator for remainder.</remarks>
         public static Polynomial operator /(Polynomial left, Polynomial right)
         {
+            if (right.degree == 0 && right.coeffs[0] == 0)
+                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
+
             if (left.degree < right.degree)
                 return new Polynomial(0);
 
@@ -443,9 +454,6 @@ namespace Eduard.Cryptography
                 words.Reverse();
                 return new Polynomial(words.ToArray());
             }
-
-            if (right.degree == 1 && right.coeffs[0] == 0)
-                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             Polynomial quo, rem;
             Divide(left, right, out quo, out rem);
@@ -484,14 +492,14 @@ namespace Eduard.Cryptography
         /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
         public static Polynomial operator %(Polynomial left, Polynomial right)
         {
+            if (right.degree == 0 && right.coeffs[0] == 0)
+                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
+
             if (left.degree < right.degree)
                 return left;
 
             if (right.degree == 0)
                 return new Polynomial(0);
-
-            if (right.degree == 0 && right.coeffs[0] == 0)
-                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             Polynomial quo, rem;
             Divide(left, right, out quo, out rem);
@@ -511,7 +519,7 @@ namespace Eduard.Cryptography
             Polynomial nb = new Polynomial(val);
             Polynomial result = 1;
 
-            if(modulus == 0)
+            if(modulus.degree == 0 && modulus.coeffs[0] == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -1020,7 +1028,16 @@ namespace Eduard.Cryptography
         /// </remarks>
         public override int GetHashCode()
         {
-            return coeffs.GetHashCode();
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + degree.GetHashCode();
+
+                for (int i = 0; i <= degree; i++)
+                    hash = hash * 31 + coeffs[i].GetHashCode();
+
+                return hash;
+            }
         }
     }
 }
