@@ -18,7 +18,7 @@ namespace Eduard.Cryptography
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public sealed class Polynomial : IEquatable<Polynomial>
+    public struct Polynomial : IEquatable<Polynomial>
     {
         /// <summary>
         /// The degree of the polynomial (highest exponent with non-zero coefficient).
@@ -26,36 +26,25 @@ namespace Eduard.Cryptography
         /// <remarks>
         /// Automatically updated when coefficients change. A zero polynomial has degree 0.
         /// </remarks>
-        public int Degree;
+        public int degree;
         public BigInteger[] coeffs;
 
         internal static RandomNumberGenerator rand = RandomNumberGenerator.Create();
         private static bool enableSpeedup;
 
         /// <summary>
-        /// Initializes a new polynomial instance representing the zero polynomial.
-        /// </summary>
-        /// <remarks>Creates the polynomial 0 (constant zero). Equivalent to new Polynomial(0).</remarks>
-        public Polynomial()
-        {
-            Degree = 0;
-            coeffs = new BigInteger[1];
-            coeffs[0] = 0;
-        }
-
-        /// <summary>
         /// Initializes a new polynomial instance with all coefficients set to zero.
         /// </summary>
-        /// <param name="Degree">The degree of the polynomial.</param>
+        /// <param name="degree">The degree of the polynomial.</param>
         /// <remarks>
         /// Creates a zero polynomial of the specified degree.<br/>
         /// All coefficients are initialized to zero. Use this constructor<br/> 
         /// when building polynomials coefficient by coefficient.
         /// </remarks>
-        public Polynomial(int Degree)
+        public Polynomial(int degree)
         {
-            this.Degree = Degree;
-            coeffs = new BigInteger[Degree + 1];
+            this.degree = degree;
+            coeffs = new BigInteger[degree + 1];
 
             for (int i = 0; i < coeffs.Length; i++)
                 coeffs[i] = 0;
@@ -71,8 +60,8 @@ namespace Eduard.Cryptography
         /// </remarks>
         public Polynomial(Polynomial poly)
         {
-            Degree = poly.Degree;
-            coeffs = new BigInteger[Degree + 1];
+            degree = poly.degree;
+            coeffs = new BigInteger[degree + 1];
 
             for (int i = 0; i < coeffs.Length; i++)
                 coeffs[i] = poly.coeffs[i];
@@ -88,14 +77,14 @@ namespace Eduard.Cryptography
         /// </remarks>
         public Polynomial(params BigInteger[] coeffs)
         {
-            Degree = coeffs.Length - 1;
-            this.coeffs = new BigInteger[Degree + 1];
+            degree = coeffs.Length - 1;
+            this.coeffs = new BigInteger[degree + 1];
             List<BigInteger> list = new List<BigInteger>();
 
             list.AddRange(coeffs);
             list.Reverse();
 
-            for (int i = 0; i <= Degree; i++)
+            for (int i = 0; i <= degree; i++)
                 this.coeffs[i] = Reduce(list[i]);
         }
 
@@ -130,12 +119,12 @@ namespace Eduard.Cryptography
             List<BigInteger> list = new List<BigInteger>();
             list.AddRange(coeffs);
 
-            while (list[Degree] == 0 && list.Count > 1 && Degree != 0)
-                Degree--;
+            while (list[degree] == 0 && list.Count > 1 && degree != 0)
+                degree--;
 
-            coeffs = new BigInteger[Degree + 1];
+            coeffs = new BigInteger[degree + 1];
 
-            for (int i = 0; i <= Degree; i++)
+            for (int i = 0; i <= degree; i++)
                 coeffs[i] = list[i];
         }
 
@@ -151,7 +140,7 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static Polynomial operator +(Polynomial left, Polynomial right)
         {
-            int max = (left.Degree > right.Degree) ? left.Degree : right.Degree;
+            int max = (left.degree > right.degree) ? left.degree : right.degree;
             Polynomial result = new Polynomial(max);
 
             for (int i = 0; i <= max; i++)
@@ -169,7 +158,7 @@ namespace Eduard.Cryptography
         /// <returns>The difference polynomial reduced modulo the field.</returns>
         public static Polynomial operator -(Polynomial left, Polynomial right)
         {
-            int max = (left.Degree > right.Degree) ? left.Degree : right.Degree;
+            int max = (left.degree > right.degree) ? left.degree : right.degree;
             Polynomial result = new Polynomial(max);
 
             for (int i = 0; i <= max; i++)
@@ -197,7 +186,7 @@ namespace Eduard.Cryptography
 
         private static Polynomial Multiply(Polynomial left, Polynomial right)
         {
-            int min = Math.Min(left.Degree, right.Degree);
+            int min = Math.Min(left.degree, right.degree);
             BigInteger field = BarrettReducer.GetModulus();
 
 #if !USE_BENCHMARKING
@@ -207,7 +196,7 @@ namespace Eduard.Cryptography
 #endif
             if (min >= FFT_POLY_MULT_THRESHOLD)
             {
-                int deg = left.Degree + right.Degree;
+                int deg = left.degree + right.degree;
                 BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs, field);
 
                 while (deg > 0 && coeffs[deg] == 0)
@@ -231,11 +220,11 @@ namespace Eduard.Cryptography
 #else
             int FFT_POLY_SQUARE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_SQUARE);
 #endif
-            if (val.Degree >= FFT_POLY_SQUARE_THRESHOLD)
+            if (val.degree >= FFT_POLY_SQUARE_THRESHOLD)
             {
                 BigInteger field = BarrettReducer.GetModulus();
                 BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs, field);
-                int deg = val.Degree << 1;
+                int deg = val.degree << 1;
 
                 while (deg > 0 && coeffs[deg] == 0)
                     deg--;
@@ -264,8 +253,8 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static Polynomial Reduce(Polynomial x, Polynomial m)
         {
-            int degm = m.Degree;
-            int n = x.Degree;
+            int degm = m.degree;
+            int n = x.degree;
 
 #if USE_BENCHMARKING
             int FFT_POLY_MOD_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_MOD);
@@ -318,7 +307,7 @@ namespace Eduard.Cryptography
         public static void SetPolyMod(Polynomial poly)
         {
             BigInteger field = BarrettReducer.GetModulus();
-            int m, n = poly.Degree;
+            int m, n = poly.degree;
 
 #if USE_BENCHMARKING
             int FFT_POLY_MOD_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_MOD);
@@ -332,7 +321,7 @@ namespace Eduard.Cryptography
 
             h = Invmodxn(h, n);
             h.Reverse();
-            m = h.Degree;
+            m = h.degree;
 
             if (m < n - 1) 
                 h = Mulxn(h, n - 1 - m);
@@ -360,14 +349,14 @@ namespace Eduard.Cryptography
 
         private static Polynomial plain_mult(Polynomial left, Polynomial right)
         {
-            int degree = left.Degree + right.Degree;
+            int degree = left.degree + right.degree;
             Polynomial result = new Polynomial(degree);
 
-            for (int j = 0; j <= left.Degree; j++)
+            for (int j = 0; j <= left.degree; j++)
             {
                 if (left.GetCoeff(j) == 0) continue;
 
-                for (int k = 0; k <= right.Degree; k++)
+                for (int k = 0; k <= right.degree; k++)
                 {
                     if (right.GetCoeff(k) == 0) continue;
                     result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MulMod(left.GetCoeff(j), right.GetCoeff(k)));
@@ -380,17 +369,17 @@ namespace Eduard.Cryptography
 
         private static Polynomial plain_square(Polynomial poly)
         {
-            int degree = 2 * poly.Degree;
+            int degree = 2 * poly.degree;
             Polynomial result = new Polynomial(degree);
 
-            for (int i = 0; i <= poly.Degree; i++)
+            for (int i = 0; i <= poly.degree; i++)
                 result.coeffs[2 * i] = BarrettReducer.MulMod(poly.GetCoeff(i), poly.GetCoeff(i));
 
-            for(int j = 0; j < poly.Degree; j++)
+            for(int j = 0; j < poly.degree; j++)
             {
                 if (poly.GetCoeff(j) == 0) continue;
 
-                for(int k = j + 1; k <= poly.Degree; k++)
+                for(int k = j + 1; k <= poly.degree; k++)
                 {
                     BigInteger t = BarrettReducer.MulMod(poly.GetCoeff(j), poly.GetCoeff(k));
                     result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MulMod(2, t));
@@ -425,7 +414,7 @@ namespace Eduard.Cryptography
             Polynomial result = new Polynomial();
             result.coeffs = coeffs;
 
-            result.Degree = coeffs.Length - 1;
+            result.degree = coeffs.Length - 1;
             return result;
         }
 
@@ -439,23 +428,23 @@ namespace Eduard.Cryptography
         /// <remarks>Returns only the quotient; use % operator for remainder.</remarks>
         public static Polynomial operator /(Polynomial left, Polynomial right)
         {
-            if (left.Degree < right.Degree)
+            if (left.degree < right.degree)
                 return new Polynomial(0);
 
-            if(right.Degree == 0)
+            if(right.degree == 0)
             {
                 BigInteger field = BarrettReducer.GetModulus();
-                BigInteger vn = right.coeffs[right.Degree].Inverse(field);
+                BigInteger vn = right.coeffs[right.degree].Inverse(field);
                 List<BigInteger> words = new List<BigInteger>();
 
-                for (int i = 0; i <= left.Degree; i++)
+                for (int i = 0; i <= left.degree; i++)
                     words.Add(BarrettReducer.MulMod(left.coeffs[i], vn));
 
                 words.Reverse();
                 return new Polynomial(words.ToArray());
             }
 
-            if (right.Degree == 1 && right.coeffs[0] == 0)
+            if (right.degree == 1 && right.coeffs[0] == 0)
                 throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             Polynomial quo, rem;
@@ -465,11 +454,11 @@ namespace Eduard.Cryptography
 
         private static void Divide(Polynomial left, Polynomial right, out Polynomial quo, out Polynomial rem)
         {
-            int m = left.Degree;
-            int n = right.Degree;
+            int m = left.degree;
+            int n = right.degree;
 
             BigInteger field = BarrettReducer.GetModulus();
-            BigInteger inv = right.coeffs[right.Degree].Inverse(field);
+            BigInteger inv = right.coeffs[right.degree].Inverse(field);
 
             quo = new Polynomial(m - n);
             rem = new Polynomial(left);
@@ -495,13 +484,13 @@ namespace Eduard.Cryptography
         /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
         public static Polynomial operator %(Polynomial left, Polynomial right)
         {
-            if (left.Degree < right.Degree)
+            if (left.degree < right.degree)
                 return left;
 
-            if (right.Degree == 0)
+            if (right.degree == 0)
                 return new Polynomial(0);
 
-            if (right.Degree == 0 && right.coeffs[0] == 0)
+            if (right.degree == 0 && right.coeffs[0] == 0)
                 throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             Polynomial quo, rem;
@@ -526,7 +515,7 @@ namespace Eduard.Cryptography
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
-            if (modulus.Degree >= 16)
+            if (modulus.degree >= 16)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
@@ -603,7 +592,7 @@ namespace Eduard.Cryptography
             if (left == 1 || right == 1)
                 return 1;
 
-            if(left.Degree < right.Degree)
+            if(left.degree < right.degree)
             {
                 a = new Polynomial(right);
                 b = new Polynomial(left);
@@ -622,7 +611,7 @@ namespace Eduard.Cryptography
             }
 
             BigInteger field = BarrettReducer.GetModulus();
-            BigInteger inv = a.coeffs[a.Degree].Inverse(field);
+            BigInteger inv = a.coeffs[a.degree].Inverse(field);
 
             a *= inv;
             return a;
@@ -638,7 +627,7 @@ namespace Eduard.Cryptography
             BigInteger sum = coeffs[0];
             BigInteger val = 1;
 
-            for(int k = 1; k <= Degree; k++)
+            for(int k = 1; k <= degree; k++)
             {
                 val = BarrettReducer.MulMod(val, x);
                 BigInteger test = BarrettReducer.MulMod(val, coeffs[k]);
@@ -662,7 +651,7 @@ namespace Eduard.Cryptography
                 if (poly == 1) continue;
                 Polynomial factor = Gcd(poly, this);
 
-                if (factor.Degree != 0)
+                if (factor.degree != 0)
                     return factor;
             }
         }
@@ -678,10 +667,10 @@ namespace Eduard.Cryptography
         {
             BigInteger field = BarrettReducer.GetModulus();
 
-            if (poly.Degree > 2)
+            if (poly.degree > 2)
                 return 0;
 
-            if(poly.Degree == 1)
+            if(poly.degree == 1)
             {
                 BigInteger inv = poly.coeffs[1].Inverse(field);
                 BigInteger b = field - poly.coeffs[0];
@@ -691,7 +680,7 @@ namespace Eduard.Cryptography
                 return 1;
             }
             
-            if(poly.Degree == 2)
+            if(poly.degree == 2)
             {
                 BigInteger sb = BarrettReducer.MulMod(poly.coeffs[1], poly.coeffs[1]);
                 BigInteger ac4 = BarrettReducer.MulMod(field - 4, poly.coeffs[2]);
@@ -752,13 +741,13 @@ namespace Eduard.Cryptography
             if (poly == 1) return;
 
             /* compute the roots of a polynomial early if the degree is 1 or 2 */
-            if (poly.Degree == 1 || poly.Degree == 2)
+            if (poly.degree == 1 || poly.degree == 2)
             {
                 Solve(poly, ref roots);
                 return;
             }
 
-            if (poly.Degree >= 1 && poly != 0 && poly != this)
+            if (poly.degree >= 1 && poly != 0 && poly != this)
                 self = new Polynomial(poly);
 
             while (roots.Count == 0)
@@ -782,14 +771,14 @@ namespace Eduard.Cryptography
         /// <returns>Polynomial result of dividing by x^n (coefficients shifted down by n).</returns>
         public static Polynomial Divxn(Polynomial poly, int degn)
         {
-            if (poly.Degree < degn) return 0;
+            if (poly.degree < degn) return 0;
             Polynomial result = new Polynomial();
-            result.coeffs = new BigInteger[poly.Degree - degn + 1];
+            result.coeffs = new BigInteger[poly.degree - degn + 1];
 
-            for (int k = degn; k <= poly.Degree; k++)
+            for (int k = degn; k <= poly.degree; k++)
                 result.coeffs[k - degn] = poly.GetCoeff(k);
 
-            result.Degree = poly.Degree - degn;
+            result.degree = poly.degree - degn;
             result.Update();
             return result;
         }
@@ -802,14 +791,14 @@ namespace Eduard.Cryptography
         /// <returns>Polynomial truncated to degree n-1.</returns>
         public static Polynomial Modxn(Polynomial poly, int degn)
         {
-            if (poly.Degree < degn) return poly;
+            if (poly.degree < degn) return poly;
             Polynomial result = new Polynomial();
             result.coeffs = new BigInteger[degn];
 
             for (int k = 0; k < degn; k++)
                 result.coeffs[k] = poly.GetCoeff(k);
 
-            result.Degree = degn - 1;
+            result.degree = degn - 1;
             result.Update();
             return result;
         }
@@ -826,10 +815,10 @@ namespace Eduard.Cryptography
         /// </remarks>
         public static Polynomial Modxn_l(Polynomial poly, int degn)
         {
-            if (poly.Degree < degn) return poly;
+            if (poly.degree < degn) return poly;
             Polynomial result = new Polynomial(degn - 1);
 
-            for (int k = 0; k + degn <= poly.Degree; k++)
+            for (int k = 0; k + degn <= poly.degree; k++)
                 result.coeffs[k] = BarrettReducer.AddMod(poly.GetCoeff(k), poly.GetCoeff(k + degn));
 
             result.Update();
@@ -889,9 +878,9 @@ namespace Eduard.Cryptography
         /// <returns>The derivative polynomial.</returns>
         public static Polynomial Differentiate(Polynomial poly, BigInteger field)
         {
-            Polynomial diff = new Polynomial(poly.Degree - 1);
+            Polynomial diff = new Polynomial(poly.degree - 1);
 
-            for (int k = 1; k <= poly.Degree; k++)
+            for (int k = 1; k <= poly.degree; k++)
                 diff.coeffs[k - 1] = BarrettReducer.MulMod(k, poly.coeffs[k]);
 
             return diff;
@@ -939,10 +928,10 @@ namespace Eduard.Cryptography
         /// </remarks>
         public bool Equals(Polynomial other)
         {
-            if (this.Degree != other.Degree)
+            if (this.degree != other.degree)
                 return false;
 
-            int degree = other.Degree;
+            int degree = other.degree;
 
             for (int i = 0; i <= degree; i++)
             {
@@ -959,15 +948,11 @@ namespace Eduard.Cryptography
         /// <param name="obj">The object to compare with the current polynomial.</param>
         /// <returns>true if the specified object is a polynomial with identical coefficients; otherwise false.</returns>
         /// <remarks>
-        /// Performs coefficient-wise comparison modulo the current field. <br/>Null objects
-        /// or non-polynomial types return false. Reference equality<br/> is checked first
-        /// for performance.
+        /// Performs coefficient-wise comparison modulo the current field. <br/>
+        /// Null objects or non-polynomial types return false.
         /// </remarks>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj))
-                return true;
-
             if (!(obj is Polynomial))
                 return false;
 
@@ -988,10 +973,10 @@ namespace Eduard.Cryptography
         /// </remarks>
         public BigInteger GetCoeff(int index)
         {
-            if (index > Degree)
+            if (index > degree)
                 return 0;
             else
-                if (index >= 0 && index <= Degree)
+                if (index >= 0 && index <= degree)
                 return coeffs[index];
             else
                 throw new IndexOutOfRangeException("Index out of range.");

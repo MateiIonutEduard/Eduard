@@ -53,7 +53,7 @@ namespace Eduard.Cryptography
         /// <param name="poly"></param>
         public ModularPolynomial(Polynomial poly)
         {
-            for (int i = poly.Degree; i >= 0; i--)
+            for (int i = poly.degree; i >= 0; i--)
                 AddTerm(poly.coeffs[i], i, 0);
         }
 
