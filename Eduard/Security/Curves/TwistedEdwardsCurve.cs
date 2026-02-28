@@ -1,0 +1,182 @@
+﻿using System;
+using Eduard;
+using System.Diagnostics;
+using MSCrypto = System.Security.Cryptography;
+using Eduard.Security.Primitives;
+
+namespace Eduard.Security.Curves
+{
+    /// <summary>
+    /// Represents an elliptic curve given in twisted Edwards form.
+    /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
+    public sealed class TwistedEdwardsCurve
+    {
+        public BigInteger a, d;
+        public BigInteger field, order;
+
+        public BigInteger cofactor;
+        private ECPoint basePoint;
+
+        private static MSCrypto.RandomNumberGenerator rand;
+        private static bool enableSpeedup;
+
+        internal bool computeOnTwist;
+        internal BigInteger kt, aroot;
+        internal bool isComplete;
+
+        /// <summary>
+        /// Creates a twisted Edwards curve with given coefficients.
+        /// </summary>
+        /// <param name="args"></param>
+        public TwistedEdwardsCurve(params BigInteger[] args)
+        {
+            if (args.Length > 5)
+                throw new ArgumentException("Too many arguments.");
+
+            rand = MSCrypto.RandomNumberGenerator.Create();
+            a = args[0];
+            d = args[1];
+
+            field = args[2]; order = args[3];
+            basePoint = ECPoint.POINT_INFINITY;
+            cofactor = args[4];
+
+            BigInteger t = (field + a - d) % field;
+            t = (t * ((a * d) % field)) % field;
+
+            if((cofactor & 0x3) != 0 || t == 0)
+                throw new Exception("The twisted Edwards curve is invalid or singular.");
+
+            isComplete = (BigInteger.Jacobi(a, field) == 1
+                && BigInteger.Jacobi(d, field) == -1);
+
+            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
+            ModSqrtUtil.InitParams(field);
+
+            computeOnTwist = false;
+            kt = aroot = 0;
+
+            /* see Hisil et al. (2008) "Twisted Edwards curves revisited." pp. 326-343 */
+            if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
+            {
+                aroot = Sqrt(field - a, true);
+                BigInteger ma = ((aroot * aroot) % field).Inverse(field);
+
+                kt = (2 * d * ma) % field;
+                computeOnTwist = true;
+            }
+        }
+
+        /// <summary>
+        /// Evaluates the twisted Edwards curve at a given y-coordinate.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        public BigInteger Evaluate(BigInteger y)
+        {
+            BigInteger A1 = (y * y) % field;
+            BigInteger A2 = (d * A1) % field;
+
+            BigInteger A3 = (field + 1 - A1) % field;
+            BigInteger A4 = (field + a - A2) % field;
+
+            BigInteger X2 = (A3 * A4.Inverse(field)) % field;
+            return X2;
+        }
+
+        /// <summary>
+        /// Generates a random base point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="isGenerated">Specifies whether the base point on the twisted Edwards curve should be generated conditionally.</param>
+        /// <returns></returns>
+        public ECPoint GetBasePoint(bool isGenerated = false)
+        {
+            bool done = false;
+            BigInteger x = 0;
+
+            BigInteger y = 0;
+            BigInteger temp = 0;
+
+            if (isGenerated && basePoint != ECPoint.POINT_INFINITY)
+                return basePoint;
+
+            do
+            {
+                y = BigInteger.Next(rand, 0, field - 1);
+                temp = Evaluate(y);
+
+                if (temp < 2)
+                    return new ECPoint(temp, y);
+
+                if (BigInteger.Jacobi(temp, field) == 1)
+                {
+                    done = true;
+                    x = Sqrt(temp);
+
+                    BigInteger eval = (x * x) % field;
+                    if (temp != eval) done = false;
+
+                    if (done)
+                    {
+                        ECPoint tempPoint = new ECPoint(x, y);
+                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        done = (basePoint != ECPoint.POINT_INFINITY);
+                    }
+                }
+            }
+            while (!done);
+
+            return basePoint;
+        }
+
+        /// <summary>
+        /// Sets the specified base point on the twisted Edwards curve.
+        /// </summary>
+        /// <param name="point">The affine point to set as the generator.</param>
+        public void SetBasePoint(ECPoint point)
+        {
+            ECPoint tempPoint = point;
+            var temp = Evaluate(tempPoint.GetAffineY());
+
+            if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
+                throw new Exception("The generator point is not on the twisted Edwards curve.");
+            else
+            {
+                BigInteger x = tempPoint.GetAffineX();
+                BigInteger eval = (x * x) % field;
+
+                if (eval != temp)
+                    throw new Exception("Invalid generator point for the twisted Edwards curve.");
+                else
+                {
+                    ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                    else
+                        throw new Exception("Chosen generator point yields a small-order subgroup on the twisted Edwards curve.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Computes the modular square root of an integer over the prime field.
+        /// </summary>
+        /// <param name="val"></param>
+        /// <param name="forceOutput"></param>
+        /// <returns></returns>
+        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
+        {
+            /* compute the modular square root using the optimized Rotaru-Iftene method */
+            if (enableSpeedup)
+                return OptimizedRotaruIftene.Sqrt(val);
+
+            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
+            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
+
+            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
+            return ModSqrtUtil.TonelliShanks(val, field);
+        }
+    }
+}
