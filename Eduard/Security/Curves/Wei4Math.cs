@@ -8,12 +8,12 @@ namespace Eduard.Security.Curves
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public static class ModifiedJacobianMath
+    public static class Wei4Math
     {
-        public static ModifiedJacobianPoint Add(EllipticCurve curve, ModifiedJacobianPoint left, ModifiedJacobianPoint right)
+        public static ECPoint4w Add(EllipticCurve curve, ECPoint4w left, ECPoint4w right)
         {
-            if (left == ModifiedJacobianPoint.POINT_INFINITY) return right;
-            if (right == ModifiedJacobianPoint.POINT_INFINITY) return left;
+            if (left == ECPoint4w.POINT_INFINITY) return right;
+            if (right == ECPoint4w.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
             BigInteger A1 = (left.z * left.z) % p;
@@ -42,17 +42,17 @@ namespace Eduard.Security.Curves
             if (Y < 0) Y += p;
 
             BigInteger Z = (left.z * right.z * A7) % p;
-            if (Z == 0) return ModifiedJacobianPoint.POINT_INFINITY;
+            if (Z == 0) return ECPoint4w.POINT_INFINITY;
             BigInteger Z2 = (Z * Z) % p;
 
             BigInteger aZ4 = (curve.a * Z2) % p;
-            return new ModifiedJacobianPoint(X, Y, Z, aZ4);
+            return new ECPoint4w(X, Y, Z, aZ4);
         }
 
-        public static ModifiedJacobianPoint Doubling(EllipticCurve curve, ModifiedJacobianPoint jacobianPoint)
+        public static ECPoint4w Doubling(EllipticCurve curve, ECPoint4w jacobianPoint)
         {
-            if (jacobianPoint == ModifiedJacobianPoint.POINT_INFINITY) 
-                return ModifiedJacobianPoint.POINT_INFINITY;
+            if (jacobianPoint == ECPoint4w.POINT_INFINITY) 
+                return ECPoint4w.POINT_INFINITY;
 
             BigInteger p = curve.field;
             BigInteger A1 = (jacobianPoint.x * jacobianPoint.x) % p;
@@ -70,16 +70,16 @@ namespace Eduard.Security.Curves
             if (Y < 0) Y += p;
 
             BigInteger Z = (2 * jacobianPoint.y * jacobianPoint.z) % p;
-            if (Z == 0) return ModifiedJacobianPoint.POINT_INFINITY;
+            if (Z == 0) return ECPoint4w.POINT_INFINITY;
 
             BigInteger aZ4 = (2 * A3 * jacobianPoint.aZ4) % p;
-            return new ModifiedJacobianPoint(X, Y, Z, aZ4);
+            return new ECPoint4w(X, Y, Z, aZ4);
         }
 
-        public static ModifiedJacobianPoint Negate(EllipticCurve curve, ModifiedJacobianPoint point)
+        public static ECPoint4w Negate(EllipticCurve curve, ECPoint4w point)
         {
-            if (point == ModifiedJacobianPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
-            return new ModifiedJacobianPoint(point.x, curve.field - point.y, point.z, point.aZ4);
+            if (point == ECPoint4w.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
+            return new ECPoint4w(point.x, curve.field - point.y, point.z, point.aZ4);
         }
     }
 

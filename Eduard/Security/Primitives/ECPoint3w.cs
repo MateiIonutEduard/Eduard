@@ -6,16 +6,16 @@ namespace Eduard.Security.Primitives
     /// <summary>
     /// Represents a projective Jacobian point (X, Y, Z) that maps to the affine elliptic curve point (X/Z^2, Y/Z^3).
     /// </summary>
-    public class JacobianPoint
+    public class ECPoint3w
     {
         public BigInteger x;
         public BigInteger y;
         public BigInteger z;
 
         /// <summary>
-        /// Creates a <seealso cref="JacobianPoint"/> equal to the point at infinity.
+        /// Creates a <seealso cref="ECPoint3w"/> equal to the point at infinity.
         /// </summary>
-        public JacobianPoint()
+        public ECPoint3w()
         {
             this.x = null;
             this.y = null;
@@ -23,13 +23,13 @@ namespace Eduard.Security.Primitives
         }
 
         /// <summary>
-        /// Creates a <seealso cref="JacobianPoint"/> from the specified projective X-coordinate, Y-coordinate, and Z-coordinate.
+        /// Creates a <seealso cref="ECPoint3w"/> from the specified projective X-coordinate, Y-coordinate, and Z-coordinate.
         /// </summary>
         /// <param name="x">The projective X-coordinate.</param>
         /// <param name="y">The projective Y-coordinate.</param>
         /// <param name="z">The projective Z-coordinate.</param>
         /// <exception cref="NullReferenceException"></exception>
-        public JacobianPoint(BigInteger x, BigInteger y, BigInteger z)
+        public ECPoint3w(BigInteger x, BigInteger y, BigInteger z)
         {
             if (object.ReferenceEquals(x, null))
                 throw new NullReferenceException("The projective X-coordinate cannot be null.");
@@ -48,9 +48,9 @@ namespace Eduard.Security.Primitives
         /// <summary>
         /// Represents the point at infinity on the Weierstrass curve.
         /// </summary>
-        public static JacobianPoint POINT_INFINITY
+        public static ECPoint3w POINT_INFINITY
         {
-            get { return new JacobianPoint(); }
+            get { return new ECPoint3w(); }
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Eduard.Security.Primitives
         {
             try
             {
-                JacobianPoint other = (JacobianPoint)obj;
+                ECPoint3w other = (ECPoint3w)obj;
 
                 if (object.ReferenceEquals(x, other.x) && object.ReferenceEquals(y, other.y) && object.ReferenceEquals(z, other.z))
                     return true;
@@ -77,23 +77,23 @@ namespace Eduard.Security.Primitives
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the Jacobian projective coordinates of two <seealso cref="JacobianPoint"/> objects are equal.
+        /// Returns a value that indicates whether the Jacobian projective coordinates of two <seealso cref="ECPoint3w"/> objects are equal.
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static bool operator ==(JacobianPoint left, JacobianPoint right)
+        public static bool operator ==(ECPoint3w left, ECPoint3w right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the Jacobian projective coordinates of two <seealso cref="JacobianPoint"/> objects have different values.
+        /// Returns a value that indicates whether the Jacobian projective coordinates of two <seealso cref="ECPoint3w"/> objects have different values.
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static bool operator !=(JacobianPoint left, JacobianPoint right)
+        public static bool operator !=(ECPoint3w left, ECPoint3w right)
         {
             return !left.Equals(right);
         }

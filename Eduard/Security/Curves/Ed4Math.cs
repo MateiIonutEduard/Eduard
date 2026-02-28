@@ -10,7 +10,7 @@ namespace Eduard.Security.Curves
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public static class TwistedEdwardsExtProjectiveMath
+    public static class Ed4Math
     {
         /// <summary>
         /// Add two points in extended projective coordinates on the twisted Edwards curve.
@@ -19,16 +19,16 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint Add(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        public static ECPoint4 Add(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ExtendedProjectivePoint.POINT_INFINITY && right == ExtendedProjectivePoint.POINT_INFINITY)
-                return ExtendedProjectivePoint.POINT_INFINITY;
+            if (left == ECPoint4.POINT_INFINITY && right == ECPoint4.POINT_INFINITY)
+                return ECPoint4.POINT_INFINITY;
 
-            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
-            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+            if (left == ECPoint4.POINT_INFINITY) return right;
+            if (right == ECPoint4.POINT_INFINITY) return left;
 
             if (left == Negate(curve, right))
-                return ExtendedProjectivePoint.POINT_INFINITY;
+                return ECPoint4.POINT_INFINITY;
 
             if (curve.isComplete)
             {
@@ -47,10 +47,10 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint UnifiedAdd(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        public static ECPoint4 UnifiedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
-            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+            if (left == ECPoint4.POINT_INFINITY) return right;
+            if (right == ECPoint4.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
             BigInteger A1 = (left.x * right.x) % p;
@@ -76,8 +76,8 @@ namespace Eduard.Security.Curves
             BigInteger T = (A5 * A8) % p;
             BigInteger Z = (A6 * A7) % p;
 
-            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
-            return new ExtendedProjectivePoint(X, Y, T, Z);
+            if (Z == 0) return ECPoint4.POINT_INFINITY;
+            return new ECPoint4(X, Y, T, Z);
         }
 
         /// <summary>
@@ -87,10 +87,10 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint TwistUnifiedAdd(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        public static ECPoint4 TwistUnifiedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
-            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+            if (left == ECPoint4.POINT_INFINITY) return right;
+            if (right == ECPoint4.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
             BigInteger A1 = ((left.y - left.x) * (right.y - right.x)) % p;
@@ -114,8 +114,8 @@ namespace Eduard.Security.Curves
             BigInteger T = (A5 * A8) % p;
             BigInteger Z = (A6 * A7) % p;
 
-            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
-            return new ExtendedProjectivePoint(X, Y, T, Z);
+            if (Z == 0) return ECPoint4.POINT_INFINITY;
+            return new ECPoint4(X, Y, T, Z);
         }
 
         /// <summary>
@@ -125,10 +125,10 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint DedicatedAdd(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        public static ECPoint4 DedicatedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
-            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+            if (left == ECPoint4.POINT_INFINITY) return right;
+            if (right == ECPoint4.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
             BigInteger A1 = (left.x * right.x) % p;
@@ -151,8 +151,8 @@ namespace Eduard.Security.Curves
             BigInteger T = (A5 * A8) % p;
             BigInteger Z = (A6 * A7) % p;
 
-            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
-            return new ExtendedProjectivePoint(X, Y, T, Z);
+            if (Z == 0) return ECPoint4.POINT_INFINITY;
+            return new ECPoint4(X, Y, T, Z);
         }
 
         /// <summary>
@@ -162,10 +162,10 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint TwistDedicatedAdd(TwistedEdwardsCurve curve, ExtendedProjectivePoint left, ExtendedProjectivePoint right)
+        public static ECPoint4 TwistDedicatedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ExtendedProjectivePoint.POINT_INFINITY) return right;
-            if (right == ExtendedProjectivePoint.POINT_INFINITY) return left;
+            if (left == ECPoint4.POINT_INFINITY) return right;
+            if (right == ECPoint4.POINT_INFINITY) return left;
             BigInteger p = curve.field;
 
             BigInteger A1 = ((left.y - left.x) * (right.y + right.x)) % p;
@@ -189,8 +189,8 @@ namespace Eduard.Security.Curves
             BigInteger T = (A5 * A8) % p;
             BigInteger Z = (A6 * A7) % p;
 
-            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
-            return new ExtendedProjectivePoint(X, Y, T, Z);
+            if (Z == 0) return ECPoint4.POINT_INFINITY;
+            return new ECPoint4(X, Y, T, Z);
         }
 
         /// <summary>
@@ -199,10 +199,10 @@ namespace Eduard.Security.Curves
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint DedicatedDoubling(TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        public static ECPoint4 DedicatedDoubling(TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if (point == ExtendedProjectivePoint.POINT_INFINITY)
-                return ExtendedProjectivePoint.POINT_INFINITY;
+            if (point == ECPoint4.POINT_INFINITY)
+                return ECPoint4.POINT_INFINITY;
 
             BigInteger p = curve.field;
             BigInteger A1 = (point.x * point.x) % p;
@@ -225,8 +225,8 @@ namespace Eduard.Security.Curves
             BigInteger T = (A5 * A8) % p;
             BigInteger Z = (A6 * A7) % p;
 
-            if (Z == 0) return ExtendedProjectivePoint.POINT_INFINITY;
-            return new ExtendedProjectivePoint(X, Y, T, Z);
+            if (Z == 0) return ECPoint4.POINT_INFINITY;
+            return new ECPoint4(X, Y, T, Z);
         }
 
         /// <summary>
@@ -235,11 +235,11 @@ namespace Eduard.Security.Curves
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint Negate(TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        public static ECPoint4 Negate(TwistedEdwardsCurve curve, ECPoint4 point)
         {
             BigInteger Xp = curve.field - point.x;
             BigInteger Tp = curve.field - point.t;
-            return new ExtendedProjectivePoint(Xp, point.y, Tp, point.z);
+            return new ECPoint4(Xp, point.y, Tp, point.z);
         }
     }
 }

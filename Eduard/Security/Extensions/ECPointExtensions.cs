@@ -18,9 +18,9 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint ToAffine(this EllipticCurve curve, JacobianPoint point)
+        public static ECPoint ToAffine(this EllipticCurve curve, ECPoint3w point)
         {
-            if (point == JacobianPoint.POINT_INFINITY || point.z == 0) 
+            if (point == ECPoint3w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
@@ -39,9 +39,9 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if(point == ExtendedProjectivePoint.POINT_INFINITY || point.z == 0)
+            if(point == ECPoint4.POINT_INFINITY || point.z == 0)
                 return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
@@ -60,9 +60,9 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ProjectivePoint point)
+        public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if (point == ProjectivePoint.POINT_INFINITY || point.z == 0)
+            if (point == ECPoint3.POINT_INFINITY || point.z == 0)
                 return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
@@ -81,14 +81,14 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint point)
+        public static ECPoint4 ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if(point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1)) 
-                return ExtendedProjectivePoint.POINT_INFINITY;
+                return ECPoint4.POINT_INFINITY;
 
             BigInteger p = curve.field;
             BigInteger t = (point.x * point.y) % p;
-            return new ExtendedProjectivePoint(point.x, point.y, t, 1);
+            return new ECPoint4(point.x, point.y, t, 1);
         }
 
         /// <summary>
@@ -97,10 +97,10 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint ToExtendedProjective(this TwistedEdwardsCurve curve, ProjectivePoint point)
+        public static ECPoint4 ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if (point == ProjectivePoint.POINT_INFINITY)
-                return ExtendedProjectivePoint.POINT_INFINITY;
+            if (point == ECPoint3.POINT_INFINITY)
+                return ECPoint4.POINT_INFINITY;
 
             BigInteger p = curve.field;
             BigInteger xz = (point.x * point.z) % p;
@@ -109,7 +109,7 @@ namespace Eduard.Security.Extensions
             BigInteger xy = (point.x * point.y) % p;
 
             BigInteger z2 = (point.z * point.z) % p;
-            return new ExtendedProjectivePoint(xz, yz, xy, z2);
+            return new ECPoint4(xz, yz, xy, z2);
         }
 
         /// <summary>
@@ -118,13 +118,13 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ExtendedProjectivePoint GetPointCopy(this TwistedEdwardsCurve curve, ProjectivePoint point)
+        public static ECPoint4 GetPointCopy(this TwistedEdwardsCurve curve, ECPoint3 point)
         {
             /* point at infinity */
-            if(point == ProjectivePoint.POINT_INFINITY)
-                return ExtendedProjectivePoint.POINT_INFINITY;
+            if(point == ECPoint3.POINT_INFINITY)
+                return ECPoint4.POINT_INFINITY;
 
-            var res = new ExtendedProjectivePoint();
+            var res = new ECPoint4();
             res.x = point.x; res.y = point.y;
 
             /* T is not used in point doubling formula */
@@ -138,12 +138,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ProjectivePoint ToProjective(this TwistedEdwardsCurve curve, ECPoint point)
+        public static ECPoint3 ToProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1))
-                return ProjectivePoint.POINT_INFINITY;
+                return ECPoint3.POINT_INFINITY;
 
-            return new ProjectivePoint(point.x, point.y, 1);
+            return new ECPoint3(point.x, point.y, 1);
         }
 
         /// <summary>
@@ -152,12 +152,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ProjectivePoint ToProjective(this TwistedEdwardsCurve curve, ExtendedProjectivePoint point)
+        public static ECPoint3 ToProjective(this TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if (point == ExtendedProjectivePoint.POINT_INFINITY)
-                return ProjectivePoint.POINT_INFINITY;
+            if (point == ECPoint4.POINT_INFINITY)
+                return ECPoint3.POINT_INFINITY;
 
-            return new ProjectivePoint(point.x, point.y, point.z);
+            return new ECPoint3(point.x, point.y, point.z);
         }
 
         /// <summary>
@@ -166,12 +166,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static JacobianPoint ToJacobian(this EllipticCurve curve, ECPoint point)
+        public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint point)
         {
             if (point == ECPoint.POINT_INFINITY) 
-                return JacobianPoint.POINT_INFINITY;
+                return ECPoint3w.POINT_INFINITY;
 
-            JacobianPoint jacobianPoint = new JacobianPoint(point.GetAffineX(),
+            ECPoint3w jacobianPoint = new ECPoint3w(point.GetAffineX(),
                 point.GetAffineY(), 1);
 
             return jacobianPoint;
@@ -183,12 +183,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static JacobianPoint ToJacobian(this EllipticCurve curve, ModifiedJacobianPoint point)
+        public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint4w point)
         {
-            if (point == ModifiedJacobianPoint.POINT_INFINITY) 
-                return JacobianPoint.POINT_INFINITY;
+            if (point == ECPoint4w.POINT_INFINITY) 
+                return ECPoint3w.POINT_INFINITY;
 
-            JacobianPoint jacobianPoint = new JacobianPoint(point.x,
+            ECPoint3w jacobianPoint = new ECPoint3w(point.x,
                 point.y, point.z);
 
             return jacobianPoint;
@@ -200,12 +200,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static JacobianPoint ToJacobian(this EllipticCurve curve, JacobianChudnovskyPoint point)
+        public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == JacobianChudnovskyPoint.POINT_INFINITY)
-                return JacobianPoint.POINT_INFINITY;
+            if (point == ECPoint5w.POINT_INFINITY)
+                return ECPoint3w.POINT_INFINITY;
 
-            JacobianPoint jacobianPoint = new JacobianPoint(point.x,
+            ECPoint3w jacobianPoint = new ECPoint3w(point.x,
                 point.y, point.z);
 
             return jacobianPoint;
@@ -217,9 +217,9 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint ToAffine(this EllipticCurve curve, JacobianChudnovskyPoint point)
+        public static ECPoint ToAffine(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == JacobianChudnovskyPoint.POINT_INFINITY || point.z == 0) return ECPoint.POINT_INFINITY;
+            if (point == ECPoint5w.POINT_INFINITY || point.z == 0) return ECPoint.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger X = (point.x * point.z2.Inverse(p)) % p;
@@ -233,10 +233,10 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static JacobianChudnovskyPoint ToJacobianChudnovsky(this EllipticCurve curve, ECPoint point)
+        public static ECPoint5w ToJacobianChudnovsky(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) return JacobianChudnovskyPoint.POINT_INFINITY;
-            JacobianChudnovskyPoint jacobianChudnovskyPoint = new JacobianChudnovskyPoint(point.GetAffineX(), point.GetAffineY(), 1, 1, 1);
+            if (point == ECPoint.POINT_INFINITY) return ECPoint5w.POINT_INFINITY;
+            ECPoint5w jacobianChudnovskyPoint = new ECPoint5w(point.GetAffineX(), point.GetAffineY(), 1, 1, 1);
             return jacobianChudnovskyPoint;
         }
 
@@ -246,9 +246,9 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ECPoint ToAffine(this EllipticCurve curve, ModifiedJacobianPoint point)
+        public static ECPoint ToAffine(this EllipticCurve curve, ECPoint4w point)
         {
-            if (point == ModifiedJacobianPoint.POINT_INFINITY || point.z == 0) return ECPoint.POINT_INFINITY;
+            if (point == ECPoint4w.POINT_INFINITY || point.z == 0) return ECPoint.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger Z2 = (point.z * point.z) % p;
@@ -265,10 +265,10 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, ECPoint point)
+        public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
-            ModifiedJacobianPoint modifiedJacobianPoint = new ModifiedJacobianPoint(point.GetAffineX(), point.GetAffineY(), 1, curve.a);
+            if (point == ECPoint.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.GetAffineX(), point.GetAffineY(), 1, curve.a);
             return modifiedJacobianPoint;
         }
 
@@ -278,13 +278,13 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, JacobianChudnovskyPoint point)
+        public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == JacobianChudnovskyPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
+            if (point == ECPoint5w.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
             BigInteger Z4 = (point.z2 * point.z2) % curve.field;
 
             BigInteger aZ4 = (curve.a * Z4) % curve.field;
-            ModifiedJacobianPoint modifiedJacobianPoint = new ModifiedJacobianPoint(point.x, point.y, point.z, aZ4);
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, point.y, point.z, aZ4);
             return modifiedJacobianPoint;
         }
 
@@ -294,14 +294,14 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ModifiedJacobianPoint ToModifiedJacobian(this EllipticCurve curve, JacobianPoint point)
+        public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint3w point)
         {
-            if (point == JacobianPoint.POINT_INFINITY) return ModifiedJacobianPoint.POINT_INFINITY;
+            if (point == ECPoint3w.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
             BigInteger Z2 = (point.z * point.z) % curve.field;
             BigInteger Z4 = (Z2 * Z2) % curve.field;
 
             BigInteger aZ4 = (curve.a * Z4) % curve.field;
-            ModifiedJacobianPoint modifiedJacobianPoint = new ModifiedJacobianPoint(point.x, point.y, point.z, aZ4);
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, point.y, point.z, aZ4);
             return modifiedJacobianPoint;
         }
     }

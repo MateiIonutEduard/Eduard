@@ -6,7 +6,7 @@ namespace Eduard.Security.Primitives
     /// <summary>
     /// Represents a Jacobian-Chudnovsky projective point (X, Y, Z, Z^2, Z^3) that maps to the affine elliptic curve point (X/Z^2, Y/Z^3).
     /// </summary>
-    public class JacobianChudnovskyPoint
+    public class ECPoint5w
     {
         public BigInteger x;
         public BigInteger y;
@@ -16,9 +16,9 @@ namespace Eduard.Security.Primitives
         public BigInteger z3;
 
         /// <summary>
-        /// Creates a <seealso cref="JacobianChudnovskyPoint"/> equal to the point at infinity.
+        /// Creates a <seealso cref="ECPoint5w"/> equal to the point at infinity.
         /// </summary>
-        public JacobianChudnovskyPoint()
+        public ECPoint5w()
         {
             this.x = null;
             this.y = null;
@@ -29,7 +29,7 @@ namespace Eduard.Security.Primitives
         }
 
         /// <summary>
-        /// Creates a <seealso cref="JacobianChudnovskyPoint"/> from the extended Jacobian projective coordinates.
+        /// Creates a <seealso cref="ECPoint5w"/> from the extended Jacobian projective coordinates.
         /// </summary>
         /// <param name="x">The projective X-coordinate.</param>
         /// <param name="y">The projective Y-coordinate.</param>
@@ -37,7 +37,7 @@ namespace Eduard.Security.Primitives
         /// <param name="z2">The projective Z^2-coordinate.</param>
         /// <param name="z3">The projective Z^3-coordinate.</param>
         /// <exception cref="NullReferenceException"></exception>
-        public JacobianChudnovskyPoint(BigInteger x, BigInteger y, BigInteger z, BigInteger z2, BigInteger z3)
+        public ECPoint5w(BigInteger x, BigInteger y, BigInteger z, BigInteger z2, BigInteger z3)
         {
             if (object.ReferenceEquals(x, null))
                 throw new NullReferenceException("The projective X-coordinate cannot be null.");
@@ -65,9 +65,9 @@ namespace Eduard.Security.Primitives
         /// <summary>
         /// Represents the point at infinity on the Weierstrass curve.
         /// </summary>
-        public static JacobianChudnovskyPoint POINT_INFINITY
+        public static ECPoint5w POINT_INFINITY
         {
-            get { return new JacobianChudnovskyPoint(); }
+            get { return new ECPoint5w(); }
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Eduard.Security.Primitives
         {
             try
             {
-                JacobianChudnovskyPoint other = (JacobianChudnovskyPoint)obj;
+                ECPoint5w other = (ECPoint5w)obj;
 
                 if (object.ReferenceEquals(x, other.x) && object.ReferenceEquals(y, other.y) 
                     && object.ReferenceEquals(z, other.z) && object.ReferenceEquals(z2, other.z2)
@@ -96,23 +96,23 @@ namespace Eduard.Security.Primitives
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the Jacobian-Chudnovsky projective coordinates of two <seealso cref="JacobianPoint"/> objects are equal.
+        /// Returns a value that indicates whether the Jacobian-Chudnovsky projective coordinates of two <seealso cref="ECPoint5w"/> objects are equal.
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static bool operator ==(JacobianChudnovskyPoint left, JacobianChudnovskyPoint right)
+        public static bool operator ==(ECPoint5w left, ECPoint5w right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the Jacobian-Chudnovsky projective coordinates of two <seealso cref="JacobianPoint"/> objects have different values.
+        /// Returns a value that indicates whether the Jacobian-Chudnovsky projective coordinates of two <seealso cref="ECPoint5w"/> objects have different values.
         /// </summary>
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static bool operator !=(JacobianChudnovskyPoint left, JacobianChudnovskyPoint right)
+        public static bool operator !=(ECPoint5w left, ECPoint5w right)
         {
             return !left.Equals(right);
         }

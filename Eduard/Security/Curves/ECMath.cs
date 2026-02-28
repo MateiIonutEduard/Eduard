@@ -122,35 +122,35 @@ namespace Eduard.Security.Curves
             }
             else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
             {
-                JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
+                ECPoint3w auxPoint = ECPoint3w.POINT_INFINITY;
                 var basePoint = curve.ToModifiedJacobian(temp);
 
                 for (int j = 0; j < t; j++)
                 {
                     if (k.TestBit(j))
-                        auxPoint = JacobianMath.Add(curve, auxPoint, curve.ToJacobian(basePoint));
+                        auxPoint = Wei3Math.Add(curve, auxPoint, curve.ToJacobian(basePoint));
 
-                    basePoint = ModifiedJacobianMath.Doubling(curve, basePoint);
+                    basePoint = Wei4Math.Doubling(curve, basePoint);
                 }
 
                 result = curve.ToAffine(auxPoint);
             }
             else if (opMode == ECMode.EC_SECURE)
             {
-                JacobianPoint R0 = JacobianPoint.POINT_INFINITY;
-                JacobianPoint R1 = curve.ToJacobian(temp);
+                ECPoint3w R0 = ECPoint3w.POINT_INFINITY;
+                ECPoint3w R1 = curve.ToJacobian(temp);
 
                 for (int j = t - 1; j >= 0; j--)
                 {
                     if (!k.TestBit(j))
                     {
-                        R1 = JacobianMath.Add(curve, R0, R1);
-                        R0 = JacobianMath.Doubling(curve, R0);
+                        R1 = Wei3Math.Add(curve, R0, R1);
+                        R0 = Wei3Math.Doubling(curve, R0);
                     }
                     else
                     {
-                        R0 = JacobianMath.Add(curve, R0, R1);
-                        R1 = JacobianMath.Doubling(curve, R1);
+                        R0 = Wei3Math.Add(curve, R0, R1);
+                        R1 = Wei3Math.Doubling(curve, R1);
                     }
                 }
 
@@ -164,18 +164,18 @@ namespace Eduard.Security.Curves
                 int windowSize = 8;
                 int tbits = 0;
 
-                var table = new JacobianChudnovskyPoint[windowSize];
+                var table = new ECPoint5w[windowSize];
                 table[0] = curve.ToJacobianChudnovsky(point);
 
-                var squarePoint = JacobianChudnovskyMath.Doubling(curve, table[0]);
-                JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
+                var squarePoint = Wei5Math.Doubling(curve, table[0]);
+                ECPoint3w auxPoint = ECPoint3w.POINT_INFINITY;
 
                 BigInteger exp3 = 3 * k;
                 bc = exp3.GetBits();
 
                 /* compute the lookup table */
                 for (i = 1; i < windowSize; i++)
-                    table[i] = JacobianChudnovskyMath.Add(curve, table[i - 1], squarePoint);
+                    table[i] = Wei5Math.Add(curve, table[i - 1], squarePoint);
 
                 for (i = bc - 1; i >= 1;)
                 {
@@ -183,21 +183,21 @@ namespace Eduard.Security.Curves
                     var auxModifiedJacobianPoint = curve.ToModifiedJacobian(auxPoint);
 
                     for (j = 0; j < ubits - 1; j++)
-                        auxModifiedJacobianPoint = ModifiedJacobianMath.Doubling(curve, auxModifiedJacobianPoint);
+                        auxModifiedJacobianPoint = Wei4Math.Doubling(curve, auxModifiedJacobianPoint);
 
                     if (ubits >= 1)
-                        auxPoint = JacobianMath.Doubling(curve, curve.ToJacobian(auxModifiedJacobianPoint));
+                        auxPoint = Wei3Math.Doubling(curve, curve.ToJacobian(auxModifiedJacobianPoint));
 
                     if (win > 0)
                     {
                         var table_point = curve.ToJacobian(table[win >> 1]);
-                        auxPoint = JacobianMath.Add(curve, table_point, auxPoint);
+                        auxPoint = Wei3Math.Add(curve, table_point, auxPoint);
                     }
                     if (win < 0)
                     {
                         var table_point = curve.ToJacobian(table[(-win) >> 1]);
-                        var negative_point = JacobianMath.Negate(curve, table_point);
-                        auxPoint = JacobianMath.Add(curve, negative_point, auxPoint);
+                        var negative_point = Wei3Math.Negate(curve, table_point);
+                        auxPoint = Wei3Math.Add(curve, negative_point, auxPoint);
                     }
 
                     i -= ubits;
@@ -208,12 +208,12 @@ namespace Eduard.Security.Curves
                         i -= tbits;
 
                         for (j = 0; j < tbits - 1; j++)
-                            lastPoint = ModifiedJacobianMath.Doubling(curve, lastPoint);
+                            lastPoint = Wei4Math.Doubling(curve, lastPoint);
 
                         if (tbits >= 1)
                         {
                             auxPoint = curve.ToJacobian(lastPoint);
-                            auxPoint = JacobianMath.Doubling(curve, auxPoint);
+                            auxPoint = Wei3Math.Doubling(curve, auxPoint);
                         }
 
                     }

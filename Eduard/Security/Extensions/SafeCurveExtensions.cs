@@ -32,15 +32,15 @@ namespace Eduard.Security.Extensions
             BigInteger k = curve.cofactor;
 
             /* check if the point generates a small-order subgroup */
-            JacobianPoint auxPoint = JacobianPoint.POINT_INFINITY;
+            ECPoint3w auxPoint = ECPoint3w.POINT_INFINITY;
             var basePoint = curve.ToModifiedJacobian(point);
 
             for (int j = 0; j < t; j++)
             {
                 if (k.TestBit(j))
-                    auxPoint = JacobianMath.Add(curve, auxPoint, curve.ToJacobian(basePoint));
+                    auxPoint = Wei3Math.Add(curve, auxPoint, curve.ToJacobian(basePoint));
 
-                basePoint = ModifiedJacobianMath.Doubling(curve, basePoint);
+                basePoint = Wei4Math.Doubling(curve, basePoint);
             }
 
             result = curve.ToAffine(auxPoint);
@@ -69,15 +69,15 @@ namespace Eduard.Security.Extensions
             BigInteger k = curve.cofactor;
 
             /* check if the point generates a small-order subgroup */
-            ProjectivePoint auxPoint = ProjectivePoint.POINT_INFINITY;
+            ECPoint3 auxPoint = ECPoint3.POINT_INFINITY;
             var basePoint = curve.ToProjective(point);
 
             for (int j = 0; j < t; j++)
             {
                 if (k.TestBit(j))
-                    auxPoint = TwistedEdwardsProjectiveMath.UnifiedAdd(curve, auxPoint, basePoint);
+                    auxPoint = Ed3Math.UnifiedAdd(curve, auxPoint, basePoint);
 
-                basePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, basePoint);
+                basePoint = Ed3Math.UnifiedDoubling(curve, basePoint);
             }
 
             result = curve.ToAffine(auxPoint);

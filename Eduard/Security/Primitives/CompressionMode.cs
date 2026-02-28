@@ -3,7 +3,7 @@
     /// <summary>
     /// Provides methods to store affine points on the elliptic curve.
     /// </summary>
-    public enum ECPointCompressionMode
+    public enum CompressionMode
     {
         /// <summary>
         /// Use the compressed form to represent affine points compactly.

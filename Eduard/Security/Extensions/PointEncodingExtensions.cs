@@ -23,12 +23,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static byte[] CompressPoint(this EllipticCurve curve, ECPoint point, ECPointCompressionMode mode = ECPointCompressionMode.EC_POINT_COMPRESSED)
+        public static byte[] CompressPoint(this EllipticCurve curve, ECPoint point, CompressionMode mode = CompressionMode.EC_POINT_COMPRESSED)
         {
             if (point == ECPoint.POINT_INFINITY)
                 throw new ArgumentException("Point at infinity cannot be compressed.");
 
-            if(mode == ECPointCompressionMode.EC_POINT_COMPRESSED)
+            if(mode == CompressionMode.EC_POINT_COMPRESSED)
             {
                 /* compressed form */
                 byte[] bytes = point.GetAffineX().ToByteArray();
@@ -66,12 +66,12 @@ namespace Eduard.Security.Extensions
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static byte[] CompressPoint(this TwistedEdwardsCurve curve, ECPoint point, ECPointCompressionMode mode = ECPointCompressionMode.EC_POINT_COMPRESSED)
+        public static byte[] CompressPoint(this TwistedEdwardsCurve curve, ECPoint point, CompressionMode mode = CompressionMode.EC_POINT_COMPRESSED)
         {
             if (point == ECPoint.POINT_INFINITY)
                 throw new ArgumentException("Point at infinity cannot be compressed.");
 
-            if (mode == ECPointCompressionMode.EC_POINT_COMPRESSED)
+            if (mode == CompressionMode.EC_POINT_COMPRESSED)
             {
                 /* compressed form */
                 byte[] bytes = point.GetAffineY().ToByteArray();

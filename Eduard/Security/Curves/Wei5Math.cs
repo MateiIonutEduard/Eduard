@@ -8,12 +8,12 @@ namespace Eduard.Security.Curves
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public static class JacobianChudnovskyMath
+    public static class Wei5Math
     {
-        public static JacobianChudnovskyPoint Add(EllipticCurve curve, JacobianChudnovskyPoint left, JacobianChudnovskyPoint right)
+        public static ECPoint5w Add(EllipticCurve curve, ECPoint5w left, ECPoint5w right)
         {
-            if (left == JacobianChudnovskyPoint.POINT_INFINITY) return right;
-            if (right == JacobianChudnovskyPoint.POINT_INFINITY) return left;
+            if (left == ECPoint5w.POINT_INFINITY) return right;
+            if (right == ECPoint5w.POINT_INFINITY) return left;
             BigInteger p = curve.field;
 
             BigInteger A1 = (left.x * right.z2) % p;
@@ -39,16 +39,16 @@ namespace Eduard.Security.Curves
             if (Y < 0) Y += p;
 
             BigInteger Z = (((left.z * right.z) % p) * A5) % p;
-            if (Z == 0) return JacobianChudnovskyPoint.POINT_INFINITY;
+            if (Z == 0) return ECPoint5w.POINT_INFINITY;
             BigInteger Z2 = (Z * Z) % p;
 
             BigInteger Z3 = (Z2 * Z) % p;
-            return new JacobianChudnovskyPoint(X, Y, Z, Z2, Z3);
+            return new ECPoint5w(X, Y, Z, Z2, Z3);
         }
 
-        public static JacobianChudnovskyPoint Doubling(EllipticCurve curve, JacobianChudnovskyPoint jacobianPoint)
+        public static ECPoint5w Doubling(EllipticCurve curve, ECPoint5w jacobianPoint)
         {
-            if (jacobianPoint == JacobianChudnovskyPoint.POINT_INFINITY) return JacobianChudnovskyPoint.POINT_INFINITY;
+            if (jacobianPoint == ECPoint5w.POINT_INFINITY) return ECPoint5w.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger A1 = (jacobianPoint.y * jacobianPoint.y) % p;
@@ -73,17 +73,17 @@ namespace Eduard.Security.Curves
             if (Y < 0) Y += p;
 
             BigInteger Z = (2 * jacobianPoint.y * jacobianPoint.z) % p;
-            if (Z == 0) return JacobianChudnovskyPoint.POINT_INFINITY;
+            if (Z == 0) return ECPoint5w.POINT_INFINITY;
             BigInteger Z2 = (Z * Z) % p;
 
             BigInteger Z3 = (Z2 * Z) % p;
-            return new JacobianChudnovskyPoint(X, Y, Z, Z2, Z3);
+            return new ECPoint5w(X, Y, Z, Z2, Z3);
         }
 
-        public static JacobianChudnovskyPoint Negate(EllipticCurve curve, JacobianChudnovskyPoint point)
+        public static ECPoint5w Negate(EllipticCurve curve, ECPoint5w point)
         {
-            if (point == JacobianChudnovskyPoint.POINT_INFINITY) return JacobianChudnovskyPoint.POINT_INFINITY;
-            return new JacobianChudnovskyPoint(point.x, curve.field - point.y, point.z, point.z2, point.z3);
+            if (point == ECPoint5w.POINT_INFINITY) return ECPoint5w.POINT_INFINITY;
+            return new ECPoint5w(point.x, curve.field - point.y, point.z, point.z2, point.z3);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Eduard.Security.Curves
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public static class TwistedEdwardsProjectiveMath
+    public static class Ed3Math
     {
         /// <summary>
         /// Add two projective points on the twisted Edwards curve using the unified formula.
@@ -19,10 +19,10 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ProjectivePoint UnifiedAdd(TwistedEdwardsCurve curve, ProjectivePoint left, ProjectivePoint right)
+        public static ECPoint3 UnifiedAdd(TwistedEdwardsCurve curve, ECPoint3 left, ECPoint3 right)
         {
-            if (left == ProjectivePoint.POINT_INFINITY) return right;
-            if (right == ProjectivePoint.POINT_INFINITY) return left;
+            if (left == ECPoint3.POINT_INFINITY) return right;
+            if (right == ECPoint3.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
             BigInteger A1 = (left.z * right.z) % p;
@@ -46,8 +46,8 @@ namespace Eduard.Security.Curves
             BigInteger Y = (A1 * ((A7 * A9) % p)) % p;
             BigInteger Z = (A6 * A7) % p;
 
-            if (Z == 0) return ProjectivePoint.POINT_INFINITY;
-            return new ProjectivePoint(X, Y, Z);
+            if (Z == 0) return ECPoint3.POINT_INFINITY;
+            return new ECPoint3(X, Y, Z);
         }
 
         /// <summary>
@@ -57,10 +57,10 @@ namespace Eduard.Security.Curves
         /// <param name="left"></param>
         /// <param name="right"></param>
         /// <returns></returns>
-        public static ProjectivePoint UnifiedDoubling(TwistedEdwardsCurve curve, ProjectivePoint point)
+        public static ECPoint3 UnifiedDoubling(TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if (point == ProjectivePoint.POINT_INFINITY)
-                return ProjectivePoint.POINT_INFINITY;
+            if (point == ECPoint3.POINT_INFINITY)
+                return ECPoint3.POINT_INFINITY;
 
             BigInteger p = curve.field;
             BigInteger A1 = ((point.x + point.y) * (point.x + point.y)) % p;
@@ -80,8 +80,8 @@ namespace Eduard.Security.Curves
             BigInteger Y = (A5 * ((p + A4 - A3) % p)) % p;
             BigInteger Z = (A5 * A7) % p;
 
-            if (Z == 0) return ProjectivePoint.POINT_INFINITY;
-            return new ProjectivePoint(X, Y, Z);
+            if (Z == 0) return ECPoint3.POINT_INFINITY;
+            return new ECPoint3(X, Y, Z);
         }
 
         /// <summary>
@@ -90,10 +90,10 @@ namespace Eduard.Security.Curves
         /// <param name="curve"></param>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static ProjectivePoint Negate(TwistedEdwardsCurve curve, ProjectivePoint point)
+        public static ECPoint3 Negate(TwistedEdwardsCurve curve, ECPoint3 point)
         {
             BigInteger x = curve.field - point.x;
-            return new ProjectivePoint(x, point.y, point.z);
+            return new ECPoint3(x, point.y, point.z);
         }
     }
 }

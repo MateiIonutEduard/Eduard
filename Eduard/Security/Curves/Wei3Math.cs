@@ -8,12 +8,12 @@ namespace Eduard.Security.Curves
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public static class JacobianMath
+    public static class Wei3Math
     {
-        public static JacobianPoint Add(EllipticCurve curve, JacobianPoint left, JacobianPoint right)
+        public static ECPoint3w Add(EllipticCurve curve, ECPoint3w left, ECPoint3w right)
         {
-            if (left == JacobianPoint.POINT_INFINITY) return right;
-            if (right == JacobianPoint.POINT_INFINITY) return left;
+            if (left == ECPoint3w.POINT_INFINITY) return right;
+            if (right == ECPoint3w.POINT_INFINITY) return left;
             BigInteger p = curve.field;
 
             BigInteger A1 = (left.x * ((right.z * right.z) % p)) % p;
@@ -39,13 +39,13 @@ namespace Eduard.Security.Curves
             if (Y < 0) Y += p;
 
             BigInteger Z = (((left.z * right.z) % p) * A5) % p;
-            if (Z == 0) return JacobianPoint.POINT_INFINITY;
-            return new JacobianPoint(X, Y, Z);
+            if (Z == 0) return ECPoint3w.POINT_INFINITY;
+            return new ECPoint3w(X, Y, Z);
         }
 
-        public static JacobianPoint Doubling(EllipticCurve curve, JacobianPoint jacobianPoint)
+        public static ECPoint3w Doubling(EllipticCurve curve, ECPoint3w jacobianPoint)
         {
-            if (jacobianPoint == JacobianPoint.POINT_INFINITY) return JacobianPoint.POINT_INFINITY;
+            if (jacobianPoint == ECPoint3w.POINT_INFINITY) return ECPoint3w.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger A1 = (jacobianPoint.y * jacobianPoint.y) % p;
@@ -71,14 +71,14 @@ namespace Eduard.Security.Curves
             if (Y < 0) Y += p;
 
             BigInteger Z = (2 * jacobianPoint.y * jacobianPoint.z) % p;
-            if (Z == 0) return JacobianPoint.POINT_INFINITY;
-            return new JacobianPoint(X, Y, Z);
+            if (Z == 0) return ECPoint3w.POINT_INFINITY;
+            return new ECPoint3w(X, Y, Z);
         }
 
-        public static JacobianPoint Negate(EllipticCurve curve, JacobianPoint point)
+        public static ECPoint3w Negate(EllipticCurve curve, ECPoint3w point)
         {
-            if (point == JacobianPoint.POINT_INFINITY) return JacobianPoint.POINT_INFINITY;
-            return new JacobianPoint(point.x, curve.field - point.y, point.z);
+            if (point == ECPoint3w.POINT_INFINITY) return ECPoint3w.POINT_INFINITY;
+            return new ECPoint3w(point.x, curve.field - point.y, point.z);
         }
     }
 

@@ -48,15 +48,15 @@ namespace Eduard.Security.Curves
             }
             else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
             {
-                ProjectivePoint auxPoint = ProjectivePoint.POINT_INFINITY;
+                ECPoint3 auxPoint = ECPoint3.POINT_INFINITY;
                 var basePoint = curve.ToProjective(temp);
 
                 for (int j = 0; j < t; j++)
                 {
                     if (k.TestBit(j))
-                        auxPoint = TwistedEdwardsProjectiveMath.UnifiedAdd(curve, auxPoint, basePoint);
+                        auxPoint = Ed3Math.UnifiedAdd(curve, auxPoint, basePoint);
 
-                    basePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, basePoint);
+                    basePoint = Ed3Math.UnifiedDoubling(curve, basePoint);
                 }
 
                 result = curve.ToAffine(auxPoint);
@@ -71,18 +71,18 @@ namespace Eduard.Security.Curves
                 int windowSize = 8;
                 int tbits = 0;
 
-                var table = new ExtendedProjectivePoint[windowSize];
+                var table = new ECPoint4[windowSize];
                 table[0] = curve.ToExtendedProjective(point);
 
-                var squarePoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, table[0]);
-                ExtendedProjectivePoint auxPoint = ExtendedProjectivePoint.POINT_INFINITY;
+                var squarePoint = Ed4Math.DedicatedDoubling(curve, table[0]);
+                ECPoint4 auxPoint = ECPoint4.POINT_INFINITY;
 
                 BigInteger exp3 = 3 * k;
                 bc = exp3.GetBits();
 
                 /* compute the lookup table */
                 for (i = 1; i < windowSize; i++)
-                    table[i] = TwistedEdwardsExtProjectiveMath.Add(curve, table[i - 1], squarePoint);
+                    table[i] = Ed4Math.Add(curve, table[i - 1], squarePoint);
 
                 for (i = bc - 1; i >= 1;)
                 {
@@ -90,24 +90,24 @@ namespace Eduard.Security.Curves
                     var projectivePoint = curve.ToProjective(auxPoint);
 
                     for (j = 0; j < ubits - 1; j++)
-                        projectivePoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, projectivePoint);
+                        projectivePoint = Ed3Math.UnifiedDoubling(curve, projectivePoint);
 
                     if (ubits >= 1)
                     {
                         var tempPoint = curve.GetPointCopy(projectivePoint);
-                        auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
+                        auxPoint = Ed4Math.DedicatedDoubling(curve, tempPoint);
                     }
 
                     if (win > 0)
                     {
                         var table_point = table[win >> 1];
-                        auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, table_point, auxPoint);
+                        auxPoint = Ed4Math.Add(curve, table_point, auxPoint);
                     }
                     if (win < 0)
                     {
                         var table_point = table[(-win) >> 1];
-                        var negative_point = TwistedEdwardsExtProjectiveMath.Negate(curve, table_point);
-                        auxPoint = TwistedEdwardsExtProjectiveMath.Add(curve, negative_point, auxPoint);
+                        var negative_point = Ed4Math.Negate(curve, table_point);
+                        auxPoint = Ed4Math.Add(curve, negative_point, auxPoint);
                     }
 
                     i -= ubits;
@@ -118,12 +118,12 @@ namespace Eduard.Security.Curves
                         i -= tbits;
 
                         for (j = 0; j < tbits - 1; j++)
-                            lastPoint = TwistedEdwardsProjectiveMath.UnifiedDoubling(curve, lastPoint);
+                            lastPoint = Ed3Math.UnifiedDoubling(curve, lastPoint);
 
                         if (tbits >= 1)
                         {
                             var tempPoint = curve.GetPointCopy(lastPoint);
-                            auxPoint = TwistedEdwardsExtProjectiveMath.DedicatedDoubling(curve, tempPoint);
+                            auxPoint = Ed4Math.DedicatedDoubling(curve, tempPoint);
                         }
                     }
                 }
