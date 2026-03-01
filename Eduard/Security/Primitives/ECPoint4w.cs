@@ -1,11 +1,15 @@
-﻿using System;
-using Eduard;
+﻿using Eduard;
+using System;
+using System.Diagnostics;
 
 namespace Eduard.Security.Primitives
 {
     /// <summary>
     /// Represents an extended Jacobian projective point (X, Y, Z, aZ^4) corresponding to the affine elliptic curve point (X/Z^2, Y/Z^3).
     /// </summary>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
     public class ECPoint4w
     {
         public BigInteger x;
