@@ -1,32 +1,48 @@
 ﻿using System;
 using Eduard;
+using System.Diagnostics;
 
 namespace Eduard.Security.Primitives
 {
     /// <summary>
-    /// Represents a point on an elliptic curve in affine coordinates.
+    /// Represents a point on an elliptic curve in affine coordinates (x, y).
     /// </summary>
-    public class ECPoint
+    /// <remarks>
+    /// This struct encapsulates an affine point on an elliptic curve over a prime field. <br/>
+    /// Points can be either ordinary curve points satisfying the curve equation, or the <br/>
+    /// point at infinity which serves as the identity element in the elliptic curve group. <br/>
+    /// The point at infinity is represented with coordinates (0,1) and the isInfinity flag set.
+    /// </remarks>
+#if !USE_PROFILER
+    [DebuggerStepThrough]
+#endif
+    public struct ECPoint : IEquatable<ECPoint>
     {
         internal BigInteger x;
         internal BigInteger y;
+        internal bool isInfinity;
 
         /// <summary>
-        /// Creates an <seealso cref="ECPoint"/> equals with point at infinity.
+        /// Initializes a new elliptic curve point with the specified affine coordinates.
         /// </summary>
-        public ECPoint()
-        {
-            this.x = null;
-            this.y = null;
-        }
+        /// <param name="x">The affine x-coordinate (must satisfy the curve equation).</param>
+        /// <param name="y">The affine y-coordinate (must satisfy the curve equation).</param>
+        /// <exception cref="NullReferenceException">Thrown when x or y is null.</exception>
+        public ECPoint(BigInteger x, BigInteger y) : this(x, y, false)
+        { }
 
         /// <summary>
-        /// Creates an <seealso cref="ECPoint"/> from the specified affine x-coordinate and affine y-coordinate.
+        /// Initializes a new elliptic curve point with the specified affine coordinates and infinity flag.
         /// </summary>
         /// <param name="x">The affine x-coordinate.</param>
         /// <param name="y">The affine y-coordinate.</param>
-        /// <exception cref="NullReferenceException"></exception>
-        public ECPoint(BigInteger x, BigInteger y)
+        /// <param name="isInfinity">Indicates whether this point represents the point at infinity.</param>
+        /// <exception cref="NullReferenceException">Thrown when x or y is null.</exception>
+        /// <remarks>
+        /// For the point at infinity, the coordinates are conventionally set to (0,1) with the <br/>
+        /// infinity flag set to true. The curve equation is not enforced for the point at infinity.
+        /// </remarks>
+        public ECPoint(BigInteger x, BigInteger y, bool isInfinity)
         {
             if (object.ReferenceEquals(x, null))
                 throw new NullReferenceException("The affine x-coordinate cannot be null.");
@@ -34,91 +50,115 @@ namespace Eduard.Security.Primitives
             if (object.ReferenceEquals(null, y))
                 throw new NullReferenceException("The affine y-coordinate cannot be null.");
 
-            this.x = x;
-            this.y = y;
+            this.isInfinity = isInfinity;
+            this.x = x; this.y = y;
         }
 
         /// <summary>
-        /// This defines the point at infinity.
+        /// Gets the point at infinity (additive identity) for elliptic curve groups.
         /// </summary>
+        /// <remarks>
+        /// The point at infinity is represented with coordinates (0,1) and the infinity flag set to true.
+        /// </remarks>
         public static ECPoint POINT_INFINITY
         {
             get
             {
-                return new ECPoint();
+                var infinity = new ECPoint(0, 1, true);
+                return infinity;
             }
         }
 
         /// <summary>
-        /// Returns the affine x-coordinate.
+        /// Gets the affine x-coordinate of this point.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The x-coordinate as a BigInteger.</returns>
         public BigInteger GetAffineX()
         {
             return x;
         }
 
         /// <summary>
-        /// Returns the affine y-coordinate.
+        /// Gets the affine y-coordinate of this point.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The y-coordinate as a BigInteger.</returns>
         public BigInteger GetAffineY()
         {
             return y;
         }
 
         /// <summary>
-        /// Compares this elliptic curve point for equality with the specified object.
+        /// Indicates whether the current point is equal to another point.
         /// </summary>
-        /// <param name="obj">The object to be compared.</param>
-        /// <returns></returns>
-        public override bool Equals(object obj)
+        /// <param name="other">The point to compare with this point.</param>
+        /// <returns>true if the points have identical affine coordinates; otherwise false.</returns>
+        /// <remarks>
+        /// Two points are considered equal if they have the same x and y <br/> coordinates.
+        /// The point at infinity (0,1,true) is only equal to itself.
+        /// </remarks>
+        public bool Equals(ECPoint other)
         {
-            try
-            {
-                ECPoint other = (ECPoint)obj;
-
-                if (object.ReferenceEquals(x, other.x) && object.ReferenceEquals(y, other.y))
-                    return true;
-
-                if (x == other.x && y == other.y)
-                    return true;
-
+            if (isInfinity != other.isInfinity)
                 return false;
-            }
-            catch (Exception)
-            { return false; }
+
+            bool sameXCoord = x == other.x;
+            bool sameYCoord = y == other.y;
+            return sameXCoord && sameYCoord;
         }
 
         /// <summary>
-        /// Returns a value that indicates if the affine coordinates of two <seealso cref="ECPoint"/> objects are equal.
+        /// Determines whether the specified object is equal to the current point.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="obj">The object to compare with the current point.</param>
+        /// <returns>true if the object is an ECPoint with identical coordinates; otherwise false.</returns>
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ECPoint))
+                return false;
+
+            ECPoint other = (ECPoint)obj;
+            return Equals(other);
+        }
+
+        /// <summary>
+        /// Equality operator for elliptic curve points.
+        /// </summary>
+        /// <param name="left">The first point to compare.</param>
+        /// <param name="right">The second point to compare.</param>
+        /// <returns>true if the points have identical coordinates; otherwise false.</returns>
         public static bool operator ==(ECPoint left, ECPoint right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a value that indicates if the affine coordinates of two <seealso cref="ECPoint"/> objects have different values.
+        /// Inequality operator for elliptic curve points.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first point to compare.</param>
+        /// <param name="right">The second point to compare.</param>
+        /// <returns>true if the points have different coordinates; otherwise false.</returns>
         public static bool operator !=(ECPoint left, ECPoint right)
         {
             return !left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a hash code value for this elliptic curve point.
+        /// Returns a hash code for this elliptic curve point.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A 32-bit signed integer hash code.</returns>
+        /// <remarks>
+        /// The hash code is computed by XORing the hash codes of the x and y coordinates. <br/>
+        /// This ensures that points with identical coordinates produce the same hash code, <br/>
+        /// maintaining consistency with the equality semantics of the struct.
+        /// </remarks>
         public override int GetHashCode()
         {
-            return ((object)this).GetHashCode();
+            unchecked
+            {
+                int xHash = x.GetHashCode();
+                int yHash = y.GetHashCode();
+                return xHash ^ yHash;
+            }
         }
     }
 }
