@@ -16,7 +16,7 @@ namespace Eduard.Security.Primitives
     /// <list type="bullet">
     /// <item><description>x = X / Z^2</description></item>
     /// <item><description>y = Y / Z^3</description></item>
-    /// <item><description>aZ⁴ = a * Z^4 (pre-computed for efficiency)</description></item>
+    /// <item><description>aZ^4 = a * Z^4 (pre-computed for efficiency)</description></item>
     /// </list>
     /// </para>
     /// <para>
@@ -79,12 +79,12 @@ namespace Eduard.Security.Primitives
                 throw new NullReferenceException("The projective Z-coordinate cannot be null.");
 
             if (ReferenceEquals(aZ4, null))
-                throw new NullReferenceException("The projective aZ⁴-coordinate cannot be null.");
+                throw new NullReferenceException("The projective aZ^4-coordinate cannot be null.");
 
             /* validate point at infinity invariant */
             if (z == 0 && aZ4 != 0)
                 throw new InvalidOperationException(
-                    "Point at infinity must have aZ⁴ = 0.");
+                    "Point at infinity must have aZ^4 = 0.");
 
             this.x = x;
             this.y = y;
@@ -115,7 +115,7 @@ namespace Eduard.Security.Primitives
         /// <param name="other">The point to compare with this point.</param>
         /// <returns>true if the points represent the same geometric point; otherwise false.</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if either point violates the invariant (Z=0 but aZ⁴≠0).
+        /// Thrown if either point violates the invariant (Z=0 but aZ^4 != 0).
         /// </exception>
         /// <remarks>
         /// Two points are considered equal if:
@@ -131,11 +131,11 @@ namespace Eduard.Security.Primitives
 
             if (isInfinitySelf && aZ4 != 0)
                 throw new InvalidOperationException(
-                    "Current point at infinity has non-zero aZ⁴.");
+                    "Current point at infinity has non-zero aZ^4.");
 
             if (isInfinityOther && other.aZ4 != 0)
                 throw new InvalidOperationException(
-                    "Other point at infinity has non-zero aZ⁴.");
+                    "Other point at infinity has non-zero aZ^4.");
 
             if (isInfinitySelf != isInfinityOther)
                 return false;
