@@ -4,12 +4,40 @@ using Eduard.Security.Primitives;
 
 namespace Eduard.Security.Curves
 {
-    /* Hankerson, D.R., Vanstone, S.A., Menezes, A.J. (2004): Guide to elliptic curve cryptography. Springer, New York, NY. */
+    /// <summary>
+    /// Implements arithmetic operations for Weierstrass elliptic curves using <br/>
+    /// Jacobian projective coordinates (X, Y, Z) where the affine point (x, y) <br/>
+    /// is represented as (X/Z^2, Y/Z^3).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Based on "Guide to Elliptic Curve Cryptography" by Hankerson, Vanstone, and Menezes (2004). <br/>
+    /// Jacobian coordinates eliminate modular inversions in point addition and doubling, <br/>
+    /// replacing them with cheaper multiplication operations. The point at infinity is <br/>
+    /// represented with Z = 0.
+    /// </para>
+    /// <para>
+    /// Optimized formulas are used for curves with a = -3, reducing the number of <br/>
+    /// field multiplications in point doubling operations.
+    /// </para>
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public static class Wei3Math
     {
+        /// <summary>
+        /// Adds two Jacobian projective points on a Weierstrass curve.
+        /// </summary>
+        /// <param name="curve">The elliptic curve context containing field parameters.</param>
+        /// <param name="left">First point in Jacobian coordinates.</param>
+        /// <param name="right">Second point in Jacobian coordinates.</param>
+        /// <returns>The sum of the two points in Jacobian coordinates.</returns>
+        /// <remarks>
+        /// Implements the mixed Jacobian addition formula from Algorithm 3.22 in <br/>
+        /// "Guide to Elliptic Curve Cryptography". Handles point at infinity cases <br/>
+        /// and returns infinity when the result is the point at infinity (Z = 0).
+        /// </remarks>
         public static ECPoint3w Add(EllipticCurve curve, ECPoint3w left, ECPoint3w right)
         {
             if (left == ECPoint3w.POINT_INFINITY) return right;
@@ -43,6 +71,25 @@ namespace Eduard.Security.Curves
             return new ECPoint3w(X, Y, Z);
         }
 
+        /// <summary>
+        /// Doubles a Jacobian projective point on a Weierstrass curve.
+        /// </summary>
+        /// <param name="curve">The elliptic curve context containing field parameters and coefficient 'a'.</param>
+        /// <param name="jacobianPoint">The point to double in Jacobian coordinates.</param>
+        /// <returns>The point doubled (2P) in Jacobian coordinates.</returns>
+        /// <remarks>
+        /// <para>
+        /// Implements optimized doubling formulas from Algorithm 3.21 in <br/>
+        /// "Guide to Elliptic Curve Cryptography". When the curve parameter a = -3, <br/>
+        /// a specialized formula is used that reduces the number of field multiplications <br/>
+        /// from 8 to 6, providing significant performance improvements for curves <br/>
+        /// like NIST P-256, P-384, and P-521.
+        /// </para>
+        /// <para>
+        /// Returns the point at infinity if the result is the point at infinity (Z = 0), <br/>
+        /// which occurs when doubling a point of order 2.
+        /// </para>
+        /// </remarks>
         public static ECPoint3w Doubling(EllipticCurve curve, ECPoint3w jacobianPoint)
         {
             if (jacobianPoint == ECPoint3w.POINT_INFINITY) return ECPoint3w.POINT_INFINITY;
@@ -75,6 +122,17 @@ namespace Eduard.Security.Curves
             return new ECPoint3w(X, Y, Z);
         }
 
+        /// <summary>
+        /// Computes the additive inverse of a Jacobian projective point.
+        /// </summary>
+        /// <param name="curve">The elliptic curve context containing field parameters.</param>
+        /// <param name="point">The point to negate in Jacobian coordinates.</param>
+        /// <returns>The point -P such that P + (-P) = point at infinity.</returns>
+        /// <remarks>
+        /// For a point P = (X, Y, Z) in Jacobian coordinates, its inverse is -P = (X, -Y, Z). <br/>
+        /// The Y-coordinate is negated modulo the field prime. The point at infinity
+        /// is its own inverse.
+        /// </remarks>
         public static ECPoint3w Negate(EllipticCurve curve, ECPoint3w point)
         {
             if (point == ECPoint3w.POINT_INFINITY) return ECPoint3w.POINT_INFINITY;
