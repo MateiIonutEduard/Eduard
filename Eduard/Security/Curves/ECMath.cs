@@ -7,20 +7,29 @@ using Eduard.Security.Primitives;
 namespace Eduard.Security.Curves
 {
     /// <summary>
-    /// Provides mathematical operations for points on the Weierstrass elliptic curve.
+    /// Provides mathematical operations for points on Weierstrass elliptic curves.
     /// </summary>
+    /// <remarks>
+    /// Implements affine and projective point arithmetic for Weierstrass curves in short Weierstrass form: <br/>
+    /// y^2 = x^3 + ax + b (mod p). Supports multiple coordinate systems and optimized scalar multiplication <br/>
+    /// algorithms including window methods and Montgomery ladder for side-channel resistance.
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public static class ECMath
     {
         /// <summary>
-        /// Add two affine points on the Weierstrass elliptic curve.
+        /// Adds two affine points on the Weierstrass elliptic curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The elliptic curve context containing field parameters.</param>
+        /// <param name="left">First point to add.</param>
+        /// <param name="right">Second point to add.</param>
+        /// <returns>The sum of the two points in affine coordinates.</returns>
+        /// <remarks>
+        /// Handles all special cases including point at infinity, point doubling, <br/>
+        /// and vertical line scenarios (resulting in point at infinity).
+        /// </remarks>
         public static ECPoint Add(EllipticCurve curve, ECPoint left, ECPoint right)
         {
             if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
@@ -89,13 +98,32 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Multiply the affine point on the Weierstrass elliptic curve by a specified scalar.
+        /// Performs scalar multiplication on a Weierstrass curve point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="k"></param>
-        /// <param name="point"></param>
-        /// <param name="opMode"></param>
-        /// <returns></returns>
+        /// <param name="curve">The elliptic curve context.</param>
+        /// <param name="k">Scalar multiplier (non-negative integer).</param>
+        /// <param name="point">Base point to multiply.</param>
+        /// <param name="opMode">Execution mode selecting algorithm and coordinate system.</param>
+        /// <param name="securityCheck">If true, validates point order before multiplication.</param>
+        /// <returns>The resulting point k * point.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when k is negative, or when security check fails on invalid point.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Supports multiple operation modes:
+        /// <list type="bullet">
+        /// <item><description><see cref="ECMode.EC_STANDARD_AFFINE"/>: Binary method in affine coordinates</description></item>
+        /// <item><description><see cref="ECMode.EC_STANDARD_PROJECTIVE"/>: Binary method with mixed coordinates</description></item>
+        /// <item><description><see cref="ECMode.EC_SECURE"/>: Montgomery ladder for side-channel resistance</description></item>
+        /// <item><description><see cref="ECMode.EC_FASTEST"/>: NAF fractional sliding window method with precomputation</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// The security check parameter validates that the point lies on the curve and <br/>
+        /// has appropriate order to prevent small-subgroup attacks.
+        /// </para>
+        /// </remarks>
         public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
             if (k < 0) throw new ArgumentException("Bad input.");
@@ -226,11 +254,15 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Compute the additive inverse of the specified affine point on the Weierstrass curve.
+        /// Computes the additive inverse of a point on the Weierstrass curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
+        /// <param name="curve">The elliptic curve context.</param>
+        /// <param name="point">The point to negate.</param>
+        /// <returns>The point -P such that P + (-P) = point at infinity.</returns>
+        /// <remarks>
+        /// For a point P = (x, y) on the curve y^2 = x^3 + ax + b, its inverse <br/>
+        /// is -P = (x, -y mod p). The point at infinity is its own inverse.
+        /// </remarks>
         public static ECPoint Negate(EllipticCurve curve, ECPoint point)
         {
             if (point == ECPoint.POINT_INFINITY)
