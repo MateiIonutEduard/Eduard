@@ -102,7 +102,12 @@ namespace Eduard.Security.Curves
             BigInteger A4 = 0;
 
             if (curve.a != p - 3)
-                A4 = ((3 * jacobianPoint.x * jacobianPoint.x) % p + (curve.a * ((jacobianPoint.z * jacobianPoint.z) % p) * ((jacobianPoint.z * jacobianPoint.z) % p)) % p) % p;
+            {
+                BigInteger X12 = (jacobianPoint.x * jacobianPoint.x) % p;
+                BigInteger Z12 = (jacobianPoint.z * jacobianPoint.z) % p;
+                BigInteger Z21 = (Z12 * Z12) % p;
+                A4 = (((3 * X12) % p) + ((curve.a * Z21) % p)) % p;
+            }
             else
             {
                 /* special case when Weierstrass curve parameter a = -3 */
