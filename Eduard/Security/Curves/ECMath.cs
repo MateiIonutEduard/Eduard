@@ -126,13 +126,19 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
-            if (k < 0) throw new ArgumentException("Bad input.");
+            if (k < 0)
+                throw new ArgumentException(
+                    "Scalar multiplier must be non-negative.",
+                    nameof(k));
 
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
             if (!curve.ValidatePoint(point) && securityCheck)
-                throw new ArgumentException("Generator point creates a small-order subgroup on the Weierstrass curve.");
+                throw new ArgumentException(
+                    "Point validation failed: the point does not lie on the Weierstrass curve. " +
+                    "This may indicate a small-subgroup attack or invalid curve parameters.",
+                    nameof(point));
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
