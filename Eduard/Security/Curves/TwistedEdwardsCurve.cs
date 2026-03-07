@@ -7,30 +7,84 @@ using Eduard.Security.Primitives;
 namespace Eduard.Security.Curves
 {
     /// <summary>
-    /// Represents an elliptic curve given in twisted Edwards form.
+    /// Represents an elliptic curve in twisted Edwards form over a prime field Fp.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Twisted Edwards curves provide complete addition laws and are widely used <br/>
+    /// in cryptographic protocols like Ed25519. The curve parameters a and d must <br/>
+    /// satisfy a != 0, d != 0, and a != d to ensure non-singularity.
+    /// </para>
+    /// <para>
+    /// For complete curves (d non-square), unified addition formulas work for all points. <br/>
+    /// This implementation also supports optimization via quadratic twist when a = -1, <br/>
+    /// as described in Hisil et al. (2008) "Twisted Edwards Curves Revisited".
+    /// </para>
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public sealed class TwistedEdwardsCurve
     {
+        /// <summary>
+        /// Curve coefficients a and d from the twisted Edwards equation.
+        /// </summary>
         public BigInteger a, d;
+
+        /// <summary>
+        /// Prime field modulus p and curve order.
+        /// </summary>
         public BigInteger field, order;
 
+        /// <summary>
+        /// Cofactor h = #E(Fp)/order, for twisted Edwards curves.
+        /// </summary>
         public BigInteger cofactor;
         private ECPoint basePoint;
 
         private static MSCrypto.RandomNumberGenerator rand;
         private static bool enableSpeedup;
 
+        /// <summary>
+        /// If true, operations are performed on the quadratic twist for optimization.
+        /// </summary>
         internal bool computeOnTwist;
+
+        /// <summary>
+        /// Twist parameter kt for optimized formulas when a = -1.
+        /// </summary>
         internal BigInteger kt, aroot;
+
+        /// <summary>
+        /// Indicates whether the curve is complete (a square, d non-square).
+        /// </summary>
         internal bool isComplete;
 
         /// <summary>
-        /// Creates a twisted Edwards curve with given coefficients.
+        /// Initializes a twisted Edwards curve with explicit parameters.
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="args">Parameter array: [a, d, field, order, cofactor]</param>
+        /// <exception cref="ArgumentException">Thrown when more than 5 parameters are provided.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the curve is singular (invalid parameters) or when the cofactor
+        /// modulo 4 condition is not satisfied.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Validates:
+        /// <list type="bullet">
+        /// <item><description>Cofactor must be multiple of 4 for twisted Edwards curve requirements</description></item>
+        /// <item><description>Non-singularity condition: a*d*(a - d) != 0 mod p</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// For curves with a = -1, pre-computes optimization parameters for Hisil et al. formulas:
+        /// <list type="bullet">
+        /// <item><description>aroot = modular square root of (-a) mod p</description></item>
+        /// <item><description>kt = -2d / a</description></item>
+        /// </list>
+        /// </para>
+        /// </remarks>
         public TwistedEdwardsCurve(params BigInteger[] args)
         {
             if (args.Length > 5)
@@ -48,7 +102,9 @@ namespace Eduard.Security.Curves
             t = (t * ((a * d) % field)) % field;
 
             if((cofactor & 0x3) != 0 || t == 0)
-                throw new Exception("The twisted Edwards curve is invalid or singular.");
+                throw new InvalidOperationException(
+                    "The twisted Edwards curve is " 
+                    + "invalid or singular.");
 
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
@@ -71,10 +127,10 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Evaluates the twisted Edwards curve at a given y-coordinate.
+        /// Evaluates the right-hand side of the twisted Edwards equation at a given y-coordinate.
         /// </summary>
-        /// <param name="x"></param>
-        /// <returns></returns>
+        /// <param name="y">The y-coordinate to evaluate.</param>
+        /// <returns>The value x^2 = (1 - y^2) / (a - d·y^2) mod p.</returns>
         public BigInteger Evaluate(BigInteger y)
         {
             BigInteger A1 = (y * y) % field;
@@ -88,10 +144,10 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Generates a random base point on the twisted Edwards curve.
+        /// Gets or generates the curve's base point (generator).
         /// </summary>
-        /// <param name="isGenerated">Specifies whether the base point on the twisted Edwards curve should be generated conditionally.</param>
-        /// <returns></returns>
+        /// <param name="isGenerated">If true, returns cached base point when available.</param>
+        /// <returns>A point in the prime-order subgroup.</returns>
         public ECPoint GetBasePoint(bool isGenerated = false)
         {
             bool done = false;
@@ -133,39 +189,50 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Sets the specified base point on the twisted Edwards curve.
+        /// Sets a specific point as the curve's base point with validation.
         /// </summary>
-        /// <param name="point">The affine point to set as the generator.</param>
+        /// <param name="point">The point to set as generator.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the point does not satisfy the curve equation, or when multiplied
+        /// by the cofactor it yields the point at infinity (indicating small-order subgroup).
+        /// </exception>
         public void SetBasePoint(ECPoint point)
         {
             ECPoint tempPoint = point;
             var temp = Evaluate(tempPoint.GetAffineY());
 
             if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
-                throw new Exception("The generator point is not on the twisted Edwards curve.");
+                throw new InvalidOperationException(
+                    "The generator point is not on the" 
+                    + " twisted Edwards curve.");
             else
             {
                 BigInteger x = tempPoint.GetAffineX();
                 BigInteger eval = (x * x) % field;
 
                 if (eval != temp)
-                    throw new Exception("Invalid generator point for the twisted Edwards curve.");
+                    throw new InvalidOperationException(
+                        "Invalid generator point for the" 
+                        + " twisted Edwards curve.");
                 else
                 {
                     ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
                     if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
                     else
-                        throw new Exception("Chosen generator point yields a small-order subgroup on the twisted Edwards curve.");
+                        throw new InvalidOperationException(
+                            "Chosen generator point yields a"
+                            + " small-order subgroup on the " 
+                            + "twisted Edwards curve.");
                 }
             }
         }
 
         /// <summary>
-        /// Computes the modular square root of an integer over the prime field.
+        /// Computes modular square root using optimal algorithm.
         /// </summary>
-        /// <param name="val"></param>
-        /// <param name="forceOutput"></param>
-        /// <returns></returns>
+        /// <param name="val">Value to find root for.</param>
+        /// <param name="forceOutput">If true, forces root computation.</param>
+        /// <returns>Square root r with r^2 = val (mod p).</returns>
         public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
