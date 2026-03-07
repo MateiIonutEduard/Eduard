@@ -7,16 +7,30 @@ using Eduard.Security.Primitives;
 namespace Eduard.Security.Curves
 {
     /// <summary>
-    /// Represents an elliptic curve given in Weierstrass form.
+    /// Represents an elliptic curve in short Weierstrass form over a prime field Fp.
     /// </summary>
+    /// <remarks>
+    /// Supports curve parameter management, point validation, Koblitz encoding for message <br/>
+    /// embedding, and modular square root computation with algorithm auto-selection.
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public sealed class EllipticCurve
     {
+        /// <summary>
+        /// Curve coefficients a and b.
+        /// </summary>
         public BigInteger a, b;
+
+        /// <summary>
+        /// Prime field modulus p and curve order.
+        /// </summary>
         public BigInteger field, order;
 
+        /// <summary>
+        /// Cofactor h = #E(Fp)/order.
+        /// </summary>
         public BigInteger cofactor;
         private ECPoint basePoint;
 
@@ -24,9 +38,9 @@ namespace Eduard.Security.Curves
         private static bool enableSpeedup;
 
         /// <summary>
-        /// Creates a Weierstrass curve with random coefficients.
+        /// Initializes a random Weierstrass curve with a prime field of specified bit length.
         /// </summary>
-        /// <param name="bits"></param>
+        /// <param name="bits">Bit length of the prime field.</param>
         public EllipticCurve(int bits)
         {
             rand = MSCrypto.RandomNumberGenerator.Create();
@@ -60,9 +74,11 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Creates a Weierstrass curve with given coefficients.
+        /// Initializes a Weierstrass curve with explicit parameters.
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="args">[a, b, field, order, cofactor]</param>
+        /// <exception cref="ArgumentException">Thrown when more than 5 parameters are provided.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the curve is singular.</exception>
         public EllipticCurve(params BigInteger[] args)
         {
             if (args.Length > 5)
@@ -86,17 +102,18 @@ namespace Eduard.Security.Curves
             delta = (delta + val) % field;
 
             if (delta == 0)
-                throw new Exception("Invalid curve: singular Weierstrass form.");
+                throw new InvalidOperationException(
+                    "Invalid curve: singular Weierstrass form.");
 
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
         }
 
         /// <summary>
-        /// Evaluates the Weierstrass curve equation at a given x-coordinate.
+        /// Evaluates the right-hand side of the Weierstrass equation at x.
         /// </summary>
-        /// <param name="x"></param>
-        /// <returns></returns>
+        /// <param name="x">The x-coordinate to evaluate.</param>
+        /// <returns>y^2 = x^3 + ax + b (mod p).</returns>
         public BigInteger Evaluate(BigInteger x)
         {
             BigInteger result = (x * x) % field;
@@ -107,11 +124,11 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Encodes a binary message as an elliptic curve point using Koblitz's compression algorithm.
+        /// Encodes a message as a curve point using Koblitz's method.
         /// </summary>
         /// <param name="m">Represents a binary message as a large integer.</param>
-        /// <param name="r">Number of iterations for Koblitz's algorithm.</param>
-        /// <returns></returns>
+        /// <param name="r">Iterations (default: 30).</param>
+        /// <returns>Point encoding the message, or POINT_INFINITY if encoding fails.</returns>
         public ECPoint GetPoint(BigInteger m, int r=30)
         {
             BigInteger test = (r + 1) * m;
@@ -148,11 +165,11 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Decodes the binary message from its corresponding elliptic curve point.
+        /// Decodes the original message from a Koblitz-encoded point.
         /// </summary>
-        /// <param name="point">Represents the elliptic curve point corresponding to the binary message.</param>
-        /// <param name="r">Specifies the number of iterations in Koblitz's algorithm.</param>
-        /// <returns></returns>
+        /// <param name="point">The encoded point.</param>
+        /// <param name="r">Iterations used during encoding (default: 30).</param>
+        /// <returns>The original message m, or -1 if invalid.</returns>
         public BigInteger GetMessage(ECPoint point, int r=30)
         {
             if (point == ECPoint.POINT_INFINITY) return -1;
@@ -163,10 +180,10 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Generates a random base point on the elliptic curve.
+        /// Gets or generates the curve's base point (generator).
         /// </summary>
-        /// <param name="isGenerated">Specifies whether the base point on the elliptic curve should be generated conditionally.</param>
-        /// <returns></returns>
+        /// <param name="isGenerated">If true, returns cached base point when available.</param>
+        /// <returns>A point in the prime-order subgroup.</returns>
         public ECPoint GetBasePoint(bool isGenerated = false)
         {
             bool done = false;
@@ -208,39 +225,50 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Sets the specified base point on the elliptic curve.
+        /// Sets a specific point as the curve's base point with validation.
         /// </summary>
-        /// <param name="point">The affine point to set as the generator.</param>
+        /// <param name="point">The point to set as generator.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the point does not lie on the curve, the y-coordinate does not satisfy
+        /// the curve equation, or when multiplied by the cofactor it yields the point at infinity
+        /// (indicating it lies in a small-order subgroup).
+        /// </exception>
         public void SetBasePoint(ECPoint point)
         {
             ECPoint tempPoint = point;
             var Y2 = Evaluate(tempPoint.GetAffineX());
 
             if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
-                throw new Exception("The generator point is not on the Weierstrass curve.");
+                throw new InvalidOperationException(
+                    "The generator point is not on " 
+                    + "the Weierstrass curve.");
             else
             {
                 BigInteger y = tempPoint.GetAffineY();
                 BigInteger eval = (y * y) % field;
 
                 if (eval != Y2)
-                    throw new Exception("Invalid generator point for Weierstrass curve.");
+                    throw new InvalidOperationException(
+                        "Invalid generator point for " 
+                        + "Weierstrass curve.");
                 else
                 {
                     ECPoint testPoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
                     if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
                     else
-                        throw new Exception("Chosen generator point yields small-order subgroup on Weierstrass curve.");
+                        throw new InvalidOperationException(
+                            "Chosen generator point yields small-order" 
+                            + " subgroup on Weierstrass curve.");
                 }
             }
         }
 
         /// <summary>
-        /// Computes the modular square root of an integer over the prime field.
+        /// Computes modular square root using optimal algorithm.
         /// </summary>
-        /// <param name="val"></param>
-        /// <param name="forceOutput"></param>
-        /// <returns></returns>
+        /// <param name="val">Value to find root for.</param>
+        /// <param name="forceOutput">If true, forces root computation.</param>
+        /// <returns>Square root r with r^2 = val (mod p).</returns>
         public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
