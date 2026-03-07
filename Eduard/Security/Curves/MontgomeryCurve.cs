@@ -7,16 +7,31 @@ using MSCrypto = System.Security.Cryptography;
 namespace Eduard.Security.Curves
 {
     /// <summary>
-    /// Represents an elliptic curve given in Montgomery form.
+    /// Represents an elliptic curve in Montgomery form over a prime field Fp.
     /// </summary>
+    /// <remarks>
+    /// Montgomery curves are widely used in cryptographic protocols like X25519 (Curve25519) due to their <br/>
+    /// efficient constant-time scalar multiplication using the Montgomery ladder. Pre-computed values <br/>
+    /// A24 = (A + 2)/4 and 1/B are cached for optimized point operations.
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public sealed class MontgomeryCurve
     {
+        /// <summary>
+        /// Prime field modulus p and curve order.
+        /// </summary>
         public BigInteger field, order;
+
+        /// <summary>
+        /// Curve coefficients A and B from the Montgomery equation.
+        /// </summary>
         public BigInteger A, B, BInv, A24;
 
+        /// <summary>
+        /// Cofactor h = #E(Fp)/order, for Montgomery curves.
+        /// </summary>
         public BigInteger cofactor;
         private ECPoint basePoint;
 
@@ -24,9 +39,17 @@ namespace Eduard.Security.Curves
         private static bool enableSpeedup;
 
         /// <summary>
-        /// Create a Montgomery curve with specified coefficients.
+        /// Initializes a Montgomery curve with explicit parameters.
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="args">Parameter array: [A, B, field, order, cofactor]</param>
+        /// <exception cref="ArgumentException">Thrown when more than 5 parameters are provided.</exception>
+        /// <remarks>
+        /// Pre-computes:
+        /// <list type="bullet">
+        /// <item><description>1/B = modular inverse of B for equation evaluation</description></item>
+        /// <item><description>A24 = (A + 2) / 4 mod p for Montgomery ladder steps</description></item>
+        /// </list>
+        /// </remarks>
         public MontgomeryCurve(params BigInteger[] args)
         {
             if (args.Length > 5)
@@ -51,10 +74,10 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Evaluate the Montgomery curve equation at a given x-coordinate.
+        /// Evaluates the right-hand side of the Montgomery equation at a given x-coordinate.
         /// </summary>
-        /// <param name="x"></param>
-        /// <returns></returns>
+        /// <param name="x">The x-coordinate to evaluate.</param>
+        /// <returns>The value y^2 = (x^3 + A * x^2 + x) / B (mod p).</returns>
         public BigInteger Evaluate(BigInteger x)
         {
             BigInteger X2 = (x * x) % field;
@@ -70,11 +93,11 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Computes the modular square root of an integer in a prime field.
+        /// Computes modular square root using optimal algorithm.
         /// </summary>
-        /// <param name="val"></param>
-        /// <param name="forceOutput"></param>
-        /// <returns></returns>
+        /// <param name="val">Value to find root for.</param>
+        /// <param name="forceOutput">If true, forces root computation.</param>
+        /// <returns>Square root r with r^2 = val (mod p).</returns>
         public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
         {
             /* compute the modular square root using the optimized Rotaru-Iftene method */
