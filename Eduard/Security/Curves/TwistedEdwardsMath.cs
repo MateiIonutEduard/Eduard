@@ -7,30 +7,77 @@ using Eduard.Security.Primitives;
 namespace Eduard.Security.Curves
 {
     /// <summary>
-    /// Provides mathematical operations for points on the twisted Edwards curve.
+    /// Provides mathematical operations for points on twisted Edwards curves, including <br/>
+    /// affine and projective arithmetic with optimized scalar multiplication algorithms.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Supports multiple operation modes:
+    /// <list type="bullet">
+    /// <item><description><see cref="ECMode.EC_STANDARD_AFFINE"/>: Binary method in affine coordinates</description></item>
+    /// <item><description><see cref="ECMode.EC_STANDARD_PROJECTIVE"/>: Binary method with projective coordinates</description></item>
+    /// <item><description><see cref="ECMode.EC_FASTEST"/>: NAF fractional sliding window method with mixed coordinates</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// For complete curves (d non-square), unified addition formulas are used. For incomplete curves, <br/>
+    /// dedicated formulas provide optimized performance with proper exceptional case
+    /// handling.
+    /// </para>
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public static class TwistedEdwardsMath
     {
         /// <summary>
-        /// Multiply an affine point on the twisted Edwards curve by a given scalar.
+        /// Performs scalar multiplication on a twisted Edwards curve point with comprehensive
+        /// security validation and algorithm selection.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="k"></param>
-        /// <param name="point"></param>
-        /// <param name="opMode"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context containing parameters a, d, and field prime.</param>
+        /// <param name="k">Scalar multiplier (must be non-negative).</param>
+        /// <param name="point">Base point to multiply in affine coordinates.</param>
+        /// <param name="opMode">Execution mode selecting algorithm and coordinate system.</param>
+        /// <param name="securityCheck">If true, validates point lies on curve and has appropriate order.</param>
+        /// <returns>The resulting point k * point in affine coordinates.</returns>
+        /// <exception cref="ArgumentException">
+        /// <para>Thrown when <paramref name="k"/> is negative.</para>
+        /// <para>Thrown when <paramref name="securityCheck"/> is enabled and the point does not lie on the curve,
+        /// indicating a potential small-subgroup or invalid curve attack.</para>
+        /// </exception>
+        /// <exception cref="NotImplementedException">
+        /// Thrown when <paramref name="opMode"/> is set to <see cref="ECMode.EC_SECURE"/> as this mode
+        /// requires Montgomery ladder transformation not yet implemented.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Automatically selects the optimal coordinate system based on operation mode:
+        /// <list type="bullet">
+        /// <item><description><see cref="ECMode.EC_STANDARD_AFFINE"/>: Binary method in affine coordinates</description></item>
+        /// <item><description><see cref="ECMode.EC_STANDARD_PROJECTIVE"/>: Binary method with projective coordinates</description></item>
+        /// <item><description><see cref="ECMode.EC_FASTEST"/>: NAF fractional sliding window method with precomputation</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// The security check validates point-on-curve membership to prevent invalid curve attacks. <br/>
+        /// For production systems handling untrusted points, this check should be enabled.
+        /// </para>
+        /// </remarks>
         public static ECPoint Multiply(TwistedEdwardsCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
-            if (k < 0) throw new ArgumentException("Bad input.");
+            if (k < 0) 
+                throw new ArgumentException(
+                    "Scalar multiplier must be non-negative.", 
+                    nameof(k));
 
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
             if (securityCheck && !curve.ValidatePoint(point))
-                throw new ArgumentException("The generator point on the twisted Edwards curve produces a small-order subgroup.");
+                throw new ArgumentException(
+                    "Point validation failed: the point does not lie on the twisted Edwards curve. " +
+                    "This may indicate a small-subgroup attack or invalid curve parameters.",
+                    nameof(point));
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
@@ -62,7 +109,9 @@ namespace Eduard.Security.Curves
                 result = curve.ToAffine(auxPoint);
             }
             else if (opMode == ECMode.EC_SECURE)
-                throw new NotImplementedException("Requires transformation to Montgomery form for improved performance.");
+                throw new NotImplementedException(
+                    "EC_SECURE mode (Montgomery ladder) is not yet implemented for twisted Edwards curves. " +
+                    "Use EC_STANDARD_AFFINE, EC_STANDARD_PROJECTIVE or EC_FASTEST modes instead.");
             else
             {
                 int i, j, win;
@@ -135,12 +184,24 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Add two affine points on the twisted Edwards curve.
+        /// Adds two affine points on a twisted Edwards curve, automatically selecting <br/>
+        /// the optimal formula based on curve completeness and point equality.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="left">First point to add.</param>
+        /// <param name="right">Second point to add.</param>
+        /// <returns>The sum of the points in affine coordinates.</returns>
+        /// <remarks>
+        /// <para>
+        /// Handles all special cases:
+        /// <list type="bullet">
+        /// <item><description>Point at infinity (identity element)</description></item>
+        /// <item><description>P + (-P) = point at infinity (inverse pairs)</description></item>
+        /// <item><description>Complete curves use unified addition</description></item>
+        /// <item><description>Incomplete curves use dedicated formulas (P != Q) or doubling (P = Q)</description></item>
+        /// </list>
+        /// </para>
+        /// </remarks>
         public static ECPoint Add(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
         {
             if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
@@ -163,12 +224,16 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Adds two affine points using the unified formula on the twisted Edwards curve.
+        /// Adds two affine points using the complete unified formula for twisted Edwards curves.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="left">First point to add.</param>
+        /// <param name="right">Second point to add.</param>
+        /// <returns>The sum of the points in affine coordinates.</returns>
+        /// <remarks>
+        /// Implements the complete addition formula that works for all points without exceptional cases. <br/>
+        /// Used when the curve parameter d is a non-square, ensuring group law completeness.
+        /// </remarks>
         public static ECPoint CompleteAdd(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
         {
             BigInteger p = curve.field;
@@ -198,12 +263,16 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Adds two affine points using the dedicated formula on the twisted Edwards curve.
+        /// Adds two distinct affine points on an incomplete twisted Edwards curve using the dedicated formula.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="left">First point to add (must not equal right).</param>
+        /// <param name="right">Second point to add (must not equal left).</param>
+        /// <returns>The sum of the points in affine coordinates.</returns>
+        /// <remarks>
+        /// Optimized addition formula for curves where d is a square. This formula has exceptional <br/>
+        /// cases that must be handled by the caller (ensuring points are distinct and not inverses).
+        /// </remarks>
         public static ECPoint DedicatedAdd(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
         {
             BigInteger p = curve.field;
@@ -234,11 +303,15 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Doubles the given affine point on the twisted Edwards curve using the dedicated formula.
+        /// Doubles an affine point on a twisted Edwards curve using the dedicated doubling formula.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="point">The point to double.</param>
+        /// <returns>The point doubled (2P) in affine coordinates.</returns>
+        /// <remarks>
+        /// Implements optimized point doubling for twisted Edwards curves. <br/>
+        /// Returns the point at infinity when doubling a point of order 2.
+        /// </remarks>
         public static ECPoint DedicatedDoubling(TwistedEdwardsCurve curve, ECPoint point)
         {
             BigInteger p = curve.field;
@@ -262,11 +335,15 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Computes the additive inverse of a given affine point on the twisted Edwards curve.
+        /// Computes the additive inverse of an affine point on a twisted Edwards curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="point">The point to negate.</param>
+        /// <returns>The point -P such that P + (-P) = point at infinity.</returns>
+        /// <remarks>
+        /// For a twisted Edwards curve, the inverse of point (x, y) is (-x, y). <br/>
+        /// The point at infinity is its own inverse.
+        /// </remarks>
         public static ECPoint Negate(TwistedEdwardsCurve curve, ECPoint point)
         {
             if (point == ECPoint.POINT_INFINITY)
