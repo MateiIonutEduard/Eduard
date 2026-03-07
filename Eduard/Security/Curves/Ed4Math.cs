@@ -4,21 +4,45 @@ using System.Diagnostics;
 
 namespace Eduard.Security.Curves
 {
-    /* Hisil, H., Wong, K. K. H., Carter, G., & Dawson, E. (2008, December). Twisted Edwards curves revisited. 
-     * In International Conference on the Theory and Application of Cryptology and Information Security 
-     * (pp. 326-343). Springer Berlin Heidelberg.*/
+    /// <summary>
+    /// Implements optimized arithmetic for twisted Edwards curves using extended projective <br/>
+    /// coordinates (X, Y, T, Z), based on the improved formulas from Hisil et al. (2008).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Reference: Hisil, H., Wong, K.K.H., Carter, G., Dawson, E. (2008). "Twisted Edwards Curves Revisited". <br/>
+    /// Advances in Cryptology - ASIACRYPT 2008, pp. 326-343. Springer Berlin Heidelberg.
+    /// </para>
+    /// <para>
+    /// Extended projective coordinates (X, Y, T, Z) introduce the auxiliary coordinate T = (X*Y)/Z, <br/>
+    /// reducing point addition from 11 to 9 field multiplications while maintaining the completeness <br/>
+    /// properties of twisted Edwards curves. This representation is particularly efficient for <br/>
+    /// scalar multiplication algorithms.
+    /// </para>
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public static class Ed4Math
     {
         /// <summary>
-        /// Add two points in extended projective coordinates on the twisted Edwards curve.
+        /// Adds two extended projective points on a twisted Edwards curve, <br/>
+        /// automatically selecting the optimal addition formula based on <br/>
+        /// curve parameters.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="left">First point in extended coordinates.</param>
+        /// <param name="right">Second point in extended coordinates.</param>
+        /// <returns>The sum of the points in extended coordinates.</returns>
+        /// <remarks>
+        /// Automatically routes to the appropriate addition formula:
+        /// <list type="bullet">
+        /// <item><description>Complete curves (d non-square) -> unified addition</description></item>
+        /// <item><description>Incomplete curves -> dedicated addition</description></item>
+        /// <item><description>Isomorphic twist handling when computeOnTwist is enabled</description></item>
+        /// </list>
+        /// Handles point at infinity and P + (-P) = O cases.
+        /// </remarks>
         public static ECPoint4 Add(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
             if (left == ECPoint4.POINT_INFINITY && right == ECPoint4.POINT_INFINITY)
@@ -41,12 +65,17 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Add two extended projective points on the twisted Edwards curve using the unified formula.
+        /// Adds two extended projective points using the complete unified formula for twisted Edwards curves.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="left">First point in extended coordinates.</param>
+        /// <param name="right">Second point in extended coordinates.</param>
+        /// <returns>The sum of the points in extended coordinates.</returns>
+        /// <remarks>
+        /// Implements Algorithm 1 from Hisil et al. (2008) requiring 9M + 1S + 1D operations. <br/>
+        /// Works for all points when d is a non-square in the field, providing complete <br/>
+        /// addition without exceptional cases.
+        /// </remarks>
         public static ECPoint4 UnifiedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
             if (left == ECPoint4.POINT_INFINITY) return right;
@@ -81,12 +110,16 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Add two extended projective points on the isomorphic twisted Edwards curve using the unified formula.
+        /// Adds two extended projective points on the isomorphic twisted Edwards curve using the unified formula.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context with twist parameters.</param>
+        /// <param name="left">First point in extended coordinates.</param>
+        /// <param name="right">Second point in extended coordinates.</param>
+        /// <returns>The sum of the points in extended coordinates.</returns>
+        /// <remarks>
+        /// Implements unified addition for curves isogenous to the original twisted Edwards curve. <br/>
+        /// Used when working on the quadratic twist for optimized implementations.
+        /// </remarks>
         public static ECPoint4 TwistUnifiedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
             if (left == ECPoint4.POINT_INFINITY) return right;
@@ -119,12 +152,16 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Add two extended projective points on the twisted Edwards curve using the dedicated formula.
+        /// Adds two extended projective points using the optimized dedicated formula for twisted Edwards curves.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="left">First point in extended coordinates.</param>
+        /// <param name="right">Second point in extended coordinates.</param>
+        /// <returns>The sum of the points in extended coordinates.</returns>
+        /// <remarks>
+        /// Implements dedicated addition for curves where d is a square, requiring 8M operations. <br/>
+        /// This formula is faster but has exceptional cases that must be handled separately.
+        /// </remarks>
         public static ECPoint4 DedicatedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
             if (left == ECPoint4.POINT_INFINITY) return right;
@@ -156,12 +193,16 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Add two extended projective points on the curve isomorphic to the twisted Edwards curve using the dedicated formula.
+        /// Adds two extended projective points on the curve isomorphic to the twisted Edwards curve using the dedicated formula.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context with twist parameters.</param>
+        /// <param name="left">First point in extended coordinates.</param>
+        /// <param name="right">Second point in extended coordinates.</param>
+        /// <returns>The sum of the points in extended coordinates.</returns>
+        /// <remarks>
+        /// Optimized addition for the quadratic twist of a twisted Edwards curve. <br/>
+        /// Used in coordinate systems that work on the twist for improved performance.
+        /// </remarks>
         public static ECPoint4 TwistDedicatedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
             if (left == ECPoint4.POINT_INFINITY) return right;
@@ -194,11 +235,15 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Double the given extended projective point on the twisted Edwards curve using the dedicated formula.
+        /// Doubles an extended projective point on a twisted Edwards curve using the dedicated formula.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="point">The point to double in extended coordinates.</param>
+        /// <returns>The doubled point (2P) in extended coordinates.</returns>
+        /// <remarks>
+        /// Implements the doubling formula for extended coordinates requiring 4M + 4S + 1D operations. <br/>
+        /// The computation reuses the T coordinate to eliminate redundant operations.
+        /// </remarks>
         public static ECPoint4 DedicatedDoubling(TwistedEdwardsCurve curve, ECPoint4 point)
         {
             if (point == ECPoint4.POINT_INFINITY)
@@ -230,11 +275,16 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Compute the additive inverse of a point in extended projective coordinates on the twisted Edwards curve.
+        /// Computes the additive inverse of a point in extended projective coordinates on a twisted Edwards curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
+        /// <param name="curve">The twisted Edwards curve context.</param>
+        /// <param name="point">The point to negate in extended coordinates.</param>
+        /// <returns>The point -P such that P + (-P) = point at infinity.</returns>
+        /// <remarks>
+        /// For a point P = (X, Y, T, Z) in extended coordinates, its inverse is -P = (-X, Y, -T, Z). <br/>
+        /// Both X and T coordinates are negated modulo the field prime, maintaining the <br/>
+        /// relation T = (X*Y)/Z. The point at infinity is its own inverse.
+        /// </remarks>
         public static ECPoint4 Negate(TwistedEdwardsCurve curve, ECPoint4 point)
         {
             BigInteger Xp = curve.field - point.x;
