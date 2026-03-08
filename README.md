@@ -1,61 +1,66 @@
-## Description
+## 🔬 Description
 
-**Eduard** library is a production-ready cryptographic software artifact implemented in C#, designed to provide high-performance multi-precision integer arithmetic and robust elliptic curve cryptography (ECC). Its primary objective is to deliver a mathematically rigorous, secure, and optimized foundation for implementing elliptic curve–based protocols, encryption systems, and digital signature schemes. This work originates from an independent research initiative in Number Theory, Algebraic Geometry, and Elliptic Curve Cryptography, and has been developed into a production-grade library with comprehensive testing, benchmarking, and security validation.
+**Eduard** is a production-grade cryptographic library in C# implementing high-performance multi-precision integer arithmetic and elliptic curve cryptography (ECC). Developed from independent research in Number Theory, Algebraic Geometry, and ECC, the library provides a mathematically rigorous foundation for elliptic curve–based protocols, encryption systems, and digital signature schemes. The implementation emphasizes correctness, security, and performance, validated through comprehensive testing and benchmarking.
 
-## Scope and Motivation
+## 🎯 Scope and Motivation
 
-The library provides:
+The library delivers:
 
-- **High-performance multi-precision integer operations**, tailored for elliptic curve arithmetic with Barrett reduction, FFT multiplication, and Karatsuba algorithms.
-- **Complete elliptic curve support** for Weierstrass, Twisted Edwards families
-- **Limited elliptic curve support** for Montgomery curve family
-- **Multiple coordinate systems** including affine, Jacobian (3w, 4w, 5w) for Weierstrass, and projective (3, 4) for Edwards curves.
-- **Production-ready features**: constant-time operations, side-channel resistant implementations, comprehensive input validation, and exception safety.
-- **Integrated unit tests and benchmark suite** ensuring mathematical correctness, performance, and memory efficiency.
+- **Multi-precision integer arithmetic** optimized for elliptic curve operations
+  - Barrett reduction, FFT multiplication, Karatsuba algorithms
 
-It is designed for real-world deployment, guaranteeing safe encryption via elliptic curve cryptosystems <br/>while providing robust, secure, and high-speed operation with minimal memory footprint.
+- **Complete elliptic curve support** for Weierstrass and Twisted Edwards families
+  - Limited Montgomery family support
 
-## Quality Assurance
+- **Multiple coordinate systems**
+  - Affine and Jacobian (3w, 4w, 5w) for Weierstrass curves
+  - Projective (3, 4) for Edwards curves
 
-- **Unit Tests**: Comprehensive coverage validating all mathematical operations against known results.
-- **Benchmark Suite**: Performance metrics for scalar multiplication, point operations, and field arithmetic across all supported curves.
-- **Memory Profiling**: Zero heap allocations in critical paths; struct-based primitives ensure memory efficiency.
-- **Validation Tests**: Known Answer Tests (KATs) against NIST and RFC standards for all curve implementations.
+- **Production-ready implementation**
+  - Constant-time operations, side-channel resistance
+  - Comprehensive validation and exception safety
 
-## Performance
+- **Integrated test and benchmark infrastructure**
+  - Mathematical correctness and performance characterization
 
-- **Scalar Multiplication**: Optimized for all supported curves
-- **Point Operations**: Sub-microsecond addition and doubling in projective coordinates
-- **Field Arithmetic**: Barrett reduction with cached constants
-- **Memory Efficient**: No allocations in hot paths; stack-allocated temporary values
+The architecture targets real-world deployment, providing secure, high-speed <br/>elliptic curve cryptosystems with minimal memory footprint.
 
-## Contribution and Issue Policy
+## ✅ Quality Assurance
 
-Given its origin as an academic research artifact and its current production-ready status, contributions <br/>are subject to strict methodological and mathematical validation. The following rules apply:
+- **Unit Tests**: Complete coverage against known mathematical results
+- **Benchmark Suite**: Performance characterization across all supported curves
+- **Memory Profiling**: Zero heap allocations in critical paths
+- **Validation Tests**: Known Answer Tests (KATs) against NIST and RFC standards
 
-1. **Notification of Issues**
-   - If unexpected behavior is observed, please notify the maintainer via email: eduardmatei@outlook.com.
-   - Reports must include reproducible experimental results under specified conditions.
+## ⚡ Performance
 
-2. **Issue Creation**
-   - Upon positive initial response, create a GitHub issue documenting either the proposed extension or identified anomaly.
+- **Scalar multiplication**: Optimized across all supported curves
+- **Point operations**: Sub-microsecond addition and doubling
+- **Field arithmetic**: Barrett reduction with cached constants
+- **Memory footprint**: Zero allocations in hot paths; stack-allocated temporaries
 
-3. **Pull Requests**
-   - Must conform strictly to the library's implementation conventions and include comprehensive tests.
-   - Submissions are accepted only to the `develop` branch.
-   - Pull requests targeting the `master` branch will be rejected without exception, regardless of contributor expertise.
+## 🤝 Contribution and Issue Policy
 
-Deviation from these rules will result in dismissal of the issue, pull request, or both.
+This library originated as an academic research artifact and maintains its production-ready status through rigorous validation. Contributions must adhere to strict methodological standards:
 
-## Research Context
+1. **Issue Notification**: Report unexpected behavior to eduardmatei@outlook.com with reproducible experimental results.
 
-This software artifact is embedded in a broader program of research in:
-- Number Theory (arithmetic of large primes and modular structures),
-- Algebraic Geometry (curves over finite fields), and
-- Elliptic Curve Cryptography (protocol design, encryption schemes, and digital signatures).
+2. **Issue Creation**: Following positive initial response, create a GitHub issue documenting proposed extensions or anomalies.
 
-The development adheres to principles of mathematical rigor, computational <br/>reproducibility, and production-grade software engineering.
+3. **Pull Requests**: Must conform to conventions, include tests, and target `develop` only. PRs to `master` rejected unconditionally.
 
-## License
+Non-compliance results in immediate dismissal of issues or pull requests.
 
-This project is distributed under the MIT License. It is production-ready and suitable for real-world deployment,<br/> with guarantees of correctness, security, and performance as validated by the integrated test suite.
+## 📚 Research Context
+
+This software constitutes part of an ongoing research program in:
+- **Number Theory**: arithmetic of large primes and modular structures
+- **Algebraic Geometry**: curves over finite fields
+- **Elliptic Curve Cryptography**: protocol design, encryption schemes, and digital signatures
+
+The development maintains mathematical rigor and ensures computational reproducibility. <br/>
+It upholds production-grade software engineering standards throughout.
+
+## 📄 License
+
+BSD 3-Clause License. Production-ready with correctness, security, and performance guarantees validated by the integrated test suite.
