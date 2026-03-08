@@ -3,8 +3,6 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using Eduard.Cryptography;
-using Eduard;
 
 namespace Eduard
 {
@@ -581,7 +579,7 @@ namespace Eduard
             return Multiply(left, right);
         }
 
-        private static void SingleDivide(BigInteger left, BigInteger right, out BigInteger Quotient, out BigInteger Remainder)
+        private static void SingleDivide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
             if (right.IsZero)
                 throw new DivideByZeroException();
@@ -612,7 +610,7 @@ namespace Eduard
                 RemainderData[pos--] = (uint)(dividend % divisor);
             }
 
-            Remainder = new BigInteger(RemainderData);
+            remainder = new BigInteger(RemainderData);
 
             Data QuotientData = new Data(resultPos + 1, resultPos);
             int j = 0;
@@ -620,10 +618,10 @@ namespace Eduard
             for (int i = QuotientData.Used - 1; i >= 0; i--, j++)
                 QuotientData[j] = result[i];
 
-            Quotient = new BigInteger(QuotientData);
+            quotient = new BigInteger(QuotientData);
         }
 
-        private static void MultiDivide(BigInteger left, BigInteger right, out BigInteger Quotient, out BigInteger Remainder)
+        private static void MultiDivide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
             if (right.IsZero)
                 throw new DivideByZeroException();
@@ -689,27 +687,27 @@ namespace Eduard
             }
 
             Array.Reverse(result, 0, resultPos);
-            Quotient = new BigInteger(new Data(result));
+            quotient = new BigInteger(new Data(result));
 
             int n = Data.ShiftRight(remainderDat, d);
             Data buf = new Data(n, n);
             buf.CopyFrom(remainderDat, 0, 0, buf.Used);
-            Remainder = new BigInteger(buf);
+            remainder = new BigInteger(buf);
         }
 
-        private static void Divide(BigInteger left, BigInteger right, out BigInteger Quotient, out BigInteger Remainder)
+        private static void Divide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
             if (left.IsZero)
             {
-                Quotient = new BigInteger();
-                Remainder = new BigInteger();
+                quotient = new BigInteger();
+                remainder = new BigInteger();
                 return;
             }
 
             if (right.data.Used == 1)
-                SingleDivide(left, right, out Quotient, out Remainder);
+                SingleDivide(left, right, out quotient, out remainder);
             else
-                MultiDivide(left, right, out Quotient, out Remainder);
+                MultiDivide(left, right, out quotient, out remainder);
         }
 
         /// <summary>
@@ -735,10 +733,10 @@ namespace Eduard
             if (left == right)
                 return (Sign ? -1 : 1);
 
-            BigInteger Quotient, Remainder;
-            Divide(left, right, out Quotient, out Remainder);
+            BigInteger quotient, remainder;
+            Divide(left, right, out quotient, out remainder);
 
-            return (Sign ? -Quotient : Quotient);
+            return (Sign ? -quotient : quotient);
         }
 
         /// <summary>
@@ -1224,44 +1222,44 @@ namespace Eduard
         /// <summary>
         /// Returns the Barrett's constant required for fast modular reduction.
         /// </summary>
-        /// <param name="Modulus"></param>
+        /// <param name="modulus"></param>
         /// <returns></returns>
-        public static BigInteger BarrettConstant(BigInteger Modulus)
+        public static BigInteger BarrettConstant(BigInteger modulus)
         {
-            int k = Modulus.data.Used << 1;
+            int k = modulus.data.Used << 1;
             Data buffer = new Data(k + 1, k + 1);
             buffer[k] = 0x0001;
 
-            BigInteger Constant = new BigInteger(buffer);
-            Constant /= Modulus;
-            return Constant;
+            BigInteger bconst = new BigInteger(buffer);
+            bconst /= modulus;
+            return bconst;
         }
 
         /// <summary>
         /// Fast calculation of modular reduction using Barrett's reduction.
         /// </summary>
-        /// <param name="Value"></param>
-        /// <param name="Modulus"></param>
-        /// <param name="Constant"></param>
+        /// <param name="value"></param>
+        /// <param name="modulus"></param>
+        /// <param name="constant"></param>
         /// <returns></returns>
-        public static BigInteger BarrettReduction(BigInteger Value, BigInteger Modulus, BigInteger Constant)
+        public static BigInteger BarrettReduction(BigInteger value, BigInteger modulus, BigInteger constant)
         {
-            int k = Modulus.data.Used,
+            int k = modulus.data.Used,
                     kPlusOne = k + 1,
                     kMinusOne = k - 1;
 
-            int length = Value.data.Used - kMinusOne;
+            int length = value.data.Used - kMinusOne;
 
             if (length <= 0)
                 length = 1;
 
             Data data = new Data(length);
 
-            for (int i = kMinusOne, j = 0; i < Value.data.Used; i++, j++)
-                data[j] = Value.data[i];
+            for (int i = kMinusOne, j = 0; i < value.data.Used; i++, j++)
+                data[j] = value.data[i];
 
             BigInteger q1 = new BigInteger(data);
-            BigInteger q2 = q1 * Constant;
+            BigInteger q2 = q1 * constant;
             length = q2.data.Used - kPlusOne;
 
             if (length <= 0)
@@ -1273,11 +1271,11 @@ namespace Eduard
                 data[j] = q2.data[i];
 
             BigInteger q3 = new BigInteger(data);
-            int lengthToCopy = (Value.data.Used > kPlusOne) ? kPlusOne : Value.data.Used;
+            int lengthToCopy = (value.data.Used > kPlusOne) ? kPlusOne : value.data.Used;
             data = new Data(lengthToCopy);
 
             for (int i = 0; i < lengthToCopy; i++)
-                data[i] = Value.data[i];
+                data[i] = value.data[i];
 
 
             BigInteger r1 = new BigInteger(data);
@@ -1289,9 +1287,9 @@ namespace Eduard
 
                 ulong mcarry = 0;
                 int t = i;
-                for (int j = 0; j < Modulus.data.Used && t < kPlusOne; j++, t++)
+                for (int j = 0; j < modulus.data.Used && t < kPlusOne; j++, t++)
                 {
-                    ulong val = ((ulong)q3.data[i] * (ulong)Modulus.data[j]) +
+                    ulong val = ((ulong)q3.data[i] * (ulong)modulus.data[j]) +
                                  (ulong)data[t] + mcarry;
 
                     data[t] = (uint)(val & 0xFFFFFFFF);
@@ -1314,8 +1312,8 @@ namespace Eduard
                 r1 += val;
             }
 
-            while (r1 >= Modulus)
-                r1 -= Modulus;
+            while (r1 >= modulus)
+                r1 -= modulus;
 
             return r1;
         }
@@ -1323,28 +1321,28 @@ namespace Eduard
         /// <summary>
         /// Raises a <seealso cref="BigInteger"/> value to the power of a specified value.
         /// </summary>
-        /// <param name="Base">The number to raise to the exponent power.</param>
-        /// <param name="Exponent">The exponent to raise value by.</param>
+        /// <param name="val">The number to raise to the exponent power.</param>
+        /// <param name="exponent">The exponent to raise value by.</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArithmeticException"></exception>
         /// <returns></returns>
-        public static BigInteger Pow(BigInteger Base, int Exponent)
+        public static BigInteger Pow(BigInteger val, int exponent)
         {
-            if (Exponent < 0)
+            if (exponent < 0)
                 throw new ArgumentOutOfRangeException("The exponent must be positive.");
 
-            if (Base == 0 && Exponent == 0)
+            if (val == 0 && exponent == 0)
                 throw new ArithmeticException("Arithmetic operation unsupported.");
 
             BigInteger result = 1;
 
-            while(Exponent != 0)
+            while(exponent != 0)
             {
-                if ((Exponent & 1) == 1)
-                    result = result * Base;
+                if ((exponent & 1) == 1)
+                    result = result * val;
 
-                Base = Base * Base;
-                Exponent >>= 1;
+                val = val * val;
+                exponent >>= 1;
             }
 
             return result;
@@ -1353,40 +1351,40 @@ namespace Eduard
         /// <summary>
         /// Performs modulus division on a number raised to the power of another number.
         /// </summary>
-        /// <param name="Base">The number to raise to the exponent power.</param>
-        /// <param name="Exponent">The exponent to raise value by.</param>
-        /// <param name="Modulus">The number by which to divide value raised to the exponent power.</param>
+        /// <param name="val">The number to raise to the exponent power.</param>
+        /// <param name="exponent">The exponent to raise value by.</param>
+        /// <param name="modulus">The number by which to divide value raised to the exponent power.</param>
         /// <exception cref="DivideByZeroException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArithmeticException"></exception>
         /// <returns></returns>
-        public static BigInteger Pow(BigInteger Base, BigInteger Exponent, BigInteger Modulus)
+        public static BigInteger Pow(BigInteger val, BigInteger exponent, BigInteger modulus)
         {
-            if (Modulus.IsZero)
+            if (modulus.IsZero)
                 throw new DivideByZeroException("Attempted to divide by zero.");
 
-            if (Base.IsZero && Exponent.IsZero)
+            if (val.IsZero && exponent.IsZero)
                 throw new ArithmeticException("Arithmetic operation unsupported.");
 
-            if (Exponent.IsNegative)
+            if (exponent.IsNegative)
                 throw new ArgumentOutOfRangeException("The exponent must be positive.");
 
-            if (Modulus.IsNegative)
-                Modulus = -Modulus;
+            if (modulus.IsNegative)
+                modulus = -modulus;
 
-            int k = Modulus.data.Used << 1;
+            int k = modulus.data.Used << 1;
             Data buffer = new Data(k + 1, k + 1);
             buffer[k] = 0x0001;
 
-            BigInteger Constant = new BigInteger(buffer);
-            Constant /= Modulus;
+            BigInteger bconst = new BigInteger(buffer);
+            bconst /= modulus;
 
             BigInteger result = 1;
             bool negative = false;
 
-            if (Base.IsNegative)
+            if (val.IsNegative)
             {
-                Base = -Base;
+                val = -val;
                 negative = true;
             }
 
@@ -1396,43 +1394,43 @@ namespace Eduard
             int WORDS_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.BIGINT_WORDS_THRESHOLD);
 #endif
 
-            if (Modulus.data.Used >= WORDS_THRESHOLD)
+            if (modulus.data.Used >= WORDS_THRESHOLD)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
 
                 BigInteger[] table = new BigInteger[store];
-                table[0] = Base % Modulus;
-                BigInteger b2 = BarrettReduction(table[0] * table[0], Modulus, Constant);
+                table[0] = val % modulus;
+                BigInteger b2 = BarrettReduction(table[0] * table[0], modulus, bconst);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
-                    table[i] = BarrettReduction(table[i - 1] * b2, Modulus, Constant);
+                    table[i] = BarrettReduction(table[i - 1] * b2, modulus, bconst);
 
-                int bits = Exponent.GetBits();
-                int nbw = 0, nzs = 0;
+                int bits = exponent.GetBits();
+                int ubits = 0, tbits = 0;
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int n = WindowUtil.Window(Exponent, i, ref nbw, ref nzs, 5);
+                    int win = WindowUtil.Window(exponent, i, ref ubits, ref tbits, 5);
 
-                    for (int j = 0; j < nbw; j++)
-                        result = BarrettReduction(result * result, Modulus, Constant);
+                    for (int j = 0; j < ubits; j++)
+                        result = BarrettReduction(result * result, modulus, bconst);
 
-                    if (n != 0)
-                        result = BarrettReduction(result * table[n >> 1], Modulus, Constant);
-                    i -= nbw;
-                    if (nzs != 0)
+                    if (win != 0)
+                        result = BarrettReduction(result * table[win >> 1], modulus, bconst);
+                    i -= ubits;
+                    if (tbits != 0)
                     {
-                        for (int j = 0; j < nzs; j++)
-                            result = BarrettReduction(result * result, Modulus, Constant);
-                        i -= nzs;
+                        for (int j = 0; j < tbits; j++)
+                            result = BarrettReduction(result * result, modulus, bconst);
+                        i -= tbits;
                     }
                 }
             }
             else
             {
-                Data data = Exponent.data;
+                Data data = exponent.data;
                 uint temp = 0;
 
                 for (int i = 0; i < data.Used - 1; i++)
@@ -1442,9 +1440,9 @@ namespace Eduard
                     for (int j = 0; j < 32; j++)
                     {
                         if ((temp & 1) == 1)
-                            result = BarrettReduction(result * Base, Modulus, Constant);
+                            result = BarrettReduction(result * val, modulus, bconst);
 
-                        Base = BarrettReduction(Base * Base, Modulus, Constant);
+                        val = BarrettReduction(val * val, modulus, bconst);
                         temp >>= 1;
                     }
                 }
@@ -1454,14 +1452,14 @@ namespace Eduard
                 while (temp != 0)
                 {
                     if ((temp & 1) == 1)
-                        result = BarrettReduction(result * Base, Modulus, Constant);
+                        result = BarrettReduction(result * val, modulus, bconst);
 
-                    Base = BarrettReduction(Base * Base, Modulus, Constant);
+                    val = BarrettReduction(val * val, modulus, bconst);
                     temp >>= 1;
                 }
             }
 
-            if (negative && (Exponent.data[0] & 0x1) != 0)
+            if (negative && (exponent.data[0] & 0x1) != 0)
                 return -result;
 
             return result;
@@ -1794,18 +1792,18 @@ namespace Eduard
         /// Generates a random <seealso cref="BigInteger"/> in a specified range.
         /// </summary>
         /// <param name="rand"></param>
-        /// <param name="Min"></param>
-        /// <param name="Max"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         /// <returns></returns>
-        public static BigInteger Next(RandomNumberGenerator rand, BigInteger Min, BigInteger Max)
+        public static BigInteger Next(RandomNumberGenerator rand, BigInteger min, BigInteger max)
         {
-            BigInteger modulus = Max - Min + 1;
+            BigInteger modulus = max - min + 1;
             BigInteger result = new BigInteger(modulus.GetBits(), rand);
 
             if (result >= modulus)
                 result -= modulus;
 
-            result += Min;
+            result += min;
 
             return result;
         }
