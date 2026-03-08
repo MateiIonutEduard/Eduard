@@ -1,4 +1,4 @@
-# 🔐 Release Notes - Eduard
+# 🔐 Eduard - Release Notes
 
 ## 🔖 Version 1.0.0 (2025-03-07)
 
@@ -121,7 +121,7 @@
 - Extension methods for coordinate conversions
 
 **Debug Support**
-- `USE_PROFILER` macro for DebuggerStepThrough attribution
+- `USE_PROFILER` macro for `[DebuggerStepThrough]` attribution
 - Detailed exception messages with validation context
 - Invariant checking in debug builds
 - Performance counter hooks for profiling
@@ -152,6 +152,6 @@
 
 ---
 
-This release represents the culmination of extensive research in algorithmic number theory, algebraic geometry, 
-and applied cryptography, resulting in a production-ready library suitable for security-critical applications 
-across the entire .NET ecosystem.
+**Eduard v1.0.0** represents the culmination of extensive research in algorithmic number theory, algebraic geometry,
+and applied <br/>cryptography, delivering a production-ready library suitable for security-critical applications across 
+the entire .NET ecosystem.
