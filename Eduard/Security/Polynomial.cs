@@ -523,7 +523,13 @@ namespace Eduard.Security
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
-            if (modulus.degree >= 16)
+#if !USE_BENCHMARKING
+            int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
+#else
+            int DEGREE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_POW_MOD);
+#endif
+
+            if (modulus.degree >= DEGREE_THRESHOLD)
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
