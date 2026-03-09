@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using CoreCC = System.Security.Cryptography;
 #pragma warning disable
 
-namespace BenchmarkTests.BenchCore.BigInt
+namespace BenchmarkTests.Core.BigInt
 {
     public class MultBenchmark
     {
