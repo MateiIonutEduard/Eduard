@@ -14,7 +14,8 @@ namespace Eduard
         BIGINT_WORDS_THRESHOLD = 3,    // Big integer words count for sliding Window exponentiation
         POLY_FFT_MULT = 4,             // FFT multiplication threshold for polynomials
         POLY_FFT_SQUARE = 5,           // FFT squaring threshold for polynomials
-        POLY_FFT_MOD = 6               // FFT remainder threshold for polynomials
+        POLY_FFT_MOD = 6,              // FFT remainder threshold for polynomials
+        POLY_DEGREE_POW_MOD = 7        // Minimum polynomial degree for sliding Window exponentiation
     }
 
     /// <summary>
@@ -32,7 +33,7 @@ namespace Eduard
         {
             thresholds = new int[] { 
                 1792, 16, 32, 10,
-                128, 96, 64
+                128, 96, 64, 16
             };
         }
 
