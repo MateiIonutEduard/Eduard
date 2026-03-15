@@ -127,6 +127,44 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
+        /// Retrieves a standardized twisted Edwards curve by its enumeration type.
+        /// </summary>
+        /// <param name="type">The curve identifier from <see cref="TwistedEdwardsCurveType"/>.</param>
+        /// <returns>A fully initialized twisted Edwards curve instance with domain parameters
+        /// loaded from the internal named curve repository.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when the specified curve type is not supported or maps to an invalid index.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// This factory method provides access to standardized twisted Edwards curves
+        /// used in modern cryptographic protocols:
+        /// <list type="bullet">
+        /// <item><description><see cref="TwistedEdwardsCurveType.Edwards25519"/> - The curve underlying Ed25519 signatures (RFC 8032).</description></item>
+        /// <item><description><see cref="TwistedEdwardsCurveType.Edwards448"/> - The curve underlying Ed448 signatures (RFC 8032).</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// The returned curve instances are pre-validated for:
+        /// <list type="bullet">
+        /// <item><description>Non-singularity condition: a*d*(a - d) != 0 (mod p)</description></item>
+        /// <item><description>Cofactor multiple of 4 requirement for twisted Edwards curves</description></item>
+        /// <item><description>Optimization pre-computation for a = -1 case (Hisil et al. formulas)</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// These curves implement complete addition laws and support the optimization <br/>
+        /// techniques described in Hisil et al. (2008) "Twisted Edwards Curves Revisited", <br/>
+        /// including quadratic twist operations when applicable.
+        /// </para>
+        /// </remarks>
+        public static TwistedEdwardsCurve GetNamedCurve(TwistedEdwardsCurveType type)
+        {
+            BigInteger[] array = NamedCurve.GetNamedCurve((int)type);
+            return new TwistedEdwardsCurve(array);
+        }
+
+        /// <summary>
         /// Evaluates the right-hand side of the twisted Edwards equation at a given y-coordinate.
         /// </summary>
         /// <param name="y">The y-coordinate to evaluate.</param>
