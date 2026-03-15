@@ -1,6 +1,6 @@
 ﻿#if RELEASE && USE_BENCHMARKING
 using BenchmarkDotNet.Running;
-using BenchmarkTests.BenchCore.BigInt;
+using BenchTests.Core.Curves;
 #else
 using System;
 #endif
@@ -12,7 +12,7 @@ namespace BenchTests
         static void Main(string[] args)
         {
 #if RELEASE && USE_BENCHMARKING
-            BenchmarkRunner.Run<DegreePowBenchmark>();
+            BenchmarkRunner.Run<WeiCurveBenchmark>();
 #endif
         }
     }
