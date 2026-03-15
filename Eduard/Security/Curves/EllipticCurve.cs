@@ -110,6 +110,30 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
+        /// Creates a Weierstrass-form elliptic curve instance using standardized domain parameters from named curves.
+        /// </summary>
+        /// <param name="type">The curve type identifier from <see cref="WeiCurveType"/> enumeration.</param>
+        /// <returns>An initialized <see cref="EllipticCurve"/> instance in short Weierstrass form with the specified curve parameters.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when the curve type corresponds to an invalid or unsupported curve index.
+        /// </exception>
+        /// <remarks>
+        /// This factory method provides access to standardized elliptic curves in short Weierstrass form including:
+        /// <list type="bullet">
+        /// <item><description>NIST curves: P-192, P-224, P-256, P-384, P-521</description></item>
+        /// <item><description>Weierstrass form of Montgomery curves: W-25519, W-448</description></item>
+        /// </list>
+        /// For Montgomery or twisted Edwards native forms, use the respective curve classes. <br/>
+        /// The returned curve includes proper validation of non-singularity and initializes <br/>
+        /// optimized modular arithmetic components for the specific prime field.
+        /// </remarks>
+        public static EllipticCurve GetNamedCurve(WeiCurveType type)
+        {
+            BigInteger[] array = NamedCurve.GetNamedCurve((int)type);
+            return new EllipticCurve(array);
+        }
+
+        /// <summary>
         /// Evaluates the right-hand side of the Weierstrass equation at x.
         /// </summary>
         /// <param name="x">The x-coordinate to evaluate.</param>
