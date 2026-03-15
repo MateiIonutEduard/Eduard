@@ -140,8 +140,8 @@ namespace Eduard.Security.Curves
         /// This factory method provides access to standardized twisted Edwards curves
         /// used in modern cryptographic protocols:
         /// <list type="bullet">
-        /// <item><description><see cref="TwistedEdwardsCurveType.Edwards25519"/> - The curve underlying Ed25519 signatures (RFC 8032).</description></item>
-        /// <item><description><see cref="TwistedEdwardsCurveType.Edwards448"/> - The curve underlying Ed448 signatures (RFC 8032).</description></item>
+        /// <item><description><see cref="TwistedEdwardsCurveType.Edwards25519"/>: The curve underlying Ed25519 signatures (RFC 8032).</description></item>
+        /// <item><description><see cref="TwistedEdwardsCurveType.Edwards448"/>: The curve underlying Ed448 signatures (RFC 8032).</description></item>
         /// </list>
         /// </para>
         /// <para>
