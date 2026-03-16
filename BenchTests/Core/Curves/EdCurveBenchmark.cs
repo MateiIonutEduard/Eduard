@@ -1,5 +1,4 @@
 ﻿#if RELEASE && USE_BENCHMARKING
-
 using BenchmarkDotNet.Attributes;
 using Eduard;
 using System;

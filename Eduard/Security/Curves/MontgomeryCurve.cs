@@ -74,6 +74,32 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
+        /// Creates a Montgomery-form elliptic curve instance using standardized domain parameters from named curves.
+        /// </summary>
+        /// <param name="type">The curve type identifier from <see cref="MontyCurveType"/> enumeration.</param>
+        /// <returns>An initialized <see cref="MontgomeryCurve"/> instance in Montgomery form with the specified curve parameters.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when the curve type corresponds to an invalid or unsupported curve index.
+        /// </exception>
+        /// <remarks>
+        /// This factory method provides access to standardized elliptic curves in Montgomery form including:
+        /// <list type="bullet">
+        /// <item><description>Curve25519 (X25519): Montgomery form of Edwards25519</description></item>
+        /// <item><description>Curve448 (X448): Montgomery form of Edwards448</description></item>
+        /// </list>
+        /// The returned curve pre-computes the essential Montgomery ladder constants. <br/>
+        /// These curves are primarily designed for constant-time scalar multiplication using <br/>the
+        /// Montgomery ladder, making them ideal for Diffie-Hellman key exchange protocols <br/>like
+        /// X25519 and X448. The factory method ensures proper initialization of all curve <br/>
+        /// parameters and cached values required for efficient point operations.
+        /// </remarks>
+        public static MontgomeryCurve GetNamedCurve(MontyCurveType type)
+        {
+            BigInteger[] array = NamedCurve.GetNamedCurve((int)type);
+            return new MontgomeryCurve(array);
+        }
+
+        /// <summary>
         /// Evaluates the right-hand side of the Montgomery equation at a given x-coordinate.
         /// </summary>
         /// <param name="x">The x-coordinate to evaluate.</param>
