@@ -10,7 +10,7 @@ using CoreCC = System.Security.Cryptography;
 
 namespace BenchTests.Core.Curves
 {
-    public class EdCurveBenchmark
+    public class EdwardsCurveBenchmark
     {
         [Params(TwistedEdwardsCurveType.Edwards25519, TwistedEdwardsCurveType.Edwards448)]
         public TwistedEdwardsCurveType curveType;

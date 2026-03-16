@@ -12,7 +12,7 @@ namespace BenchTests
         static void Main(string[] args)
         {
 #if RELEASE && USE_BENCHMARKING
-            BenchmarkRunner.Run<EdCurveBenchmark>();
+            BenchmarkRunner.Run<MontyCurveBenchmark>();
 #endif
         }
     }
