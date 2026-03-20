@@ -82,28 +82,32 @@ namespace Eduard.Security.Curves
             if (right == ECPoint4.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
-            BigInteger A1 = (left.x * right.x) % p;
+            BigInteger A1 = BarrettReducer.MulMod(left.x, right.x);
 
-            BigInteger A2 = (left.y * right.y) % p;
-            BigInteger A3 = (curve.d * ((left.t * right.t) % p)) % p;
+            BigInteger A2 = BarrettReducer.MulMod(left.y, right.y);
+            BigInteger B1t = BarrettReducer.MulMod(left.t, right.t);
 
-            BigInteger A4 = (left.z * right.z) % p;
-            BigInteger A5 = ((((left.x + left.y) * (right.x + right.y)) % p) - A1 - A2) % p;
+            BigInteger A3 = BarrettReducer.MulMod(curve.d, B1t);
+            BigInteger A4 = BarrettReducer.MulMod(left.z, right.z);
 
-            if (A5 < 0) A5 += p;
-            BigInteger A6 = (A4 - A3) % p;
+            BigInteger lxy = BarrettReducer.AddMod(left.x, left.y);
+            BigInteger rxy = BarrettReducer.AddMod(right.x, right.y);
 
-            if (A6 < 0) A6 += p;
-            BigInteger A7 = (A4 + A3) % p;
+            BigInteger B2 = BarrettReducer.MulMod(lxy, rxy);
+            BigInteger A5 = BarrettReducer.SubMod(B2, A1);
+            A5 = BarrettReducer.SubMod(A5, A2);
 
-            BigInteger A8 = (A2 - ((curve.a * A1) % p)) % p;
-            if (A8 < 0) A8 += p;
+            BigInteger A6 = BarrettReducer.SubMod(A4, A3);
+            BigInteger A7 = BarrettReducer.AddMod(A4, A3);
 
-            BigInteger X = (A5 * A6) % p;
-            BigInteger Y = (A7 * A8) % p;
+            BigInteger B3 = BarrettReducer.MulMod(curve.a, A1);
+            BigInteger A8 = BarrettReducer.SubMod(A2, B3);
 
-            BigInteger T = (A5 * A8) % p;
-            BigInteger Z = (A6 * A7) % p;
+            BigInteger X = BarrettReducer.MulMod(A5, A6);
+            BigInteger Y = BarrettReducer.MulMod(A7, A8);
+
+            BigInteger T = BarrettReducer.MulMod(A5, A8);
+            BigInteger Z = BarrettReducer.MulMod(A6, A7);
 
             if (Z == 0) return ECPoint4.POINT_INFINITY;
             return new ECPoint4(X, Y, T, Z);
@@ -126,26 +130,32 @@ namespace Eduard.Security.Curves
             if (right == ECPoint4.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
-            BigInteger A1 = ((left.y - left.x) * (right.y - right.x)) % p;
-            if (A1 < 0) A1 += p;
+            BigInteger B1 = BarrettReducer.SubMod(left.y, left.x);
+            BigInteger B2 = BarrettReducer.SubMod(right.y, right.x);
 
-            BigInteger A2 = ((left.y + left.x) * (right.y + right.x)) % p;
-            if (A2 < 0) A2 += p;
+            BigInteger A1 = BarrettReducer.MulMod(B1, B2);
+            BigInteger B3 = BarrettReducer.AddMod(left.y, left.x);
 
-            BigInteger A3 = (curve.kt * left.t * right.t) % p;
-            BigInteger A4 = (2 * left.z * right.z) % p;
+            BigInteger B4 = BarrettReducer.AddMod(right.y, right.x);
+            BigInteger A2 = BarrettReducer.MulMod(B3, B4);
 
-            BigInteger A5 = (p + A2 - A1) % p;
-            BigInteger A6 = (p + A4 - A3) % p;
+            BigInteger B5 = BarrettReducer.MulMod(left.t, right.t);
+            BigInteger A3 = BarrettReducer.MulMod(curve.kt, B5);
 
-            BigInteger A7 = (A4 + A3) % p;
-            BigInteger A8 = (A2 + A1) % p;
+            BigInteger A4t = BarrettReducer.MulMod(left.z, right.z);
+            BigInteger A4 = BarrettReducer.AddMod(A4t, A4t);
 
-            BigInteger X = (A5 * A6) % p;
-            BigInteger Y = (A7 * A8) % p;
+            BigInteger A5 = BarrettReducer.SubMod(A2, A1);
+            BigInteger A6 = BarrettReducer.SubMod(A4, A3);
 
-            BigInteger T = (A5 * A8) % p;
-            BigInteger Z = (A6 * A7) % p;
+            BigInteger A7 = BarrettReducer.AddMod(A3, A4);
+            BigInteger A8 = BarrettReducer.AddMod(A2, A1);
+
+            BigInteger X = BarrettReducer.MulMod(A5, A6);
+            BigInteger Y = BarrettReducer.MulMod(A7, A8);
+
+            BigInteger T = BarrettReducer.MulMod(A5, A8);
+            BigInteger Z = BarrettReducer.MulMod(A6, A7);
 
             if (Z == 0) return ECPoint4.POINT_INFINITY;
             return new ECPoint4(X, Y, T, Z);
@@ -168,25 +178,31 @@ namespace Eduard.Security.Curves
             if (right == ECPoint4.POINT_INFINITY) return left;
 
             BigInteger p = curve.field;
-            BigInteger A1 = (left.x * right.x) % p;
+            BigInteger A1 = BarrettReducer.MulMod(left.x, right.x);
 
-            BigInteger A2 = (left.y * right.y) % p;
-            BigInteger A3 = (left.z * right.t) % p;
+            BigInteger A2 = BarrettReducer.MulMod(left.y, right.y);
+            BigInteger A3 = BarrettReducer.MulMod(left.z, right.t);
 
-            BigInteger A4 = (left.t * right.z) % p;
-            BigInteger A5 = (A4 + A3) % p;
+            BigInteger A4 = BarrettReducer.MulMod(left.t, right.z);
+            BigInteger A5 = BarrettReducer.AddMod(A4, A3);
 
-            BigInteger A6 = ((((left.x - left.y) * (right.x + right.y)) % p) + A2 - A1) % p;
-            if (A6 < 0) A6 += p;
+            BigInteger B1 = BarrettReducer.SubMod(left.x, left.y);
+            BigInteger B2 = BarrettReducer.AddMod(right.x, right.y);
 
-            BigInteger A7 = (A2 + curve.a * A1) % p;
-            BigInteger A8 = (p + A4 - A3) % p;
+            BigInteger B3 = BarrettReducer.MulMod(B1, B2);
+            BigInteger B4 = BarrettReducer.AddMod(A2, B3);
 
-            BigInteger X = (A5 * A6) % p;
-            BigInteger Y = (A7 * A8) % p;
+            BigInteger A6 = BarrettReducer.SubMod(B4, A1);
+            BigInteger B5 = BarrettReducer.MulMod(curve.a, A1);
 
-            BigInteger T = (A5 * A8) % p;
-            BigInteger Z = (A6 * A7) % p;
+            BigInteger A7 = BarrettReducer.AddMod(A2, B5);
+            BigInteger A8 = BarrettReducer.SubMod(A4, A3);
+
+            BigInteger X = BarrettReducer.MulMod(A5, A6);
+            BigInteger Y = BarrettReducer.MulMod(A7, A8);
+
+            BigInteger T = BarrettReducer.MulMod(A5, A8);
+            BigInteger Z = BarrettReducer.MulMod(A6, A7);
 
             if (Z == 0) return ECPoint4.POINT_INFINITY;
             return new ECPoint4(X, Y, T, Z);
@@ -209,26 +225,32 @@ namespace Eduard.Security.Curves
             if (right == ECPoint4.POINT_INFINITY) return left;
             BigInteger p = curve.field;
 
-            BigInteger A1 = ((left.y - left.x) * (right.y + right.x)) % p;
-            if (A1 < 0) A1 += p;
+            BigInteger B1 = BarrettReducer.SubMod(left.y, left.x);
+            BigInteger B2 = BarrettReducer.AddMod(right.y, right.x);
 
-            BigInteger A2 = ((left.y + left.x) * (right.y - right.x)) % p;
-            if (A2 < 0) A2 += p;
+            BigInteger A1 = BarrettReducer.MulMod(B1, B2);
+            BigInteger B3 = BarrettReducer.AddMod(left.y, left.x);
 
-            BigInteger A3 = (2 * left.z * right.t) % p;
-            BigInteger A4 = (2 * left.t * right.z) % p;
+            BigInteger B4 = BarrettReducer.SubMod(right.y, right.x);
+            BigInteger A2 = BarrettReducer.MulMod(B3, B4);
 
-            BigInteger A5 = (A3 + A4) % p;
-            BigInteger A6 = (p + A2 - A1) % p;
+            BigInteger A3t = BarrettReducer.MulMod(left.z, right.t);
+            BigInteger A3 = BarrettReducer.AddMod(A3t, A3t);
 
-            BigInteger A7 = (A2 + A1) % p;
-            BigInteger A8 = (p + A4 - A3) % p;
+            BigInteger A4t = BarrettReducer.MulMod(left.t, right.z);
+            BigInteger A4 = BarrettReducer.AddMod(A4t, A4t);
 
-            BigInteger X = (A5 * A6) % p;
-            BigInteger Y = (A7 * A8) % p;
+            BigInteger A5 = BarrettReducer.AddMod(A3, A4);
+            BigInteger A6 = BarrettReducer.SubMod(A2, A1);
 
-            BigInteger T = (A5 * A8) % p;
-            BigInteger Z = (A6 * A7) % p;
+            BigInteger A7 = BarrettReducer.AddMod(A2, A1);
+            BigInteger A8 = BarrettReducer.SubMod(A4, A3);
+
+            BigInteger X = BarrettReducer.MulMod(A5, A6);
+            BigInteger Y = BarrettReducer.MulMod(A7, A8);
+
+            BigInteger T = BarrettReducer.MulMod(A5, A8);
+            BigInteger Z = BarrettReducer.MulMod(A6, A7);
 
             if (Z == 0) return ECPoint4.POINT_INFINITY;
             return new ECPoint4(X, Y, T, Z);
@@ -250,25 +272,29 @@ namespace Eduard.Security.Curves
                 return ECPoint4.POINT_INFINITY;
 
             BigInteger p = curve.field;
-            BigInteger A1 = (point.x * point.x) % p;
+            BigInteger A1 = BarrettReducer.MulMod(point.x, point.x);
+            BigInteger A2 = BarrettReducer.MulMod(point.y, point.y);
 
-            BigInteger A2 = (point.y * point.y) % p;
-            BigInteger A3 = (2 * point.z * point.z) % p;
+            BigInteger A3t = BarrettReducer.MulMod(point.z, point.z);
+            BigInteger A3 = BarrettReducer.AddMod(A3t, A3t);
 
-            BigInteger A4 = (curve.a * A1) % p;
-            BigInteger A5 = ((((point.x + point.y) * (point.x + point.y)) % p) - A1 - A2) % p;
+            BigInteger A4 = BarrettReducer.MulMod(curve.a, A1);
+            BigInteger txy = BarrettReducer.AddMod(point.x, point.y);
 
-            if (A5 < 0) A5 += p;
-            BigInteger A6 = (A2 + A4) % p;
+            BigInteger Bxy = BarrettReducer.MulMod(txy, txy);
+            BigInteger A5t = BarrettReducer.SubMod(Bxy, A1);
 
-            BigInteger A7 = (p + A6 - A3) % p;
-            BigInteger A8 = (p + A4 - A2) % p;
+            BigInteger A5 = BarrettReducer.SubMod(A5t, A2);
+            BigInteger A6 = BarrettReducer.AddMod(A2, A4);
 
-            BigInteger X = (A5 * A7) % p;
-            BigInteger Y = (A6 * A8) % p;
+            BigInteger A7 = BarrettReducer.SubMod(A6, A3);
+            BigInteger A8 = BarrettReducer.SubMod(A4, A2);
 
-            BigInteger T = (A5 * A8) % p;
-            BigInteger Z = (A6 * A7) % p;
+            BigInteger X = BarrettReducer.MulMod(A5, A7);
+            BigInteger Y = BarrettReducer.MulMod(A6, A8);
+
+            BigInteger T = BarrettReducer.MulMod(A5, A8);
+            BigInteger Z = BarrettReducer.MulMod(A6, A7);
 
             if (Z == 0) return ECPoint4.POINT_INFINITY;
             return new ECPoint4(X, Y, T, Z);
