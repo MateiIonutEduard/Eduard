@@ -109,6 +109,7 @@ namespace Eduard.Security.Curves
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
 
+            BarrettReducer.SetModulus(field);
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
 
@@ -119,9 +120,12 @@ namespace Eduard.Security.Curves
             if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
             {
                 aroot = Sqrt(field - a, true);
-                BigInteger ma = ((aroot * aroot) % field).Inverse(field);
+                BigInteger ta = BarrettReducer.MulMod(aroot, aroot);
 
-                kt = (2 * d * ma) % field;
+                BigInteger ma = ta.Inverse(field);
+                BigInteger kt1 = BarrettReducer.MulMod(d, ma);
+
+                kt = BarrettReducer.AddMod(kt1, kt1);
                 computeOnTwist = true;
             }
         }
@@ -168,16 +172,17 @@ namespace Eduard.Security.Curves
         /// Evaluates the right-hand side of the twisted Edwards equation at a given y-coordinate.
         /// </summary>
         /// <param name="y">The y-coordinate to evaluate.</param>
-        /// <returns>The value x^2 = (1 - y^2) / (a - d·y^2) mod p.</returns>
+        /// <returns>The value x^2 = (1 - y^2) / (a - d*(y^2)) mod p.</returns>
         public BigInteger Evaluate(BigInteger y)
         {
-            BigInteger A1 = (y * y) % field;
-            BigInteger A2 = (d * A1) % field;
+            BigInteger A1 = BarrettReducer.MulMod(y, y);
+            BigInteger A2 = BarrettReducer.MulMod(d, A1);
 
-            BigInteger A3 = (field + 1 - A1) % field;
-            BigInteger A4 = (field + a - A2) % field;
+            BigInteger A3 = BarrettReducer.SubMod(1, A1);
+            BigInteger A4 = BarrettReducer.SubMod(a, A2);
 
-            BigInteger X2 = (A3 * A4.Inverse(field)) % field;
+            BigInteger A4i = A4.Inverse(field);
+            BigInteger X2 = BarrettReducer.MulMod(A3, A4i);
             return X2;
         }
 
@@ -210,13 +215,14 @@ namespace Eduard.Security.Curves
                     done = true;
                     x = Sqrt(temp);
 
-                    BigInteger eval = (x * x) % field;
+                    BigInteger eval = BarrettReducer.MulMod(x, x);
                     if (temp != eval) done = false;
 
                     if (done)
                     {
                         ECPoint tempPoint = new ECPoint(x, y);
-                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, 
+                            tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
                         done = (basePoint != ECPoint.POINT_INFINITY);
                     }
                 }
@@ -246,7 +252,7 @@ namespace Eduard.Security.Curves
             else
             {
                 BigInteger x = tempPoint.GetAffineX();
-                BigInteger eval = (x * x) % field;
+                BigInteger eval = BarrettReducer.MulMod(x, x);
 
                 if (eval != temp)
                     throw new InvalidOperationException(
@@ -254,8 +260,11 @@ namespace Eduard.Security.Curves
                         + " twisted Edwards curve.");
                 else
                 {
-                    ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                    ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, 
+                        tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+
+                    if (testPoint != ECPoint.POINT_INFINITY) 
+                        basePoint = tempPoint;
                     else
                         throw new InvalidOperationException(
                             "Chosen generator point yields a"
