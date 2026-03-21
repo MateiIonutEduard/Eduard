@@ -45,20 +45,21 @@ namespace Eduard.Security.Curves
         {
             rand = MSCrypto.RandomNumberGenerator.Create();
             field = BigInteger.GenProbablePrime(rand, bits, 50);
+            BarrettReducer.SetModulus(field);
 
             a = BigInteger.Next(rand, 1, field - 1);
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
 
-            BigInteger temp = (a * a) % field;
-            temp = (temp * a) % field;
-            temp = (4 * temp) % field;
+            BigInteger temp = BarrettReducer.MulMod(a, a);
+            temp = BarrettReducer.MulMod(temp, a);
+            temp = BarrettReducer.MulMod(4, temp);
 
             b = BigInteger.Next(rand, 1, field - 1);
-            BigInteger B2 = (b * b) % field;
+            BigInteger B2 = BarrettReducer.MulMod(b, b);
 
-            BigInteger val = (27 * B2) % field;
-            BigInteger check = (temp + val) % field;
+            BigInteger val = BarrettReducer.MulMod(27, B2);
+            BigInteger check = BarrettReducer.AddMod(temp, val);
 
             order = 1; cofactor = 1;
             basePoint = ECPoint.POINT_INFINITY;
@@ -66,10 +67,10 @@ namespace Eduard.Security.Curves
             while (check == 0)
             {
                 b = BigInteger.Next(rand, 1, field - 1);
-                B2 = (b * b) % field;
+                B2 = BarrettReducer.MulMod(b, b);
 
-                val = (27 * B2) % field;
-                check = (temp + val) % field;
+                val = BarrettReducer.MulMod(27, B2);
+                check = BarrettReducer.AddMod(temp, val);
             }
         }
 
@@ -90,16 +91,17 @@ namespace Eduard.Security.Curves
 
             field = args[2]; order = args[3];
             basePoint = ECPoint.POINT_INFINITY;
-
             cofactor = args[4];
-            BigInteger A2 = (a * a) % field;
 
-            BigInteger B2 = (b * b) % field;
-            BigInteger delta = (a * A2) % field;
+            BarrettReducer.SetModulus(field);
+            BigInteger A2 = BarrettReducer.MulMod(a, a);
 
-            delta = (4 * delta) % field;
-            BigInteger val = ((27 * B2) % field);
-            delta = (delta + val) % field;
+            BigInteger B2 = BarrettReducer.MulMod(b, b);
+            BigInteger delta = BarrettReducer.MulMod(a, A2);
+
+            delta = BarrettReducer.MulMod(4, delta);
+            BigInteger val = BarrettReducer.MulMod(27, B2);
+            delta = BarrettReducer.AddMod(delta, val);
 
             if (delta == 0)
                 throw new InvalidOperationException(
@@ -140,10 +142,13 @@ namespace Eduard.Security.Curves
         /// <returns>y^2 = x^3 + ax + b (mod p).</returns>
         public BigInteger Evaluate(BigInteger x)
         {
-            BigInteger result = (x * x) % field;
-            result = (result * x) % field;
-            BigInteger temp = (a * x + b) % field;
-            result = (result + temp) % field;
+            BigInteger result = BarrettReducer.MulMod(x, x);
+            result = BarrettReducer.MulMod(result, x);
+
+            BigInteger ax = BarrettReducer.MulMod(a, x);
+            BigInteger temp = BarrettReducer.AddMod(ax, b);
+
+            result = BarrettReducer.AddMod(result, temp);
             return result;
         }
 
@@ -156,7 +161,7 @@ namespace Eduard.Security.Curves
         public ECPoint GetPoint(BigInteger m, int r=30)
         {
             BigInteger test = (r + 1) * m;
-            BigInteger xs = (m * r) % field;
+            BigInteger xs = BarrettReducer.MulMod(m, r);
 
             /* if the product exceeds the value of the prime field, the algorithm fails */
             if (test >= field) return ECPoint.POINT_INFINITY;
@@ -232,13 +237,14 @@ namespace Eduard.Security.Curves
                     done = true;
                     y = Sqrt(temp);
 
-                    BigInteger eval = (y * y) % field;
+                    BigInteger eval = BarrettReducer.MulMod(y, y);
                     if (temp != eval) done = false;
 
                     if (done)
                     {
                         ECPoint tempPoint = new ECPoint(x, y);
-                        basePoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        basePoint = ECMath.Multiply(this, cofactor, 
+                            tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
                         done = (basePoint != ECPoint.POINT_INFINITY);
                     }
                 }
@@ -269,7 +275,7 @@ namespace Eduard.Security.Curves
             else
             {
                 BigInteger y = tempPoint.GetAffineY();
-                BigInteger eval = (y * y) % field;
+                BigInteger eval = BarrettReducer.MulMod(y, y);
 
                 if (eval != Y2)
                     throw new InvalidOperationException(
@@ -277,8 +283,11 @@ namespace Eduard.Security.Curves
                         + "Weierstrass curve.");
                 else
                 {
-                    ECPoint testPoint = ECMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                    ECPoint testPoint = ECMath.Multiply(this, cofactor, 
+                        tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+
+                    if (testPoint != ECPoint.POINT_INFINITY) 
+                        basePoint = tempPoint;
                     else
                         throw new InvalidOperationException(
                             "Chosen generator point yields small-order" 
