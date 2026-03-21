@@ -66,8 +66,11 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BInv = B.Inverse(field);
-            BigInteger temp = new BigInteger(4).Inverse(field);
-            A24 = ((A + 2) * temp) % field;
+            BarrettReducer.SetModulus(field);
+
+            BigInteger t = new BigInteger(4).Inverse(field);
+            BigInteger At = BarrettReducer.AddMod(A, 2);
+            A24 = BarrettReducer.MulMod(At, t);
 
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
@@ -106,16 +109,14 @@ namespace Eduard.Security.Curves
         /// <returns>The value y^2 = (x^3 + A * x^2 + x) / B (mod p).</returns>
         public BigInteger Evaluate(BigInteger x)
         {
-            BigInteger X2 = (x * x) % field;
-            BigInteger result = (x * X2) % field;
+            BigInteger X2 = BarrettReducer.MulMod(x, x);
+            BigInteger res = BarrettReducer.MulMod(x, X2);
 
-            BigInteger temp = (A * X2 + x) % field;
-            result += temp;
+            BigInteger tx = BarrettReducer.MulMod(A, X2);
+            tx = BarrettReducer.AddMod(tx, x);
 
-            if (result >= field)
-                result -= field;
-
-            return (result * BInv) % field;
+            res = BarrettReducer.AddMod(res, tx);
+            return BarrettReducer.MulMod(res, BInv);
         }
 
         /// <summary>
