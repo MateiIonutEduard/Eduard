@@ -52,8 +52,6 @@ namespace Eduard.Security.Curves
         {
             if (left == ECPoint3.POINT_INFINITY) return right;
             if (right == ECPoint3.POINT_INFINITY) return left;
-
-            BigInteger p = curve.field;
             BigInteger A1 = BarrettReducer.MulMod(left.z, right.z);
 
             BigInteger A2 = BarrettReducer.MulMod(A1, A1);
@@ -102,9 +100,7 @@ namespace Eduard.Security.Curves
             if (point == ECPoint3.POINT_INFINITY)
                 return ECPoint3.POINT_INFINITY;
 
-            BigInteger p = curve.field;
             BigInteger B1 = BarrettReducer.AddMod(point.x, point.y);
-
             BigInteger A1 = BarrettReducer.MulMod(B1, B1);
             BigInteger A2 = BarrettReducer.MulMod(point.x, point.x);
 

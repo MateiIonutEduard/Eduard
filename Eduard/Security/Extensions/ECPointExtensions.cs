@@ -24,12 +24,11 @@ namespace Eduard.Security.Extensions
                 return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
-            BigInteger Z2 = (point.z * point.z) % p;
+            BigInteger Z2 = BarrettReducer.MulMod(point.z, point.z);
+            BigInteger Z3 = BarrettReducer.MulMod(Z2, point.z);
 
-            BigInteger Z3 = (Z2 * point.z) % p;
-            BigInteger X = (point.x * Z2.Inverse(p)) % p;
-
-            BigInteger Y = (point.y * Z3.Inverse(p)) % p;
+            BigInteger X = BarrettReducer.MulMod(point.x, Z2.Inverse(p));
+            BigInteger Y = BarrettReducer.MulMod(point.y, Z3.Inverse(p));
             return new ECPoint(X, Y);
         }
 
@@ -47,8 +46,8 @@ namespace Eduard.Security.Extensions
             BigInteger p = curve.field;
             BigInteger inv_Z = point.z.Inverse(p);
 
-            BigInteger X = (point.x * inv_Z) % p;
-            BigInteger Y = (point.y * inv_Z) % p;
+            BigInteger X = BarrettReducer.MulMod(point.x, inv_Z);
+            BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
 
             if (X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
@@ -68,8 +67,8 @@ namespace Eduard.Security.Extensions
             BigInteger p = curve.field;
             BigInteger inv_Z = point.z.Inverse(p);
 
-            BigInteger X = (point.x * inv_Z) % p;
-            BigInteger Y = (point.y * inv_Z) % p;
+            BigInteger X = BarrettReducer.MulMod(point.x, inv_Z);
+            BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
 
             if(X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
@@ -86,8 +85,7 @@ namespace Eduard.Security.Extensions
             if(point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1)) 
                 return ECPoint4.POINT_INFINITY;
 
-            BigInteger p = curve.field;
-            BigInteger t = (point.x * point.y) % p;
+            BigInteger t = BarrettReducer.MulMod(point.x, point.y);
             return new ECPoint4(point.x, point.y, t, 1);
         }
 
@@ -102,13 +100,11 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint3.POINT_INFINITY)
                 return ECPoint4.POINT_INFINITY;
 
-            BigInteger p = curve.field;
-            BigInteger xz = (point.x * point.z) % p;
+            BigInteger xz = BarrettReducer.MulMod(point.x, point.z);
+            BigInteger yz = BarrettReducer.MulMod(point.y, point.z);
 
-            BigInteger yz = (point.y * point.z) % p;
-            BigInteger xy = (point.x * point.y) % p;
-
-            BigInteger z2 = (point.z * point.z) % p;
+            BigInteger xy = BarrettReducer.MulMod(point.x, point.y);
+            BigInteger z2 = BarrettReducer.MulMod(point.z, point.z);
             return new ECPoint4(xz, yz, xy, z2);
         }
 
@@ -219,11 +215,13 @@ namespace Eduard.Security.Extensions
         /// <returns></returns>
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == ECPoint5w.POINT_INFINITY || point.z == 0) return ECPoint.POINT_INFINITY;
-            BigInteger p = curve.field;
+            if (point == ECPoint5w.POINT_INFINITY || point.z == 0) 
+                return ECPoint.POINT_INFINITY;
 
-            BigInteger X = (point.x * point.z2.Inverse(p)) % p;
-            BigInteger Y = (point.y * point.z3.Inverse(p)) % p;
+            BigInteger p = curve.field;
+            BigInteger X = BarrettReducer.MulMod(point.x, point.z2.Inverse(p));
+
+            BigInteger Y = BarrettReducer.MulMod(point.y, point.z3.Inverse(p));
             return new ECPoint(X, Y);
         }
 
@@ -235,8 +233,12 @@ namespace Eduard.Security.Extensions
         /// <returns></returns>
         public static ECPoint5w ToJacobianChudnovsky(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) return ECPoint5w.POINT_INFINITY;
-            ECPoint5w jacobianChudnovskyPoint = new ECPoint5w(point.GetAffineX(), point.GetAffineY(), 1, 1, 1);
+            if (point == ECPoint.POINT_INFINITY) 
+                return ECPoint5w.POINT_INFINITY;
+
+            ECPoint5w jacobianChudnovskyPoint = new ECPoint5w(point.GetAffineX(), 
+                point.GetAffineY(), 1, 1, 1);
+
             return jacobianChudnovskyPoint;
         }
 
@@ -248,14 +250,15 @@ namespace Eduard.Security.Extensions
         /// <returns></returns>
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint4w point)
         {
-            if (point == ECPoint4w.POINT_INFINITY || point.z == 0) return ECPoint.POINT_INFINITY;
+            if (point == ECPoint4w.POINT_INFINITY || point.z == 0) 
+                return ECPoint.POINT_INFINITY;
+
             BigInteger p = curve.field;
+            BigInteger Z2 = BarrettReducer.MulMod(point.z, point.z);
+            BigInteger Z3 = BarrettReducer.MulMod(Z2, point.z);
 
-            BigInteger Z2 = (point.z * point.z) % p;
-            BigInteger Z3 = (Z2 * point.z) % p;
-            BigInteger X = (point.x * Z2.Inverse(p)) % p;
-
-            BigInteger Y = (point.y * Z3.Inverse(p)) % p;
+            BigInteger X = BarrettReducer.MulMod(point.x, Z2.Inverse(p));
+            BigInteger Y = BarrettReducer.MulMod(point.y, Z3.Inverse(p));
             return new ECPoint(X, Y);
         }
 
@@ -267,8 +270,11 @@ namespace Eduard.Security.Extensions
         /// <returns></returns>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
-            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.GetAffineX(), point.GetAffineY(), 1, curve.a);
+            if (point == ECPoint.POINT_INFINITY) 
+                return ECPoint4w.POINT_INFINITY;
+
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(
+                point.GetAffineX(), point.GetAffineY(), 1, curve.a);
             return modifiedJacobianPoint;
         }
 
@@ -280,11 +286,14 @@ namespace Eduard.Security.Extensions
         /// <returns></returns>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == ECPoint5w.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
-            BigInteger Z4 = (point.z2 * point.z2) % curve.field;
+            if (point == ECPoint5w.POINT_INFINITY) 
+                return ECPoint4w.POINT_INFINITY;
 
-            BigInteger aZ4 = (curve.a * Z4) % curve.field;
-            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, point.y, point.z, aZ4);
+            BigInteger Z4 = BarrettReducer.MulMod(point.z2, point.z2);
+            BigInteger aZ4 = BarrettReducer.MulMod(curve.a, Z4);
+
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, 
+                point.y, point.z, aZ4);
             return modifiedJacobianPoint;
         }
 
@@ -296,12 +305,15 @@ namespace Eduard.Security.Extensions
         /// <returns></returns>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint3w point)
         {
-            if (point == ECPoint3w.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
-            BigInteger Z2 = (point.z * point.z) % curve.field;
-            BigInteger Z4 = (Z2 * Z2) % curve.field;
+            if (point == ECPoint3w.POINT_INFINITY) 
+                return ECPoint4w.POINT_INFINITY;
 
-            BigInteger aZ4 = (curve.a * Z4) % curve.field;
-            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, point.y, point.z, aZ4);
+            BigInteger Z2 = BarrettReducer.MulMod(point.z, point.z);
+            BigInteger Z4 = BarrettReducer.MulMod(Z2, Z2);
+            BigInteger aZ4 = BarrettReducer.MulMod(curve.a, Z4);
+
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, 
+                point.y, point.z, aZ4);
             return modifiedJacobianPoint;
         }
     }
