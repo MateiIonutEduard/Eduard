@@ -28,11 +28,13 @@ namespace Eduard.Security.Extensions
                 return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
-            BigInteger Z2 = BarrettReducer.MulMod(point.z, point.z);
-            BigInteger Z3 = BarrettReducer.MulMod(Z2, point.z);
+            BigInteger inv_Z = point.z.Inverse(p);
 
-            BigInteger X = BarrettReducer.MulMod(point.x, Z2.Inverse(p));
-            BigInteger Y = BarrettReducer.MulMod(point.y, Z3.Inverse(p));
+            BigInteger iZ2 = BarrettReducer.MulMod(inv_Z, inv_Z);
+            BigInteger iZ3 = BarrettReducer.MulMod(iZ2, inv_Z);
+
+            BigInteger X = BarrettReducer.MulMod(point.x, iZ2);
+            BigInteger Y = BarrettReducer.MulMod(point.y, iZ3);
             return new ECPoint(X, Y);
         }
 
