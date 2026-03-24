@@ -10,19 +10,23 @@ using System.Threading.Tasks;
 namespace Eduard.Security.Extensions
 {
     /// <summary>
-    /// This class provides utilities to convert elliptic curves between families and map points to an isomorphic curve via isogenies.
+    /// Provides isogeny-based conversions between Weierstrass, Montgomery, and twisted Edwards curves.
     /// </summary>
+    /// <remarks>
+    /// All operations use <see cref="BarrettReducer"/> for optimized modular arithmetic. <br/>
+    /// Conversions require cofactor divisible by 4 for valid curve mapping.
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
     public static class EllipticCurveExtensions
     {
         /// <summary>
-        /// Convert a Weierstrass curve into its equivalent Montgomery curve.
+        /// Converts a Weierstrass curve to an isomorphic Montgomery curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Weierstrass curve y^2 = x^3 + ax + b over Fp.</param>
+        /// <returns>Montgomery curve B*y^2 = x^3 + A*x^2 + x.</returns>
+        /// <exception cref="ArgumentException">Curve invalid or no 4-torsion point found.</exception>
         public static MontgomeryCurve ToMontgomeryCurve(this EllipticCurve curve)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -80,12 +84,11 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert an affine point on a Weierstrass curve to the corresponding affine point on the Montgomery curve.
+        /// Maps a Weierstrass point to its corresponding Montgomery point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Source Weierstrass curve.</param>
+        /// <param name="point">Affine point on the Weierstrass curve.</param>
+        /// <returns>Mapped point on the Montgomery curve.</returns>
         public static ECPoint ToMontgomeryPoint(this EllipticCurve curve, ECPoint point)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -147,11 +150,10 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert a Weierstrass curve to its equivalent twisted Edwards curve.
+        /// Converts a Weierstrass curve to an isomorphic twisted Edwards curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Weierstrass curve y^2 = x^3 + ax + b over Fp.</param>
+        /// <returns>Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2.</returns>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this EllipticCurve curve)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -218,12 +220,11 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert an affine point on a Weierstrass curve to the corresponding affine point on the twisted Edwards curve.
+        /// Maps a Weierstrass point to its corresponding twisted Edwards point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Source Weierstrass curve.</param>
+        /// <param name="point">Affine point on the Weierstrass curve.</param>
+        /// <returns>Mapped point on the twisted Edwards curve.</returns>
         public static ECPoint ToTwistedEdwardsPoint(this EllipticCurve curve, ECPoint point)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -294,11 +295,10 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert a Montgomery curve to the equivalent Weierstrass curve.
+        /// Converts a Montgomery curve to an isomorphic Weierstrass curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Montgomery curve B*y^2 = x^3 + A*x^2 + x over Fp.</param>
+        /// <returns>Weierstrass curve y^2 = x^3 + ax + b.</returns>
         public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -333,12 +333,11 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert an affine point on a Montgomery curve to its equivalent affine point on the Weierstrass curve.
+        /// Maps a Montgomery point to its corresponding Weierstrass point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Source Montgomery curve.</param>
+        /// <param name="point">Affine point on the Montgomery curve.</param>
+        /// <returns>Mapped point on the Weierstrass curve.</returns>
         public static ECPoint ToWeierstrassPoint(this MontgomeryCurve curve, ECPoint point)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -367,11 +366,10 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert a twisted Edwards curve to the equivalent Weierstrass curve.
+        /// Converts a twisted Edwards curve to an isomorphic Weierstrass curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
+        /// <returns>Weierstrass curve y^2 = x^3 + ax + b.</returns>
         public static EllipticCurve ToWeierstrassCurve(this TwistedEdwardsCurve curve)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
@@ -414,12 +412,11 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert an affine point on a twisted Edwards curve to its equivalent affine point on the Weierstrass curve.
+        /// Maps a twisted Edwards point to its corresponding Weierstrass point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Source twisted Edwards curve.</param>
+        /// <param name="point">Affine point on the twisted Edwards curve.</param>
+        /// <returns>Mapped point on the Weierstrass curve.</returns>
         public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
@@ -468,11 +465,10 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert a Montgomery curve to the equivalent twisted Edwards curve.
+        /// Converts a Montgomery curve to an isomorphic twisted Edwards curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Montgomery curve B*y^2 = x^3 + A*x^2 + x over Fp.</param>
+        /// <returns>Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2.</returns>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this MontgomeryCurve curve)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -493,12 +489,11 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert an affine point on a Montgomery curve to the equivalent affine point on the twisted Edwards curve.
+        /// Maps a Montgomery point to its corresponding twisted Edwards point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Source Montgomery curve.</param>
+        /// <param name="point">Affine point on the Montgomery curve.</param>
+        /// <returns>Mapped point on the twisted Edwards curve.</returns>
         public static ECPoint ToTwistedEdwardsPoint(this MontgomeryCurve curve, ECPoint point)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -528,11 +523,10 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert a twisted Edwards curve to the equivalent Montgomery curve.
+        /// Converts a twisted Edwards curve to an isomorphic Montgomery curve.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
+        /// <returns>Montgomery curve B*y^2 = x^3 + A*x^2 + x.</returns>
         public static MontgomeryCurve ToMontgomeryCurve(this TwistedEdwardsCurve curve)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
@@ -555,12 +549,11 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Convert an affine point on a twisted Edwards curve to the equivalent affine point on the Montgomery curve.
+        /// Maps a twisted Edwards point to its corresponding Montgomery point.
         /// </summary>
-        /// <param name="curve"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="curve">Source twisted Edwards curve.</param>
+        /// <param name="point">Affine point on the twisted Edwards curve.</param>
+        /// <returns>Mapped point on the Montgomery curve.</returns>
         public static ECPoint ToMontgomeryPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
