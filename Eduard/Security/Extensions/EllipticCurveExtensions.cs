@@ -26,11 +26,11 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">Weierstrass curve y^2 = x^3 + ax + b over Fp.</param>
         /// <returns>Montgomery curve B*y^2 = x^3 + A*x^2 + x.</returns>
-        /// <exception cref="ArgumentException">Curve invalid or no 4-torsion point found.</exception>
+        /// <exception cref="ArgumentException">Cofactor not divisible by 4, or no suitable 4-torsion point found.</exception>
         public static MontgomeryCurve ToMontgomeryCurve(this EllipticCurve curve)
         {
             if ((curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Weierstrass curve is invalid.");
+                throw new ArgumentException("Cofactor must be multiple of 4.");
 
             BigInteger order = curve.order;
             BigInteger cofactor = curve.cofactor;
@@ -74,7 +74,7 @@ namespace Eduard.Security.Extensions
             }
 
             if (!found)
-                throw new ArgumentException("Weierstrass curve cannot be converted to Montgomery form.");
+                throw new ArgumentException("No suitable 4-torsion point found.");
 
             BigInteger t = curve.Sqrt(s, true).Inverse(p);
             BigInteger A4 = BarrettReducer.MulMod(A1, t);
@@ -89,10 +89,11 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">Source Weierstrass curve.</param>
         /// <param name="point">Affine point on the Weierstrass curve.</param>
         /// <returns>Mapped point on the Montgomery curve.</returns>
+        /// <exception cref="ArgumentException">Cofactor not divisible by 4, or no suitable 4-torsion point found.</exception>
         public static ECPoint ToMontgomeryPoint(this EllipticCurve curve, ECPoint point)
         {
             if ((curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Weierstrass curve is invalid.");
+                throw new ArgumentException("Cofactor must be multiple of 4.");
 
             Polynomial.SetField(curve.field);
             BigInteger p = curve.field;
@@ -136,7 +137,7 @@ namespace Eduard.Security.Extensions
             }
 
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
-            if (!found) throw new ArgumentException("Weierstrass curve cannot be converted to Montgomery form.");
+            if (!found) throw new ArgumentException("No suitable 4-torsion point found.");
 
             BigInteger ts = curve.Sqrt(s, true).Inverse(p);
             BigInteger Xp = point.GetAffineX();
@@ -154,10 +155,11 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">Weierstrass curve y^2 = x^3 + ax + b over Fp.</param>
         /// <returns>Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2.</returns>
+        /// <exception cref="ArgumentException">Cofactor not divisible by 4, or no suitable 4-torsion point found.</exception>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this EllipticCurve curve)
         {
             if ((curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Weierstrass curve is invalid.");
+                throw new ArgumentException("Cofactor must be multiple of 4.");
 
             BigInteger order = curve.order;
             BigInteger cofactor = curve.cofactor;
@@ -201,7 +203,7 @@ namespace Eduard.Security.Extensions
             }
 
             if (!found)
-                throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
+                throw new ArgumentException("No suitable 4-torsion point found.");
 
             BigInteger t = curve.Sqrt(s, true).Inverse(p);
             BigInteger A4 = BarrettReducer.MulMod(A1, t);
@@ -225,10 +227,11 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">Source Weierstrass curve.</param>
         /// <param name="point">Affine point on the Weierstrass curve.</param>
         /// <returns>Mapped point on the twisted Edwards curve.</returns>
+        /// <exception cref="ArgumentException">Cofactor not divisible by 4, no suitable 4-torsion point found, or point maps to exceptional case.</exception>
         public static ECPoint ToTwistedEdwardsPoint(this EllipticCurve curve, ECPoint point)
         {
             if ((curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Weierstrass curve is invalid.");
+                throw new ArgumentException("Cofactor must be multiple of 4.");
 
             Polynomial.SetField(curve.field);
             BigInteger p = curve.field;
@@ -272,7 +275,7 @@ namespace Eduard.Security.Extensions
             }
 
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
-            if (!found) throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
+            if (!found) throw new ArgumentException("No suitable 4-torsion point found.");
 
             BigInteger ts = curve.Sqrt(s, true).Inverse(p);
             BigInteger Xp = point.GetAffineX();
@@ -299,10 +302,11 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">Montgomery curve B*y^2 = x^3 + A*x^2 + x over Fp.</param>
         /// <returns>Weierstrass curve y^2 = x^3 + ax + b.</returns>
+        /// <exception cref="ArgumentException">Invalid Montgomery parameters or cofactor not divisible by 4.</exception>
         public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Montgomery curve is invalid.");
+                throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             BigInteger order = curve.order;
             BigInteger cofactor = curve.cofactor;
@@ -338,10 +342,11 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">Source Montgomery curve.</param>
         /// <param name="point">Affine point on the Montgomery curve.</param>
         /// <returns>Mapped point on the Weierstrass curve.</returns>
+        /// <exception cref="ArgumentException">Invalid Montgomery curve parameters.</exception>
         public static ECPoint ToWeierstrassPoint(this MontgomeryCurve curve, ECPoint point)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Montgomery curve is invalid.");
+                throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
             if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
@@ -370,10 +375,11 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
         /// <returns>Weierstrass curve y^2 = x^3 + ax + b.</returns>
+        /// <exception cref="ArgumentException">Invalid twisted Edwards parameters or cofactor not divisible by 4.</exception>
         public static EllipticCurve ToWeierstrassCurve(this TwistedEdwardsCurve curve)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The twisted Edwards curve is invalid.");
+                throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             BigInteger order = curve.order;
             BigInteger cofactor = curve.cofactor;
@@ -417,16 +423,17 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">Source twisted Edwards curve.</param>
         /// <param name="point">Affine point on the twisted Edwards curve.</param>
         /// <returns>Mapped point on the Weierstrass curve.</returns>
+        /// <exception cref="ArgumentException">Invalid twisted Edwards parameters or point maps to exceptional case.</exception>
         public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The twisted Edwards curve is invalid.");
+                throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Weierstrass curve */
             if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
-                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Weierstrass curve.");
+                throw new ArgumentException("Exceptional point has no Weierstrass equivalent.");
 
             BigInteger Xp = point.GetAffineX();
             BigInteger Yp = point.GetAffineY();
@@ -469,10 +476,11 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">Montgomery curve B*y^2 = x^3 + A*x^2 + x over Fp.</param>
         /// <returns>Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2.</returns>
+        /// <exception cref="ArgumentException">Invalid Montgomery curve parameters or cofactor not divisible by 4.</exception>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this MontgomeryCurve curve)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Montgomery curve is invalid.");
+                throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             BigInteger order = curve.order;
             BigInteger cofactor = curve.cofactor;
@@ -494,16 +502,17 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">Source Montgomery curve.</param>
         /// <param name="point">Affine point on the Montgomery curve.</param>
         /// <returns>Mapped point on the twisted Edwards curve.</returns>
+        /// <exception cref="ArgumentException">Invalid Montgomery curve parameters or point maps to exceptional case.</exception>
         public static ECPoint ToTwistedEdwardsPoint(this MontgomeryCurve curve, ECPoint point)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The Montgomery curve is invalid.");
+                throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the twisted Edwards curve */
             if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == curve.field - 1)
-                throw new ArgumentException("This Montgomery curve point is exceptional and has no corresponding point on the equivalent twisted Edwards curve.");
+                throw new ArgumentException("Exceptional point has no twisted Edwards equivalent.");
 
             BigInteger p = curve.field;
             BigInteger B_root = curve.Sqrt(curve.B);
@@ -527,10 +536,11 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
         /// <returns>Montgomery curve B*y^2 = x^3 + A*x^2 + x.</returns>
+        /// <exception cref="ArgumentException">Invalid twisted Edwards curve parameters or cofactor not divisible by 4.</exception>
         public static MontgomeryCurve ToMontgomeryCurve(this TwistedEdwardsCurve curve)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The twisted Edwards curve is invalid.");
+                throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             BigInteger order = curve.order;
             BigInteger cofactor = curve.cofactor;
@@ -554,16 +564,17 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">Source twisted Edwards curve.</param>
         /// <param name="point">Affine point on the twisted Edwards curve.</param>
         /// <returns>Mapped point on the Montgomery curve.</returns>
+        /// <exception cref="ArgumentException">Invalid twisted Edwards curve parameters or point maps to exceptional case.</exception>
         public static ECPoint ToMontgomeryPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
-                throw new ArgumentException("The twisted Edwards curve is invalid.");
+                throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Montgomery curve */
             if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
-                throw new ArgumentException("This twisted Edwards curve point is exceptional and has no equivalent on the Montgomery curve.");
+                throw new ArgumentException("Exceptional point has no Montgomery equivalent.");
 
             BigInteger Xp = point.GetAffineX();
             BigInteger Yp = point.GetAffineY();
