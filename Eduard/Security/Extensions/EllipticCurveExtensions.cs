@@ -48,7 +48,7 @@ namespace Eduard.Security.Extensions
             }
 
             W /= P;
-            BigInteger alpha = 0;
+            BigInteger A1 = 0;
             bool found = false;
 
             Polynomial.Solve(W, ref roots);
@@ -56,8 +56,10 @@ namespace Eduard.Security.Extensions
 
             for (int i = 0; i < roots.Count; i++)
             {
-                alpha = roots[i];
-                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+                A1 = roots[i];
+                BigInteger A2 = BarrettReducer.MulMod(A1, A1);
+                BigInteger A3 = BarrettReducer.MulMod(3, A2);
+                s = BarrettReducer.AddMod(A3, curve.a);
 
                 /* find the root corresponding to the x-coordinate of the 4-torsion point */
                 if (BigInteger.Jacobi(s, p) == 1)
@@ -67,14 +69,14 @@ namespace Eduard.Security.Extensions
                 }
             }
 
-            if(!found)
+            if (!found)
                 throw new ArgumentException("Weierstrass curve cannot be converted to Montgomery form.");
 
             BigInteger t = curve.Sqrt(s, true).Inverse(p);
-            BigInteger A = (3 * alpha * t) % p;
+            BigInteger A4 = BarrettReducer.MulMod(A1, t);
 
-            BigInteger B = t;
-            return new MontgomeryCurve(A, B, p, order, cofactor);
+            BigInteger A = BarrettReducer.MulMod(3, A4);
+            return new MontgomeryCurve(A, t, p, order, cofactor);
         }
 
         /// <summary>
@@ -109,7 +111,7 @@ namespace Eduard.Security.Extensions
             }
 
             W /= P;
-            BigInteger alpha = 0;
+            BigInteger A1 = 0;
             bool found = false;
 
             Polynomial.Solve(W, ref roots);
@@ -117,8 +119,10 @@ namespace Eduard.Security.Extensions
 
             for (int i = 0; i < roots.Count; i++)
             {
-                alpha = roots[i];
-                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+                A1 = roots[i];
+                BigInteger A2 = BarrettReducer.MulMod(A1, A1);
+                BigInteger A3 = BarrettReducer.MulMod(3, A2);
+                s = BarrettReducer.AddMod(A3, curve.a);
 
                 /* find the root corresponding to the x-coordinate of the 4-torsion point */
                 if (BigInteger.Jacobi(s, p) == 1)
@@ -135,9 +139,10 @@ namespace Eduard.Security.Extensions
             BigInteger Xp = point.GetAffineX();
 
             BigInteger Yp = point.GetAffineY();
-            BigInteger X = (ts * ((p + Xp - alpha) % p)) % p;
+            BigInteger A4 = BarrettReducer.SubMod(Xp, A1);
+            BigInteger X = BarrettReducer.MulMod(ts, A4);
 
-            BigInteger Y = (ts * Yp) % p;
+            BigInteger Y = BarrettReducer.MulMod(ts, Yp);
             return new ECPoint(X, Y);
         }
 
