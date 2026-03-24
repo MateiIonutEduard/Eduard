@@ -177,7 +177,7 @@ namespace Eduard.Security.Extensions
             }
 
             W /= P;
-            BigInteger alpha = 0;
+            BigInteger A1 = 0;
             bool found = false;
 
             Polynomial.Solve(W, ref roots);
@@ -185,8 +185,10 @@ namespace Eduard.Security.Extensions
 
             for (int i = 0; i < roots.Count; i++)
             {
-                alpha = roots[i];
-                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+                A1 = roots[i];
+                BigInteger A2 = BarrettReducer.MulMod(A1, A1);
+                BigInteger A3 = BarrettReducer.MulMod(3, A2);
+                s = BarrettReducer.AddMod(A3, curve.a);
 
                 /* find the root corresponding to the x-coordinate of the 4-torsion point */
                 if (BigInteger.Jacobi(s, p) == 1)
@@ -200,13 +202,18 @@ namespace Eduard.Security.Extensions
                 throw new ArgumentException("Weierstrass curve cannot be converted to twisted Edwards form.");
 
             BigInteger t = curve.Sqrt(s, true).Inverse(p);
-            BigInteger A = (3 * alpha * t) % p;
+            BigInteger A4 = BarrettReducer.MulMod(A1, t);
 
+            BigInteger A = BarrettReducer.MulMod(3, A4);
             BigInteger B = t;
-            BigInteger B_inv = B.Inverse(p);
 
-            BigInteger a = ((A + 2) * B_inv) % p;
-            BigInteger d = ((p + A - 2) * B_inv) % p;
+            BigInteger B_inv = B.Inverse(p);
+            BigInteger A5 = BarrettReducer.AddMod(A, 2);
+
+            BigInteger a = BarrettReducer.MulMod(A5, B_inv);
+            BigInteger A6 = BarrettReducer.SubMod(A, 2);
+
+            BigInteger d = BarrettReducer.MulMod(A6, B_inv);
             return new TwistedEdwardsCurve(a, d, p, order, cofactor);
         }
 
@@ -242,7 +249,7 @@ namespace Eduard.Security.Extensions
             }
 
             W /= P;
-            BigInteger alpha = 0;
+            BigInteger A1 = 0;
             bool found = false;
 
             Polynomial.Solve(W, ref roots);
@@ -250,8 +257,10 @@ namespace Eduard.Security.Extensions
 
             for (int i = 0; i < roots.Count; i++)
             {
-                alpha = roots[i];
-                s = (((3 * ((alpha * alpha) % p)) % p) + curve.a) % p;
+                A1 = roots[i];
+                BigInteger A2 = BarrettReducer.MulMod(A1, A1);
+                BigInteger A3 = BarrettReducer.MulMod(3, A2);
+                s = BarrettReducer.AddMod(A3, curve.a);
 
                 /* find the root corresponding to the x-coordinate of the 4-torsion point */
                 if (BigInteger.Jacobi(s, p) == 1)
@@ -268,15 +277,19 @@ namespace Eduard.Security.Extensions
             BigInteger Xp = point.GetAffineX();
 
             BigInteger Yp = point.GetAffineY();
-            BigInteger Xm = (ts * ((p + Xp - alpha) % p)) % p;
+            BigInteger A4 = BarrettReducer.SubMod(Xp, A1);
 
-            BigInteger Ym = (ts * Yp) % p;
+            BigInteger Xm = BarrettReducer.MulMod(ts, A4);
+            BigInteger Ym = BarrettReducer.MulMod(ts, Yp);
+
             BigInteger y_inv = Ym.Inverse(p);
+            BigInteger A5 = BarrettReducer.AddMod(Xm, 1);
 
-            BigInteger x1_inv = ((Xm + 1) % p).Inverse(p);
-            BigInteger X = (Xm * y_inv) % p;
+            BigInteger x1_inv = A5.Inverse(p);
+            BigInteger X = BarrettReducer.MulMod(Xm, y_inv);
 
-            BigInteger Y = ((p + Xm - 1) * x1_inv) % p;
+            BigInteger A6 = BarrettReducer.SubMod(Xm, 1);
+            BigInteger Y = BarrettReducer.MulMod(A6, x1_inv);
             return new ECPoint(X, Y);
         }
 
