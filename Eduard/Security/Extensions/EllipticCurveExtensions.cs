@@ -455,7 +455,7 @@ namespace Eduard.Security.Extensions
         /// <exception cref="ArgumentException"></exception>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this MontgomeryCurve curve)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2  || (curve.cofactor & 0x3) != 0)
+            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("The Montgomery curve is invalid.");
 
             BigInteger order = curve.order;
@@ -464,8 +464,11 @@ namespace Eduard.Security.Extensions
             BigInteger field = curve.field;
             BigInteger B_inv = curve.B.Inverse(field);
 
-            BigInteger a = ((curve.A + 2) * B_inv) % field;
-            BigInteger d = ((field + curve.A - 2) * B_inv) % field;
+            BigInteger A1 = BarrettReducer.AddMod(curve.A, 2);
+            BigInteger a = BarrettReducer.MulMod(A1, B_inv);
+            BigInteger A2 = BarrettReducer.SubMod(curve.A, 2);
+
+            BigInteger d = BarrettReducer.MulMod(A2, B_inv);
             return new TwistedEdwardsCurve(a, d, field, order, cofactor);
         }
 
@@ -494,10 +497,13 @@ namespace Eduard.Security.Extensions
             BigInteger Yp = point.GetAffineY();
 
             BigInteger y_inv = Yp.Inverse(p);
-            BigInteger x1_inv = ((Xp + 1) % p).Inverse(p);
+            BigInteger B1 = BarrettReducer.AddMod(Xp, 1);
 
-            BigInteger X = (Xp * y_inv) % p;
-            BigInteger Y = ((p + Xp - 1) * x1_inv) % p;
+            BigInteger x1_inv = B1.Inverse(p);
+            BigInteger X = BarrettReducer.MulMod(Xp, y_inv);
+
+            BigInteger B2 = BarrettReducer.SubMod(Xp, 1);
+            BigInteger Y = BarrettReducer.MulMod(B2, x1_inv);
             return new ECPoint(X, Y);
         }
 
