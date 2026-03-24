@@ -381,29 +381,35 @@ namespace Eduard.Security.Extensions
             BigInteger cofactor = curve.cofactor;
 
             BigInteger p = curve.field;
-            BigInteger ad = (p + curve.a - curve.d) % p;
+            BigInteger ad = BarrettReducer.SubMod(curve.a, curve.d);
 
             BigInteger ad_inv = ad.Inverse(p);
-            BigInteger B = (4 * ad_inv) % p;
+            BigInteger B = BarrettReducer.MulMod(4, ad_inv);
 
-            BigInteger A = (2 * (curve.a + curve.d)) % p;
-            A = (A * ad_inv) % p;
+            BigInteger Bt = BarrettReducer.AddMod(curve.a, curve.d);
+            BigInteger A = BarrettReducer.AddMod(Bt, Bt);
 
-            BigInteger A1 = (A * A) % p;
+            A = BarrettReducer.MulMod(A, ad_inv);
+            BigInteger A1 = BarrettReducer.MulMod(A, A);
 
-            BigInteger A2 = (A * A1) % p;
-            BigInteger A3 = (p + 3 - A1) % p;
+            BigInteger A2 = BarrettReducer.MulMod(A, A1);
+            BigInteger A3 = BarrettReducer.SubMod(3, A1);
 
-            BigInteger A4 = (p + ((2 * A2) % p) - ((9 * A) % p)) % p;
-            BigInteger B1 = (B * B) % p;
+            BigInteger A4t = BarrettReducer.AddMod(A2, A2);
+            BigInteger A4t2 = BarrettReducer.MulMod(9, A);
 
-            BigInteger B2 = (B1 * B) % p;
-            BigInteger B3 = ((27 * B2) % p).Inverse(p);
+            BigInteger A4 = BarrettReducer.SubMod(A4t, A4t2);
+            BigInteger B1 = BarrettReducer.MulMod(B, B);
 
-            BigInteger B4 = (9 * B) % p;
-            BigInteger a = (((A3 * B3) % p) * B4) % p;
+            BigInteger B2 = BarrettReducer.MulMod(B1, B);
+            BigInteger B2t = BarrettReducer.MulMod(27, B2);
 
-            BigInteger b = (A4 * B3) % p;
+            BigInteger B3 = B2t.Inverse(p);
+            BigInteger B4 = BarrettReducer.MulMod(9, B);
+            BigInteger B4t = BarrettReducer.MulMod(A3, B3);
+
+            BigInteger a = BarrettReducer.MulMod(B4t, B4);
+            BigInteger b = BarrettReducer.MulMod(A4, B3);
             return new EllipticCurve(a, b, p, order, cofactor);
         }
 
@@ -429,29 +435,35 @@ namespace Eduard.Security.Extensions
             BigInteger Yp = point.GetAffineY();
 
             BigInteger p = curve.field;
-            BigInteger u = (Yp + 1) % p;
+            BigInteger u = BarrettReducer.AddMod(Yp, 1);
 
-            BigInteger v = (((p + 1 - Yp) % p) * Xp).Inverse(p);
-            BigInteger Xm = (u * (((Xp * v) % p) % p)) % p;
+            BigInteger A1 = BarrettReducer.SubMod(1, Yp);
+            BigInteger v = BarrettReducer.MulMod(A1, Xp).Inverse(p);
 
-            BigInteger Ym = (u * v) % p;
-            BigInteger ad = (p + curve.a - curve.d) % p;
+            BigInteger A2 = BarrettReducer.MulMod(Xp, v);
+            BigInteger Xm = BarrettReducer.MulMod(u, A2);
+
+            BigInteger Ym = BarrettReducer.MulMod(u, v);
+            BigInteger ad = BarrettReducer.SubMod(curve.a, curve.d);
 
             BigInteger ad_inv = ad.Inverse(p);
-            BigInteger B = (4 * ad_inv) % p;
+            BigInteger B = BarrettReducer.MulMod(4, ad_inv);
 
-            BigInteger A = (2 * (curve.a + curve.d)) % p;
-            A = (A * ad_inv) % p;
+            BigInteger A3 = BarrettReducer.AddMod(curve.a, curve.d);
+            BigInteger A = BarrettReducer.AddMod(A3, A3);
 
+            A = BarrettReducer.MulMod(A, ad_inv);
             BigInteger B3_inv = ((3 * B) % p).Inverse(p);
-            BigInteger AB3 = (A * B3_inv) % p;
-            BigInteger B_inv = (3 * B3_inv) % p;
+
+            BigInteger AB3 = BarrettReducer.MulMod(A, B3_inv);
+            BigInteger B_inv = BarrettReducer.MulMod(3, B3_inv);
 
             /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
             if (Xm == 0 && Ym == 0) return new ECPoint(AB3, 0);
-            BigInteger X = (((Xm * B_inv) % p) + AB3) % p;
+            BigInteger A4 = BarrettReducer.MulMod(Xm, B_inv);
 
-            BigInteger Y = (Ym * B_inv) % p;
+            BigInteger X = BarrettReducer.AddMod(A4, AB3);
+            BigInteger Y = BarrettReducer.MulMod(Ym, B_inv);
             return new ECPoint(X, Y);
         }
 
