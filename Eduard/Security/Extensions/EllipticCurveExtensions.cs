@@ -10,11 +10,13 @@ using System.Threading.Tasks;
 namespace Eduard.Security.Extensions
 {
     /// <summary>
-    /// Provides isogeny-based conversions between Weierstrass, Montgomery, and twisted Edwards curves.
+    /// Provides isogeny-based curve transformations and point mappings between Weierstrass, <br/>
+    /// Montgomery, and twisted Edwards curve representations.
     /// </summary>
     /// <remarks>
-    /// All operations use <see cref="BarrettReducer"/> for optimized modular arithmetic. <br/>
-    /// Conversions require cofactor divisible by 4 for valid curve mapping.
+    /// This utility class implements the standard isomorphism mappings between elliptic curve <br/>
+    /// forms commonly used in cryptographic implementations. All operations leverage <br/>
+    /// <see cref="BarrettReducer"/> for constant-time modular arithmetic.
     /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
@@ -22,11 +24,20 @@ namespace Eduard.Security.Extensions
     public static class EllipticCurveExtensions
     {
         /// <summary>
-        /// Converts a Weierstrass curve to an isomorphic Montgomery curve.
+        /// Transforms a Weierstrass curve to an isomorphic Montgomery curve representation.
         /// </summary>
-        /// <param name="curve">Weierstrass curve y^2 = x^3 + ax + b over Fp.</param>
-        /// <returns>Montgomery curve B*y^2 = x^3 + A*x^2 + x.</returns>
-        /// <exception cref="ArgumentException">Cofactor not divisible by 4, or no suitable 4-torsion point found.</exception>
+        /// <param name="curve">The source Weierstrass curve in short form y^2 = x^3 + a*x + b over Fp.</param>
+        /// <returns>A Montgomery curve in the form B*y^2 = x^3 + A*x^2 + x that is isomorphic to the source curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The curve's cofactor is not divisible by 4
+        /// - No suitable 4-torsion point exists for the transformation (curve may not be properly parameterized)
+        /// </exception>
+        /// <remarks>
+        /// The transformation follows the standard algorithm for converting Weierstrass curves to Montgomery form, <br/>
+        /// requiring the existence of a point of order 4. The resulting Montgomery curve parameters (A, B) are <br/>
+        /// derived from the 4-torsion point's x-coordinate and a quadratic residue condition.
+        /// </remarks>
         public static MontgomeryCurve ToMontgomeryCurve(this EllipticCurve curve)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -84,12 +95,21 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Maps a Weierstrass point to its corresponding Montgomery point.
+        /// Maps an affine point from a Weierstrass curve to its isomorphic image on the corresponding Montgomery curve.
         /// </summary>
-        /// <param name="curve">Source Weierstrass curve.</param>
-        /// <param name="point">Affine point on the Weierstrass curve.</param>
-        /// <returns>Mapped point on the Montgomery curve.</returns>
-        /// <exception cref="ArgumentException">Cofactor not divisible by 4, or no suitable 4-torsion point found.</exception>
+        /// <param name="curve">Source Weierstrass curve containing the point.</param>
+        /// <param name="point">Affine point on the Weierstrass curve to be mapped.</param>
+        /// <returns>The corresponding affine point on the isomorphic Montgomery curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The curve's cofactor is not divisible by 4
+        /// - No suitable 4-torsion point exists for the transformation
+        /// </exception>
+        /// <remarks>
+        /// The mapping preserves the group law and is invertible. The point at infinity maps to itself. <br/>
+        /// The transformation is derived from the same 4-torsion point used in the curve conversion, <br/>
+        /// ensuring consistency between curve and point mappings.
+        /// </remarks>
         public static ECPoint ToMontgomeryPoint(this EllipticCurve curve, ECPoint point)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -151,11 +171,20 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Converts a Weierstrass curve to an isomorphic twisted Edwards curve.
+        /// Transforms a Weierstrass curve to an isomorphic twisted Edwards curve representation.
         /// </summary>
-        /// <param name="curve">Weierstrass curve y^2 = x^3 + ax + b over Fp.</param>
-        /// <returns>Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2.</returns>
-        /// <exception cref="ArgumentException">Cofactor not divisible by 4, or no suitable 4-torsion point found.</exception>
+        /// <param name="curve">The source Weierstrass curve in short form y^2 = x^3 + a*x + b over Fp.</param>
+        /// <returns>A twisted Edwards curve in the form a*x^2 + y^2 = 1 + d*x^2*y^2 isomorphic to the source curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The curve's cofactor is not divisible by 4
+        /// - No suitable 4-torsion point exists for the transformation
+        /// </exception>
+        /// <remarks>
+        /// This transformation composes the Weierstrass, Montgomery, twisted Edwards conversions, <br/>
+        /// producing optimal parameters for Ed25519-style implementations. The resulting twisted Edwards <br/>
+        /// curve will have a = (A+2)/B and d = (A-2)/B where (A,B) are the intermediate Montgomery parameters.
+        /// </remarks>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this EllipticCurve curve)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -222,12 +251,22 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Maps a Weierstrass point to its corresponding twisted Edwards point.
+        /// Maps an affine point from a Weierstrass curve to its isomorphic image on the corresponding twisted Edwards curve.
         /// </summary>
-        /// <param name="curve">Source Weierstrass curve.</param>
-        /// <param name="point">Affine point on the Weierstrass curve.</param>
-        /// <returns>Mapped point on the twisted Edwards curve.</returns>
-        /// <exception cref="ArgumentException">Cofactor not divisible by 4, no suitable 4-torsion point found, or point maps to exceptional case.</exception>
+        /// <param name="curve">Source Weierstrass curve containing the point.</param>
+        /// <param name="point">Affine point on the Weierstrass curve to be mapped.</param>
+        /// <returns>The corresponding affine point on the isomorphic twisted Edwards curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The curve's cofactor is not divisible by 4
+        /// - No suitable 4-torsion point exists for the transformation
+        /// - The point maps to an exceptional case (e.g., points requiring division by zero)
+        /// </exception>
+        /// <remarks>
+        /// The mapping is obtained by composing the Weierstrass, Montgomery and twisted Edwards point mappings. <br/>
+        /// Points with x = 0 or y = 1 on the intermediate Montgomery curve represent exceptional cases that <br/>
+        /// cannot be mapped to twisted Edwards form and will trigger an exception.
+        /// </remarks>
         public static ECPoint ToTwistedEdwardsPoint(this EllipticCurve curve, ECPoint point)
         {
             if ((curve.cofactor & 0x3) != 0)
@@ -298,11 +337,20 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Converts a Montgomery curve to an isomorphic Weierstrass curve.
+        /// Transforms a Montgomery curve to an isomorphic Weierstrass curve representation.
         /// </summary>
-        /// <param name="curve">Montgomery curve B*y^2 = x^3 + A*x^2 + x over Fp.</param>
-        /// <returns>Weierstrass curve y^2 = x^3 + ax + b.</returns>
-        /// <exception cref="ArgumentException">Invalid Montgomery parameters or cofactor not divisible by 4.</exception>
+        /// <param name="curve">The source Montgomery curve in the form B*y^2 = x^3 + A*x^2 + x over Fp.</param>
+        /// <returns>A Weierstrass curve in short form y^2 = x^3 + a*x + b isomorphic to the source curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The Montgomery curve parameters are invalid.
+        /// - The curve's cofactor is not divisible by 4.
+        /// </exception>
+        /// <remarks>
+        /// The transformation is derived from the standard Weierstrass form conversion: <br/>
+        /// a = (3 - A^2) / (3B^2) and b = (2A^3 - 9A) / (27B^3). The resulting parameters are <br/>
+        /// normalized to ensure proper isomorphism.
+        /// </remarks>
         public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -337,12 +385,21 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Maps a Montgomery point to its corresponding Weierstrass point.
+        /// Maps an affine point from a Montgomery curve to its isomorphic image on the corresponding Weierstrass curve.
         /// </summary>
-        /// <param name="curve">Source Montgomery curve.</param>
-        /// <param name="point">Affine point on the Montgomery curve.</param>
-        /// <returns>Mapped point on the Weierstrass curve.</returns>
-        /// <exception cref="ArgumentException">Invalid Montgomery curve parameters.</exception>
+        /// <param name="curve">Source Montgomery curve containing the point.</param>
+        /// <param name="point">Affine point on the Montgomery curve to be mapped.</param>
+        /// <returns>The corresponding affine point on the isomorphic Weierstrass curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The Montgomery curve parameters are invalid.
+        /// - The curve's cofactor is not divisible by 4.
+        /// </exception>
+        /// <remarks>
+        /// The mapping is an isomorphism that preserves the group law.
+        /// The point at infinity maps to <br/> itself, and the rational 2-torsion point (0,0) 
+        /// maps to (A/3B, 0) on the Weierstrass curve.
+        /// </remarks>
         public static ECPoint ToWeierstrassPoint(this MontgomeryCurve curve, ECPoint point)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -371,11 +428,20 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Converts a twisted Edwards curve to an isomorphic Weierstrass curve.
+        /// Transforms a twisted Edwards curve to an isomorphic Weierstrass curve representation.
         /// </summary>
-        /// <param name="curve">Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
-        /// <returns>Weierstrass curve y^2 = x^3 + ax + b.</returns>
-        /// <exception cref="ArgumentException">Invalid twisted Edwards parameters or cofactor not divisible by 4.</exception>
+        /// <param name="curve">The source twisted Edwards curve in the form a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
+        /// <returns>A Weierstrass curve in short form y^2 = x^3 + a*x + b isomorphic to the source curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The twisted Edwards curve parameters are invalid (a = d, causing singularities).
+        /// - The curve's cofactor is not divisible by 4.
+        /// </exception>
+        /// <remarks>
+        /// This transformation composes the twisted Edwards, Montgomery, Weierstrass conversions, <br/>
+        /// producing standard Weierstrass parameters suitable for generic elliptic curve operations. <br/>
+        /// The intermediate Montgomery parameters are derived as A = 2(a+d)/(a-d) and B = 4/(a-d).
+        /// </remarks>
         public static EllipticCurve ToWeierstrassCurve(this TwistedEdwardsCurve curve)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
@@ -418,12 +484,21 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Maps a twisted Edwards point to its corresponding Weierstrass point.
+        /// Maps an affine point from a twisted Edwards curve to its isomorphic image on the corresponding Weierstrass curve.
         /// </summary>
-        /// <param name="curve">Source twisted Edwards curve.</param>
-        /// <param name="point">Affine point on the twisted Edwards curve.</param>
-        /// <returns>Mapped point on the Weierstrass curve.</returns>
-        /// <exception cref="ArgumentException">Invalid twisted Edwards parameters or point maps to exceptional case.</exception>
+        /// <param name="curve">Source twisted Edwards curve containing the point.</param>
+        /// <param name="point">Affine point on the twisted Edwards curve to be mapped.</param>
+        /// <returns>The corresponding affine point on the isomorphic Weierstrass curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The twisted Edwards curve parameters are invalid (a = d).
+        /// - The point maps to an exceptional case requiring division by zero.
+        /// </exception>
+        /// <remarks>
+        /// The mapping is obtained by composing the twisted Edwards, Montgomery, Weierstrass point mappings. <br/>
+        /// Points with x = 0 or y = 1 on the twisted Edwards curve represent exceptional cases that cannot be <br/>
+        /// mapped and will trigger an exception. The point at infinity maps to itself.
+        /// </remarks>
         public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
@@ -472,11 +547,20 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Converts a Montgomery curve to an isomorphic twisted Edwards curve.
+        /// Transforms a Montgomery curve to an isomorphic twisted Edwards curve representation.
         /// </summary>
-        /// <param name="curve">Montgomery curve B*y^2 = x^3 + A*x^2 + x over Fp.</param>
-        /// <returns>Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2.</returns>
-        /// <exception cref="ArgumentException">Invalid Montgomery curve parameters or cofactor not divisible by 4.</exception>
+        /// <param name="curve">The source Montgomery curve in the form B*y^2 = x^3 + A*x^2 + x over Fp.</param>
+        /// <returns>A twisted Edwards curve in the form a*x^2 + y^2 = 1 + d*x^2*y^2 isomorphic to the source curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The Montgomery curve parameters are invalid.
+        /// - The curve's cofactor is not divisible by 4.
+        /// </exception>
+        /// <remarks>
+        /// The transformation uses the standard conversion:
+        /// a = (A + 2)/B and d = (A - 2)/B. <br/>This mapping is particularly useful for
+        /// converting Montgomery curves like Curve25519<br/> to twisted Edwards form (Ed25519).
+        /// </remarks>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this MontgomeryCurve curve)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -497,12 +581,21 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Maps a Montgomery point to its corresponding twisted Edwards point.
+        /// Maps an affine point from a Montgomery curve to its isomorphic image on the corresponding twisted Edwards curve.
         /// </summary>
-        /// <param name="curve">Source Montgomery curve.</param>
-        /// <param name="point">Affine point on the Montgomery curve.</param>
-        /// <returns>Mapped point on the twisted Edwards curve.</returns>
-        /// <exception cref="ArgumentException">Invalid Montgomery curve parameters or point maps to exceptional case.</exception>
+        /// <param name="curve">Source Montgomery curve containing the point.</param>
+        /// <param name="point">Affine point on the Montgomery curve to be mapped.</param>
+        /// <returns>The corresponding affine point on the isomorphic twisted Edwards curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The Montgomery curve parameters are invalid.
+        /// - The point maps to an exceptional case requiring division by zero.
+        /// </exception>
+        /// <remarks>
+        /// The mapping follows the standard Montgomery to twisted Edwards conversion. <br/>
+        /// The point at infinity maps to itself, and points with x = 0 or y = -1 represent <br/>
+        /// exceptional cases that cannot be mapped.
+        /// </remarks>
         public static ECPoint ToTwistedEdwardsPoint(this MontgomeryCurve curve, ECPoint point)
         {
             if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
@@ -532,11 +625,20 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Converts a twisted Edwards curve to an isomorphic Montgomery curve.
+        /// Transforms a twisted Edwards curve to an isomorphic Montgomery curve representation.
         /// </summary>
-        /// <param name="curve">Twisted Edwards curve a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
-        /// <returns>Montgomery curve B*y^2 = x^3 + A*x^2 + x.</returns>
-        /// <exception cref="ArgumentException">Invalid twisted Edwards curve parameters or cofactor not divisible by 4.</exception>
+        /// <param name="curve">The source twisted Edwards curve in the form a*x^2 + y^2 = 1 + d*x^2*y^2 over Fp.</param>
+        /// <returns>A Montgomery curve in the form B*y^2 = x^3 + A*x^2 + x isomorphic to the source curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The twisted Edwards curve parameters are invalid (a = d, causing singularities).
+        /// - The curve's cofactor is not divisible by 4.
+        /// </exception>
+        /// <remarks>
+        /// The transformation follows the standard conversion:
+        /// A = 2(a+d)/(a-d) and B = 4/(a-d).<br/> This is the inverse of the Montgomery to twisted Edwards conversion
+        /// and is particularly <br/>useful for implementing X25519-style operations.
+        /// </remarks>
         public static MontgomeryCurve ToMontgomeryCurve(this TwistedEdwardsCurve curve)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
@@ -559,12 +661,21 @@ namespace Eduard.Security.Extensions
         }
 
         /// <summary>
-        /// Maps a twisted Edwards point to its corresponding Montgomery point.
+        /// Maps an affine point from a twisted Edwards curve to its isomorphic image on the corresponding Montgomery curve.
         /// </summary>
-        /// <param name="curve">Source twisted Edwards curve.</param>
-        /// <param name="point">Affine point on the twisted Edwards curve.</param>
-        /// <returns>Mapped point on the Montgomery curve.</returns>
-        /// <exception cref="ArgumentException">Invalid twisted Edwards curve parameters or point maps to exceptional case.</exception>
+        /// <param name="curve">Source twisted Edwards curve containing the point.</param>
+        /// <param name="point">Affine point on the twisted Edwards curve to be mapped.</param>
+        /// <returns>The corresponding affine point on the isomorphic Montgomery curve.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when:
+        /// - The twisted Edwards curve parameters are invalid (a = d).
+        /// - The point maps to an exceptional case requiring division by zero.
+        /// </exception>
+        /// <remarks>
+        /// The mapping follows the standard twisted Edwards to Montgomery conversion. <br/>
+        /// The point at infinity maps to itself, and points with x = 0 or y = 1 represent exceptional <br/>
+        /// cases that cannot be mapped and will trigger an exception.
+        /// </remarks>
         public static ECPoint ToMontgomeryPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
