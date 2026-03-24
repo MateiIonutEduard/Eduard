@@ -522,13 +522,15 @@ namespace Eduard.Security.Extensions
             BigInteger cofactor = curve.cofactor;
 
             BigInteger field = curve.field;
-            BigInteger ad = (field + curve.a - curve.d) % field;
+            BigInteger ad = BarrettReducer.SubMod(curve.a, curve.d);
 
             BigInteger ad_inv = ad.Inverse(field);
-            BigInteger B = (4 * ad_inv) % field;
+            BigInteger B = BarrettReducer.MulMod(4, ad_inv);
 
-            BigInteger A = (2 * (curve.a + curve.d)) % field;
-            A = (A * ad_inv) % field;
+            BigInteger At = BarrettReducer.AddMod(curve.a, curve.d);
+            BigInteger A = BarrettReducer.AddMod(At, At);
+
+            A = BarrettReducer.MulMod(A, ad_inv);
             return new MontgomeryCurve(A, B, field, order, cofactor);
         }
 
@@ -554,12 +556,15 @@ namespace Eduard.Security.Extensions
             BigInteger Yp = point.GetAffineY();
 
             BigInteger p = curve.field;
-            BigInteger u = (Yp + 1) % p;
+            BigInteger u = BarrettReducer.AddMod(Yp, 1);
 
-            BigInteger v = (((p + 1 - Yp) % p) * Xp).Inverse(p);
-            BigInteger X = (u * (((Xp * v) % p) % p)) % p;
+            BigInteger B1 = BarrettReducer.SubMod(1, Yp);
+            BigInteger v = BarrettReducer.MulMod(B1, Xp).Inverse(p);
 
-            BigInteger Y = (u * v) % p;
+            BigInteger B2 = BarrettReducer.MulMod(Xp, v);
+            BigInteger X = BarrettReducer.MulMod(u, B2);
+
+            BigInteger Y = BarrettReducer.MulMod(u, v);
             return new ECPoint(X, Y);
         }
     }
