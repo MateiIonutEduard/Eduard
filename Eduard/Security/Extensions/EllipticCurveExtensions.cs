@@ -308,21 +308,27 @@ namespace Eduard.Security.Extensions
             BigInteger cofactor = curve.cofactor;
 
             BigInteger p = curve.field;
-            BigInteger A1 = (curve.A * curve.A) % p;
+            BigInteger A1 = BarrettReducer.MulMod(curve.A, curve.A);
 
-            BigInteger A2 = (curve.A * A1) % p;
-            BigInteger A3 = (p + 3 - A1) % p;
+            BigInteger A2 = BarrettReducer.MulMod(curve.A, A1);
+            BigInteger A3 = BarrettReducer.SubMod(3, A1);
 
-            BigInteger A4 = (p + ((2 * A2) % p) - ((9 * curve.A) % p)) % p;
-            BigInteger B1 = (curve.B * curve.B) % p;
+            BigInteger At = BarrettReducer.AddMod(A2, A2);
+            BigInteger At2 = BarrettReducer.MulMod(9, curve.A);
 
-            BigInteger B2 = (B1 * curve.B) % p;
-            BigInteger B3 = ((27 * B2) % p).Inverse(p);
+            BigInteger A4 = BarrettReducer.SubMod(At, At2);
+            BigInteger B1 = BarrettReducer.MulMod(curve.B, curve.B);
 
-            BigInteger B4 = (9 * curve.B) % p;
-            BigInteger a = (((A3 * B3) % p) * B4) % p;
+            BigInteger B2 = BarrettReducer.MulMod(B1, curve.B);
+            BigInteger Bt = BarrettReducer.MulMod(27, B2);
 
-            BigInteger b = (A4 * B3) % p;
+            BigInteger B3 = Bt.Inverse(p);
+            BigInteger B4 = BarrettReducer.MulMod(9, curve.B);
+
+            BigInteger B5 = BarrettReducer.MulMod(A3, B3);
+            BigInteger a = BarrettReducer.MulMod(B5, B4);
+
+            BigInteger b = BarrettReducer.MulMod(A4, B3);
             return new EllipticCurve(a, b, p, order, cofactor);
         }
 
@@ -342,19 +348,21 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
 
             BigInteger p = curve.field;
-            BigInteger B3_inv = ((3 * curve.B) % p).Inverse(p);
+            BigInteger Bt = BarrettReducer.MulMod(3, curve.B);
+            BigInteger B3_inv = Bt.Inverse(p);
 
             BigInteger Xp = point.GetAffineX();
             BigInteger Yp = point.GetAffineY();
 
-            BigInteger AB3 = (curve.A * B3_inv) % p;
-            BigInteger B_inv = (3 * B3_inv) % p;
+            BigInteger AB3 = BarrettReducer.MulMod(curve.A, B3_inv);
+            BigInteger B_inv = BarrettReducer.MulMod(3, B3_inv);
 
             /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
             if (Xp == 0 && Yp == 0) return new ECPoint(AB3, 0);
-            BigInteger X = (((Xp * B_inv) % p) + AB3) % p;
-            
-            BigInteger Y = (Yp * B_inv) % p;
+            BigInteger Xt = BarrettReducer.MulMod(Xp, B_inv);
+            BigInteger X = BarrettReducer.AddMod(Xt, AB3);
+
+            BigInteger Y = BarrettReducer.MulMod(Yp, B_inv);
             return new ECPoint(X, Y);
         }
 
