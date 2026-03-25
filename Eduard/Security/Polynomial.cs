@@ -187,7 +187,6 @@ namespace Eduard.Security
         private static Polynomial Multiply(Polynomial left, Polynomial right)
         {
             int min = Math.Min(left.degree, right.degree);
-            BigInteger field = BarrettReducer.GetModulus();
 
 #if !USE_BENCHMARKING
             int FFT_POLY_MULT_THRESHOLD = (int)Threshold.POLY_FFT_MULT_THRESHOLD;
@@ -197,7 +196,7 @@ namespace Eduard.Security
             if (min >= FFT_POLY_MULT_THRESHOLD)
             {
                 int deg = left.degree + right.degree;
-                BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs, field);
+                BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs);
 
                 while (deg > 0 && coeffs[deg] == 0)
                     deg--;
@@ -222,8 +221,7 @@ namespace Eduard.Security
 #endif
             if (val.degree >= FFT_POLY_SQUARE_THRESHOLD)
             {
-                BigInteger field = BarrettReducer.GetModulus();
-                BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs, field);
+                BigInteger[] coeffs = FFT.FastPolySquare(val.coeffs);
                 int deg = val.degree << 1;
 
                 while (deg > 0 && coeffs[deg] == 0)
@@ -274,7 +272,6 @@ namespace Eduard.Security
 
             BigInteger[] G = new BigInteger[n + 1];
             BigInteger[] R = new BigInteger[degm + 1];
-            BigInteger field = BarrettReducer.GetModulus();
 
             for (int i = 0; i <= n; i++)
                 G[i] = x.coeffs[i];
@@ -283,10 +280,10 @@ namespace Eduard.Security
                 R[j] = 0;
             
 
-            if (!FFT.FastPolyMod(G, R, field))
+            if (!FFT.FastPolyMod(G, R))
             {
                 SetPolyMod(m);
-                FFT.FastPolyMod(G, R, field);
+                FFT.FastPolyMod(G, R);
             }
 
             int deg = degm - 1;
@@ -314,7 +311,6 @@ namespace Eduard.Security
             if (poly.degree == 0 && poly.coeffs[0] == 0)
                 throw new DivideByZeroException("Modulus polynomial cannot be zero.");
 
-            BigInteger field = BarrettReducer.GetModulus();
             int m, n = poly.degree;
 
 #if USE_BENCHMARKING
@@ -343,7 +339,7 @@ namespace Eduard.Security
                 rf[i] = (i <= m) ? h.coeffs[i] : 0;
             }
 
-            FFT.SetPolyMod(n, rf, f, field);
+            FFT.SetPolyMod(n, rf, f);
         }
 
         private void Reverse()

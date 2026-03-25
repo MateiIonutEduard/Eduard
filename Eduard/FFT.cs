@@ -34,14 +34,13 @@ namespace Eduard
         /// </summary>
         /// <param name="x">Coefficients of first polynomial.</param>
         /// <param name="y">Coefficients of second polynomial.</param>
-        /// <param name="field">The finite field modulus.</param>
         /// <returns>Product polynomial coefficients.</returns>
         /// <remarks>
         /// Transforms both polynomials to NTT domain, performs point-wise multiplication, <br/>
         /// inverse transform, and CRT reconstruction to recover exact integer coefficients <br/>
         /// modulo the target field. Automatically selects optimal transform size.
         /// </remarks>
-        public static BigInteger[] FastPolyMult(BigInteger[] x, BigInteger[] y, BigInteger field)
+        public static BigInteger[] FastPolyMult(BigInteger[] x, BigInteger[] y)
         {
             int i, j, newn, logn;
             uint inv, p, maxn;
@@ -52,6 +51,8 @@ namespace Eduard
 
             int degx = x.Length - 1;
             int degy = y.Length - 1;
+
+            BigInteger field = BarrettReducer.GetModulus();
             degree = degx + degy;
 
             while (degree + 1 > newn)
@@ -126,20 +127,21 @@ namespace Eduard
         /// Squares a polynomial using NTT for improved performance.
         /// </summary>
         /// <param name="x">Coefficients of input polynomial.</param>
-        /// <param name="field">The finite field modulus.</param>
         /// <returns>Squared polynomial coefficients.</returns>
         /// <remarks>
         /// Optimized version of polynomial multiplication for squaring operations. <br/>
         /// Requires only one forward transform of the input polynomial, reducing <br/>
         /// computational cost by approximately 30% compared to generic multiplication.
         /// </remarks>
-        public static BigInteger[] FastPolySquare(BigInteger[] x, BigInteger field)
+        public static BigInteger[] FastPolySquare(BigInteger[] x)
         {
             int i, j, newn, logn;
             uint inv, p, maxn;
             int pc, degree;
 
             int degx = x.Length - 1;
+            BigInteger field = BarrettReducer.GetModulus();
+
             degree = degx << 1;
             newn = 1; logn = 0;
 
@@ -204,14 +206,13 @@ namespace Eduard
         /// </summary>
         /// <param name="G">Dividend polynomial coefficients (modified in-place).</param>
         /// <param name="R">Output remainder polynomial coefficients.</param>
-        /// <param name="field">The finite field modulus.</param>
         /// <returns>true if reduction was performed, false if modulus is zero.</returns>
         /// <remarks>
         /// Implements fast polynomial modulus using precomputed reciprocals. <br/>
         /// Operates in-place on G to minimize memory allocations. Used internally <br/>
         /// by Polynomial.Reduce() for large-degree moduli.
         /// </remarks>
-        public static bool FastPolyMod(BigInteger[] G, BigInteger[] R, BigInteger field)
+        public static bool FastPolyMod(BigInteger[] G, BigInteger[] R)
         {
             int i, j, newn, logn;
             uint p, inv, maxn;
@@ -224,6 +225,7 @@ namespace Eduard
                 return false;
 
             int degG = G.Length - 1;
+            BigInteger field = BarrettReducer.GetModulus();
             pc = count;
 
             newn = 1;
@@ -306,7 +308,7 @@ namespace Eduard
                     MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
-            Modxn(newn >> 1, degG, G, field);
+            Modxn(newn >> 1, degG, G);
 
             for (j = 0; j < degn; j++)
             {
@@ -333,13 +335,12 @@ namespace Eduard
         /// <param name="degn">Degree of the modulus polynomial.</param>
         /// <param name="rf">Reciprocal polynomial coefficients.</param>
         /// <param name="f">Modulus polynomial coefficients.</param>
-        /// <param name="field">The finite field modulus.</param>
         /// <remarks>
         /// Computes and stores the NTT of both the modulus and its reciprocal <br/>
         /// for efficient repeated modular reductions. Called automatically when <br/>
         /// a new modulus polynomial is encountered in reduction operations.
         /// </remarks>
-        public static void SetPolyMod(int degn, BigInteger[] rf, BigInteger[] f, BigInteger field)
+        public static void SetPolyMod(int degn, BigInteger[] rf, BigInteger[] f)
         {
             int i, j, pc, newn;
             int logn, deg;
@@ -349,6 +350,7 @@ namespace Eduard
 
             deg = 2 * degn;
             newn = 1; logn = 0;
+            BigInteger field = BarrettReducer.GetModulus();
 
             while (deg > newn)
             {
@@ -368,7 +370,7 @@ namespace Eduard
             for (i = 0; i <= degn; i++)
                 F[i] = f[i];
 
-            Modxn(newn >> 1, degn, F, field);
+            Modxn(newn >> 1, degn, F);
 
             for (i = 0; i < pc; i++)
             {
@@ -388,12 +390,11 @@ namespace Eduard
             }
         }
 
-        static void Modxn(int degn, int deg, BigInteger[] x, BigInteger field)
+        static void Modxn(int degn, int deg, BigInteger[] x)
         {
             for (int i = 0; degn + i <= deg; i++)
             {
-                x[i] += x[degn + i];
-                if (x[i] >= field) x[i] -= field;
+                x[i] = BarrettReducer.AddMod(x[i], x[degn + i]);
                 x[degn + i] = 0;
             }
         }
