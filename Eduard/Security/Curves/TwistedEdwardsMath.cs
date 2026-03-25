@@ -250,7 +250,7 @@ namespace Eduard.Security.Curves
             if (ty == 0) return ECPoint.POINT_INFINITY;
 
             BigInteger Axy = BarrettReducer.MulMod(tx, ty);
-            BigInteger txy = Axy.Inverse(p);
+            BigInteger txy = BarrettReducer.InvMod(Axy);
 
             BigInteger x = BarrettReducer.AddMod(A1, A2);
             BigInteger t = BarrettReducer.MulMod(x, txy);
@@ -300,7 +300,9 @@ namespace Eduard.Security.Curves
 
             BigInteger A10 = BarrettReducer.SubMod(A8, A9);
             if (A10 == 0) return ECPoint.POINT_INFINITY;
-            BigInteger A11 = BarrettReducer.MulMod(A6, A10).Inverse(p);
+
+            BigInteger A11t = BarrettReducer.MulMod(A6, A10);
+            BigInteger A11 = BarrettReducer.InvMod(A11t);
 
             BigInteger B2 = BarrettReducer.MulMod(A5, A10);
             BigInteger x = BarrettReducer.MulMod(B2, A11);
@@ -335,7 +337,9 @@ namespace Eduard.Security.Curves
 
             BigInteger A5 = BarrettReducer.SubMod(2, A4);
             if (A5 == 0) return ECPoint.POINT_INFINITY;
-            BigInteger A6 = BarrettReducer.MulMod(A4, A5).Inverse(p);
+
+            BigInteger A6t = BarrettReducer.MulMod(A4, A5);
+            BigInteger A6 = BarrettReducer.InvMod(A6t);
 
             BigInteger B3 = BarrettReducer.MulMod(A1, A5);
             BigInteger x = BarrettReducer.MulMod(B3, A6);

@@ -65,10 +65,10 @@ namespace Eduard.Security.Curves
             basePoint = ECPoint.POINT_INFINITY;
             cofactor = args[4];
 
-            BInv = B.Inverse(field);
             BarrettReducer.SetModulus(field);
+            BInv = BarrettReducer.InvMod(B);
 
-            BigInteger t = new BigInteger(4).Inverse(field);
+            BigInteger t = BarrettReducer.InvMod(4);
             BigInteger At = BarrettReducer.AddMod(A, 2);
             A24 = BarrettReducer.MulMod(At, t);
 

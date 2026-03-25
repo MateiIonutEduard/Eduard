@@ -58,7 +58,7 @@ namespace Eduard.Security.Curves
                 yDiff = BarrettReducer.SubMod(right.y, left.y);
                 if (xDiff == 0) return ECPoint.POINT_INFINITY;
 
-                inv = xDiff.Inverse(curve.field);
+                inv = BarrettReducer.InvMod(xDiff);
                 lambda = BarrettReducer.MulMod(inv, yDiff);
             }
             else
@@ -76,7 +76,7 @@ namespace Eduard.Security.Curves
                 yDiff = BarrettReducer.AddMod(yDiff, yDiff);
                 if (yDiff == 0) return ECPoint.POINT_INFINITY;
 
-                inv = yDiff.Inverse(curve.field);
+                inv = BarrettReducer.InvMod(yDiff);
                 lambda = BarrettReducer.MulMod(xDiff, inv);
             }
 

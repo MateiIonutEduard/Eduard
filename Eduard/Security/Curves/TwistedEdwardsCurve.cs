@@ -98,8 +98,11 @@ namespace Eduard.Security.Curves
             basePoint = ECPoint.POINT_INFINITY;
             cofactor = args[4];
 
-            BigInteger t = (field + a - d) % field;
-            t = (t * ((a * d) % field)) % field;
+            BarrettReducer.SetModulus(field);
+            BigInteger t1 = BarrettReducer.SubMod(a, d);
+
+            BigInteger t2 = BarrettReducer.MulMod(a, d);
+            BigInteger t = BarrettReducer.MulMod(t1, t2);
 
             if((cofactor & 0x3) != 0 || t == 0)
                 throw new InvalidOperationException(
@@ -109,7 +112,6 @@ namespace Eduard.Security.Curves
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
 
-            BarrettReducer.SetModulus(field);
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
 
@@ -122,7 +124,7 @@ namespace Eduard.Security.Curves
                 aroot = Sqrt(field - a, true);
                 BigInteger ta = BarrettReducer.MulMod(aroot, aroot);
 
-                BigInteger ma = ta.Inverse(field);
+                BigInteger ma = BarrettReducer.InvMod(ta);
                 BigInteger kt1 = BarrettReducer.MulMod(d, ma);
 
                 kt = BarrettReducer.AddMod(kt1, kt1);
@@ -181,7 +183,7 @@ namespace Eduard.Security.Curves
             BigInteger A3 = BarrettReducer.SubMod(1, A1);
             BigInteger A4 = BarrettReducer.SubMod(a, A2);
 
-            BigInteger A4i = A4.Inverse(field);
+            BigInteger A4i = BarrettReducer.InvMod(A4);
             BigInteger X2 = BarrettReducer.MulMod(A3, A4i);
             return X2;
         }
