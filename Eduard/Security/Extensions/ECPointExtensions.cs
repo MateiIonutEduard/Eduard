@@ -27,9 +27,7 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint3w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger p = curve.field;
-            BigInteger inv_Z = point.z.Inverse(p);
-
+            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
             BigInteger iZ2 = BarrettReducer.MulMod(inv_Z, inv_Z);
             BigInteger iZ3 = BarrettReducer.MulMod(iZ2, inv_Z);
 
@@ -53,9 +51,7 @@ namespace Eduard.Security.Extensions
             if(point == ECPoint4.POINT_INFINITY || point.z == 0)
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger p = curve.field;
-            BigInteger inv_Z = point.z.Inverse(p);
-
+            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
             BigInteger X = BarrettReducer.MulMod(point.x, inv_Z);
             BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
 
@@ -78,12 +74,10 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint3.POINT_INFINITY || point.z == 0)
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger p = curve.field;
-            BigInteger inv_Z = point.z.Inverse(p);
-
+            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
             BigInteger X = BarrettReducer.MulMod(point.x, inv_Z);
-            BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
 
+            BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
             if(X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
         }
@@ -259,9 +253,8 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint5w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger p = curve.field;
             BigInteger Z5 = BarrettReducer.MulMod(point.z2, point.z3);
-            BigInteger iZ5 = Z5.Inverse(p);
+            BigInteger iZ5 = BarrettReducer.InvMod(Z5);
 
             BigInteger iZ2 = BarrettReducer.MulMod(iZ5, point.z3);
             BigInteger iZ3 = BarrettReducer.MulMod(iZ5, point.z2);
@@ -307,9 +300,7 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint4w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger p = curve.field;
-            BigInteger inv_Z = point.z.Inverse(p);
-
+            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
             BigInteger iZ2 = BarrettReducer.MulMod(inv_Z, inv_Z);
             BigInteger iZ3 = BarrettReducer.MulMod(iZ2, inv_Z);
 
