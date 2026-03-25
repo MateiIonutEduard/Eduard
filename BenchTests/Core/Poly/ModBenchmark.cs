@@ -24,9 +24,8 @@ namespace BenchmarkTests.Core.Poly
         {
             rand = CoreCC.RandomNumberGenerator.Create();
             field = BigInteger.GenProbablePrime(rand, bitSize, 50);
-            Polynomial.SetField(field);
 
-            BarrettReducer.SetModulus(field);
+            Polynomial.SetField(field);
             mod = new Polynomial(degree);
 
             for (int i = 0; i <= degree; i++)

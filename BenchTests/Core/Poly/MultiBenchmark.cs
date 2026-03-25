@@ -26,8 +26,6 @@ namespace BenchmarkTests.Core.Poly
             field = BigInteger.GenProbablePrime(rand, bitSize, 50);
 
             Polynomial.SetField(field);
-            BarrettReducer.SetModulus(field);
-
             left = new Polynomial(degree);
             right = new Polynomial(degree);
             int i;
