@@ -440,9 +440,8 @@ namespace Eduard.Security
 
             if(right.degree == 0)
             {
-                BigInteger field = BarrettReducer.GetModulus();
-                BigInteger vn = right.coeffs[right.degree].Inverse(field);
-                List<BigInteger> words = new List<BigInteger>();
+                BigInteger vn = BarrettReducer.InvMod(right.coeffs[right.degree]);
+                List <BigInteger> words = new List<BigInteger>();
 
                 for (int i = 0; i <= left.degree; i++)
                     words.Add(BarrettReducer.MulMod(left.coeffs[i], vn));
@@ -461,9 +460,7 @@ namespace Eduard.Security
             int m = left.degree;
             int n = right.degree;
 
-            BigInteger field = BarrettReducer.GetModulus();
-            BigInteger inv = right.coeffs[right.degree].Inverse(field);
-
+            BigInteger inv = BarrettReducer.InvMod(right.coeffs[right.degree]);
             quo = new Polynomial(m - n);
             rem = new Polynomial(left);
             
@@ -620,8 +617,8 @@ namespace Eduard.Security
                 b = new Polynomial(r);
             }
 
-            BigInteger field = BarrettReducer.GetModulus();
-            BigInteger inv = a.coeffs[a.degree].Inverse(field);
+            BigInteger coeff = a.coeffs[a.degree];
+            BigInteger inv = BarrettReducer.InvMod(coeff);
 
             a *= inv;
             return a;
@@ -676,13 +673,11 @@ namespace Eduard.Security
         public static int Solve(Polynomial poly, ref List<BigInteger> roots)
         {
             BigInteger field = BarrettReducer.GetModulus();
-
-            if (poly.degree > 2)
-                return 0;
+            if (poly.degree > 2) return 0;
 
             if(poly.degree == 1)
             {
-                BigInteger inv = poly.coeffs[1].Inverse(field);
+                BigInteger inv = BarrettReducer.InvMod(poly.coeffs[1]);
                 BigInteger b = field - poly.coeffs[0];
                 BigInteger root = BarrettReducer.MulMod(b, inv);
 
@@ -850,7 +845,9 @@ namespace Eduard.Security
         {
             int k = 0;
             BigInteger field = BarrettReducer.GetModulus();
-            Polynomial result = new Polynomial(poly.GetCoeff(0).Inverse(field));
+            BigInteger lastCoeff = BarrettReducer.InvMod(poly.GetCoeff(0));
+
+            Polynomial result = new Polynomial(lastCoeff);
             while ((1 << k) < degn) k++;
 
             for (int i = 1; i <= k; i++)
