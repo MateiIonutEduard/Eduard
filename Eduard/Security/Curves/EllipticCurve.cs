@@ -31,9 +31,7 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order.
         /// </summary>
         public BigInteger cofactor;
-
         private ECPoint basePoint;
-        private static bool enableSpeedup;
 
         /// <summary>
         /// Initializes a random Weierstrass curve with a prime field of specified bit length.
@@ -45,8 +43,7 @@ namespace Eduard.Security.Curves
             BarrettReducer.SetModulus(field);
 
             a = SecureRandom.Range(1, field - 1);
-            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
-            ModSqrtUtil.InitParams(field);
+            ModSqrtUtil.InitParams();
 
             BigInteger temp = BarrettReducer.MulMod(a, a);
             temp = BarrettReducer.MulMod(temp, a);
@@ -103,8 +100,7 @@ namespace Eduard.Security.Curves
                 throw new InvalidOperationException(
                     "Invalid curve: singular Weierstrass form.");
 
-            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
-            ModSqrtUtil.InitParams(field);
+            ModSqrtUtil.InitParams();
         }
 
         /// <summary>
@@ -175,7 +171,7 @@ namespace Eduard.Security.Curves
 
                 if (BigInteger.Jacobi(t, field) == 1)
                 {
-                    ys = Sqrt(t, true);
+                    ys = ModSqrtUtil.Sqrt(t, true);
                     break;
                 }
 
@@ -231,7 +227,7 @@ namespace Eduard.Security.Curves
                 if (BigInteger.Jacobi(temp, field) == 1)
                 {
                     done = true;
-                    y = Sqrt(temp);
+                    y = ModSqrtUtil.Sqrt(temp);
 
                     BigInteger eval = BarrettReducer.MulMod(y, y);
                     if (temp != eval) done = false;
@@ -290,25 +286,6 @@ namespace Eduard.Security.Curves
                             + " subgroup on Weierstrass curve.");
                 }
             }
-        }
-
-        /// <summary>
-        /// Computes modular square root using optimal algorithm.
-        /// </summary>
-        /// <param name="val">Value to find root for.</param>
-        /// <param name="forceOutput">If true, forces root computation.</param>
-        /// <returns>Square root r with r^2 = val (mod p).</returns>
-        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
-        {
-            /* compute the modular square root using the optimized Rotaru-Iftene method */
-            if (enableSpeedup)
-                return OptimizedRotaruIftene.Sqrt(val);
-            
-            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
-            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
-
-            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
-            return ModSqrtUtil.TonelliShanks(val, field);
         }
     }
 }

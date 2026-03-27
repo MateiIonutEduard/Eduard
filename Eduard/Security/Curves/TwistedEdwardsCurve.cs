@@ -39,9 +39,7 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order, for twisted Edwards curves.
         /// </summary>
         public BigInteger cofactor;
-
         private ECPoint basePoint;
-        private static bool enableSpeedup;
 
         /// <summary>
         /// If true, operations are performed on the quadratic twist for optimization.
@@ -109,16 +107,14 @@ namespace Eduard.Security.Curves
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
 
-            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
-            ModSqrtUtil.InitParams(field);
-
+            ModSqrtUtil.InitParams();
             computeOnTwist = false;
             kt = aroot = 0;
 
             /* see Hisil et al. (2008) "Twisted Edwards curves revisited." pp. 326-343 */
             if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
             {
-                aroot = Sqrt(field - a, true);
+                aroot = ModSqrtUtil.Sqrt(field - a, true);
                 BigInteger ta = BarrettReducer.MulMod(aroot, aroot);
 
                 BigInteger ma = BarrettReducer.InvMod(ta);
@@ -212,7 +208,7 @@ namespace Eduard.Security.Curves
                 if (BigInteger.Jacobi(temp, field) == 1)
                 {
                     done = true;
-                    x = Sqrt(temp);
+                    x = ModSqrtUtil.Sqrt(temp);
 
                     BigInteger eval = BarrettReducer.MulMod(x, x);
                     if (temp != eval) done = false;
@@ -271,25 +267,6 @@ namespace Eduard.Security.Curves
                             + "twisted Edwards curve.");
                 }
             }
-        }
-
-        /// <summary>
-        /// Computes modular square root using optimal algorithm.
-        /// </summary>
-        /// <param name="val">Value to find root for.</param>
-        /// <param name="forceOutput">If true, forces root computation.</param>
-        /// <returns>Square root r with r^2 = val (mod p).</returns>
-        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
-        {
-            /* compute the modular square root using the optimized Rotaru-Iftene method */
-            if (enableSpeedup)
-                return OptimizedRotaruIftene.Sqrt(val);
-
-            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
-            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
-
-            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
-            return ModSqrtUtil.TonelliShanks(val, field);
         }
     }
 }

@@ -130,7 +130,7 @@ namespace Eduard.Security.Extensions
                 Array.Copy(bytes, data, bytes.Length - 1);
 
                 BigInteger Yp = new BigInteger(data);
-                BigInteger Xp = curve.Sqrt(curve.Evaluate(Yp), true);
+                BigInteger Xp = ModSqrtUtil.Sqrt(curve.Evaluate(Yp), true);
 
                 int sign = bytes[bytes.Length - 1] - 2;
                 int x_sign = Xp.TestBit(0) ? 1 : 0;
@@ -188,7 +188,7 @@ namespace Eduard.Security.Extensions
                 Array.Copy(bytes, data, bytes.Length - 1);
 
                 BigInteger Xp = new BigInteger(data);
-                BigInteger Yp = curve.Sqrt(curve.Evaluate(Xp), true);
+                BigInteger Yp = ModSqrtUtil.Sqrt(curve.Evaluate(Xp), true);
 
                 int sign = bytes[bytes.Length - 1] - 2;
                 int y_sign = Yp.TestBit(0) ? 1 : 0;

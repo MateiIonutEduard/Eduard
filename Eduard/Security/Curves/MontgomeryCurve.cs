@@ -67,10 +67,9 @@ namespace Eduard.Security.Curves
 
             BigInteger t = BarrettReducer.InvMod(4);
             BigInteger At = BarrettReducer.AddMod(A, 2);
-            A24 = BarrettReducer.MulMod(At, t);
 
-            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
-            ModSqrtUtil.InitParams(field);
+            A24 = BarrettReducer.MulMod(At, t);
+            ModSqrtUtil.InitParams();
         }
 
         /// <summary>
@@ -114,25 +113,6 @@ namespace Eduard.Security.Curves
 
             res = BarrettReducer.AddMod(res, tx);
             return BarrettReducer.MulMod(res, BInv);
-        }
-
-        /// <summary>
-        /// Computes modular square root using optimal algorithm.
-        /// </summary>
-        /// <param name="val">Value to find root for.</param>
-        /// <param name="forceOutput">If true, forces root computation.</param>
-        /// <returns>Square root r with r^2 = val (mod p).</returns>
-        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
-        {
-            /* compute the modular square root using the optimized Rotaru-Iftene method */
-            if (enableSpeedup)
-                return OptimizedRotaruIftene.Sqrt(val);
-
-            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
-            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
-
-            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
-            return ModSqrtUtil.TonelliShanks(val, field);
         }
     }
 }

@@ -28,7 +28,6 @@ namespace Eduard.Security
         /// </remarks>
         public int degree;
         public BigInteger[] coeffs;
-        private static bool enableSpeedup;
 
         /// <summary>
         /// Initializes a new polynomial instance with all coefficients set to zero.
@@ -97,8 +96,7 @@ namespace Eduard.Security
         public static void SetField(BigInteger field)
         {
             BarrettReducer.SetModulus(field);
-            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
-            ModSqrtUtil.InitParams(field);
+            ModSqrtUtil.InitParams();
         }
 
         internal static BigInteger Reduce(BigInteger val)
@@ -694,7 +692,7 @@ namespace Eduard.Security
                 int jSymbol = BigInteger.Jacobi(delta, field);
                 if (jSymbol == -1) return -1;
 
-                BigInteger root = Sqrt(delta, true);
+                BigInteger root = ModSqrtUtil.Sqrt(delta, true);
                 BigInteger val = BarrettReducer.MulMod(2, poly.coeffs[2]);
 
                 BigInteger inv = val.Inverse(field);
@@ -711,20 +709,6 @@ namespace Eduard.Security
             }
 
             return -1;
-        }
-
-        internal static BigInteger Sqrt(BigInteger val, bool forceOutput = false)
-        {
-            /* compute the modular square root using the optimized Rotaru-Iftene method */
-            if (enableSpeedup)
-                return OptimizedRotaruIftene.Sqrt(val);
-
-            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
-            BigInteger field = BarrettReducer.GetModulus();
-            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
-
-            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
-            return ModSqrtUtil.TonelliShanks(val, field);
         }
 
         /// <summary>

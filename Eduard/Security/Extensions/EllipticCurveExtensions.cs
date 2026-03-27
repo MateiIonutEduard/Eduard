@@ -87,7 +87,7 @@ namespace Eduard.Security.Extensions
             if (!found)
                 throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = curve.Sqrt(s, true);
+            BigInteger root = ModSqrtUtil.Sqrt(s, true);
             BigInteger t = BarrettReducer.InvMod(root);
             BigInteger A4 = BarrettReducer.MulMod(A1, t);
 
@@ -160,7 +160,7 @@ namespace Eduard.Security.Extensions
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
             if (!found) throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = curve.Sqrt(s, true);
+            BigInteger root = ModSqrtUtil.Sqrt(s, true);
             BigInteger ts = BarrettReducer.InvMod(root);
 
             BigInteger Xp = point.GetAffineX();
@@ -237,7 +237,7 @@ namespace Eduard.Security.Extensions
             if (!found)
                 throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = curve.Sqrt(s, true);
+            BigInteger root = ModSqrtUtil.Sqrt(s, true);
             BigInteger t = BarrettReducer.InvMod(root);
             BigInteger A4 = BarrettReducer.MulMod(A1, t);
 
@@ -320,7 +320,7 @@ namespace Eduard.Security.Extensions
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
             if (!found) throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = curve.Sqrt(s, true);
+            BigInteger root = ModSqrtUtil.Sqrt(s, true);
             BigInteger ts = BarrettReducer.InvMod(root);
 
             BigInteger Xp = point.GetAffineX();
@@ -611,7 +611,7 @@ namespace Eduard.Security.Extensions
             if (point.GetAffineX() == 0 || point.GetAffineY() == curve.field - 1)
                 throw new ArgumentException("Exceptional point has no twisted Edwards equivalent.");
 
-            BigInteger B_root = curve.Sqrt(curve.B);
+            BigInteger B_root = ModSqrtUtil.Sqrt(curve.B);
             BigInteger Xp = point.GetAffineX();
             BigInteger Yp = point.GetAffineY();
 
