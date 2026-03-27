@@ -1,11 +1,10 @@
 ﻿#if RELEASE && USE_BENCHMARKING
-using BenchmarkDotNet.Attributes;
 using Eduard;
 using System;
 using Eduard.Security;
 using Eduard.Security.Curves;
 using Eduard.Security.Primitives;
-using CoreCC = System.Security.Cryptography;
+using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
 namespace BenchTests.Core.Curves
@@ -15,7 +14,6 @@ namespace BenchTests.Core.Curves
         [Params(WeiCurveType.NistP192, WeiCurveType.NistP224, WeiCurveType.NistP256, WeiCurveType.NistP384, WeiCurveType.NistP521, WeiCurveType.Wei25519, WeiCurveType.Wei448)]
         public WeiCurveType curveType;
 
-        private CoreCC.RandomNumberGenerator rand;
         private EllipticCurve curve;
         private ECPoint G;
 
@@ -23,9 +21,7 @@ namespace BenchTests.Core.Curves
         public void Setup()
         {
             curve = EllipticCurve.GetNamedCurve(curveType);
-            rand = CoreCC.RandomNumberGenerator.Create();
-
-            BigInteger k = BigInteger.Next(rand, 1, curve.order - 1);
+            BigInteger k = SecureRandom.Range(1, curve.order - 1);
             G = curve.GetBasePoint();
         }
 
