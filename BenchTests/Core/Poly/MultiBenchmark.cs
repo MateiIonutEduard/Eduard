@@ -2,7 +2,6 @@
 using Eduard;
 using Eduard.Security;
 using BenchmarkDotNet.Attributes;
-using CoreCC = System.Security.Cryptography;
 #pragma warning disable
 
 namespace BenchmarkTests.Core.Poly
@@ -15,26 +14,24 @@ namespace BenchmarkTests.Core.Poly
         [Params(16, 32, 64, 96, 128, 256, 512)]
         public int degree;
 
-        private CoreCC.RandomNumberGenerator rand;
         private Polynomial left, right;
         private BigInteger field;
 
         [GlobalSetup]
         public void Setup()
         {
-            rand = CoreCC.RandomNumberGenerator.Create();
-            field = BigInteger.GenProbablePrime(rand, bitSize, 50);
-
+            field = SecureRandom.GenProbablePrime(bitSize);
             Polynomial.SetField(field);
+
             left = new Polynomial(degree);
             right = new Polynomial(degree);
             int i;
 
             for (i = 0; i <= degree - 3; i++)
-                left.coeffs[i] = BigInteger.Next(rand, 1, field - 1);
+                left.coeffs[i] = SecureRandom.Range(1, field - 1);
 
             for (i = 0; i <= degree - 1; i++)
-                right.coeffs[i] = BigInteger.Next(rand, 1, field - 1);
+                right.coeffs[i] = SecureRandom.Range(1, field - 1);
         }
 
         [Benchmark]
