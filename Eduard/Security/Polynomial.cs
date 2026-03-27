@@ -28,8 +28,6 @@ namespace Eduard.Security
         /// </remarks>
         public int degree;
         public BigInteger[] coeffs;
-
-        internal static RandomNumberGenerator rand = RandomNumberGenerator.Create();
         private static bool enableSpeedup;
 
         /// <summary>
@@ -649,7 +647,7 @@ namespace Eduard.Security
             while(true)
             {
                 BigInteger field = BarrettReducer.GetModulus();
-                BigInteger a = BigInteger.Next(rand, 1, field - 1);
+                BigInteger a = SecureRandom.Range(1, field - 1);
                 Polynomial g = new Polynomial(1, a);
                 
                 Polynomial h = Pow(g, (field - 1) / 2, this);

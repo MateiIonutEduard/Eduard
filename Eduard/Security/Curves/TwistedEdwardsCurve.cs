@@ -1,7 +1,6 @@
 ﻿using System;
 using Eduard;
 using System.Diagnostics;
-using MSCrypto = System.Security.Cryptography;
 using Eduard.Security.Primitives;
 
 namespace Eduard.Security.Curves
@@ -40,9 +39,8 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order, for twisted Edwards curves.
         /// </summary>
         public BigInteger cofactor;
-        private ECPoint basePoint;
 
-        private static MSCrypto.RandomNumberGenerator rand;
+        private ECPoint basePoint;
         private static bool enableSpeedup;
 
         /// <summary>
@@ -90,7 +88,6 @@ namespace Eduard.Security.Curves
             if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
-            rand = MSCrypto.RandomNumberGenerator.Create();
             a = args[0];
             d = args[1];
 
@@ -206,7 +203,7 @@ namespace Eduard.Security.Curves
 
             do
             {
-                y = BigInteger.Next(rand, 0, field - 1);
+                y = SecureRandom.Range(0, field - 1);
                 temp = Evaluate(y);
 
                 if (temp < 2)

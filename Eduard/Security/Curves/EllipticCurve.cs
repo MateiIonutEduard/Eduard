@@ -1,7 +1,6 @@
 ﻿using System;
 using Eduard;
 using System.Diagnostics;
-using MSCrypto = System.Security.Cryptography;
 using Eduard.Security.Primitives;
 
 namespace Eduard.Security.Curves
@@ -32,9 +31,8 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order.
         /// </summary>
         public BigInteger cofactor;
-        private ECPoint basePoint;
 
-        private static MSCrypto.RandomNumberGenerator rand;
+        private ECPoint basePoint;
         private static bool enableSpeedup;
 
         /// <summary>
@@ -43,11 +41,10 @@ namespace Eduard.Security.Curves
         /// <param name="bits">Bit length of the prime field.</param>
         public EllipticCurve(int bits)
         {
-            rand = MSCrypto.RandomNumberGenerator.Create();
-            field = BigInteger.GenProbablePrime(rand, bits, 50);
+            field = SecureRandom.GenProbablePrime(bits, 50);
             BarrettReducer.SetModulus(field);
 
-            a = BigInteger.Next(rand, 1, field - 1);
+            a = SecureRandom.Range(1, field - 1);
             enableSpeedup = ModSqrtUtil.CanSpeedup(field);
             ModSqrtUtil.InitParams(field);
 
@@ -55,7 +52,7 @@ namespace Eduard.Security.Curves
             temp = BarrettReducer.MulMod(temp, a);
             temp = BarrettReducer.MulMod(4, temp);
 
-            b = BigInteger.Next(rand, 1, field - 1);
+            b = SecureRandom.Range(1, field - 1);
             BigInteger B2 = BarrettReducer.MulMod(b, b);
 
             BigInteger val = BarrettReducer.MulMod(27, B2);
@@ -66,7 +63,7 @@ namespace Eduard.Security.Curves
 
             while (check == 0)
             {
-                b = BigInteger.Next(rand, 1, field - 1);
+                b = SecureRandom.Range(1, field - 1);
                 B2 = BarrettReducer.MulMod(b, b);
 
                 val = BarrettReducer.MulMod(27, B2);
@@ -85,7 +82,6 @@ namespace Eduard.Security.Curves
             if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
-            rand = MSCrypto.RandomNumberGenerator.Create();
             a = args[0];
             b = args[1];
 
@@ -226,7 +222,7 @@ namespace Eduard.Security.Curves
 
             do
             {
-                x = BigInteger.Next(rand, 0, field - 1);
+                x = SecureRandom.Range(0, field - 1);
                 temp = Evaluate(x);
 
                 if (temp < 2)

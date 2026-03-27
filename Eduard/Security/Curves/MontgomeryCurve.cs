@@ -2,7 +2,6 @@
 using Eduard;
 using System.Diagnostics;
 using Eduard.Security.Primitives;
-using MSCrypto = System.Security.Cryptography;
 
 namespace Eduard.Security.Curves
 {
@@ -33,9 +32,8 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order, for Montgomery curves.
         /// </summary>
         public BigInteger cofactor;
-        private ECPoint basePoint;
 
-        private static MSCrypto.RandomNumberGenerator rand;
+        private ECPoint basePoint;
         private static bool enableSpeedup;
 
         /// <summary>
@@ -55,7 +53,6 @@ namespace Eduard.Security.Curves
             if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
-            rand = MSCrypto.RandomNumberGenerator.Create();
             A = args[0];
             B = args[1];
 

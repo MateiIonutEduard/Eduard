@@ -6,16 +6,13 @@ namespace Eduard.Security
 {
     internal class ModSqrtUtil
     {
-        static RandomNumberGenerator rand;
-
         public static void InitParams(BigInteger field, int windowSize = 4)
         {
             /* check whether optimizations can be used */
             bool enableSpeedup = CanSpeedup(field);
-            rand = RandomNumberGenerator.Create();
 
             if (enableSpeedup)
-                OptimizedRotaruIftene.Precompute(rand, field, windowSize);
+                OptimizedRotaruIftene.Precompute(field, windowSize);
         }
 
         public static bool CanSpeedup(BigInteger field)
@@ -52,7 +49,7 @@ namespace Eduard.Security
 
             do
             {
-                n = BigInteger.Next(rand, 2, field - 1);
+                n = SecureRandom.Range(2, field - 1);
                 JSymbol = BigInteger.Jacobi(n, field);
             } while (JSymbol != -1);
 
@@ -60,9 +57,11 @@ namespace Eduard.Security
             y = z;
             r = e;
 
-            x = BigInteger.Pow(val, (q - 1) / 2, field);
-            b = (((val * x) % field) * x) % field;
-            x = (val * x) % field;
+            x = BigInteger.Pow(val, (q - 1) >> 1, field);
+            BigInteger sx = BarrettReducer.MulMod(x, x);
+
+            b = BarrettReducer.MulMod(val, sx);
+            x = BarrettReducer.MulMod(val, x);
 
             while (true)
             {
@@ -80,10 +79,10 @@ namespace Eduard.Security
                 /* has failed */
                 if (s == r) return 0;
                 t = BigInteger.Pow(y, (long)Math.Pow(2, r - s - 1), field);
-                y = (t * t) % field;
+                y = BarrettReducer.MulMod(t, t);
 
-                x = (x * t) % field;
-                b = (b * y) % field;
+                x = BarrettReducer.MulMod(x, t);
+                b = BarrettReducer.MulMod(b, y);
                 r = s;
             }
         }
@@ -94,12 +93,13 @@ namespace Eduard.Security
                 return BigInteger.Pow(val, (field + 1) >> 2, field);
 
             BigInteger root = 0;
-            BigInteger delta = ((field - 4) * (field - val)) % field;
+            BigInteger delta = BarrettReducer.MulMod(field - 4, field - val);
 
             BigInteger temp = 1;
             BigInteger qnr = 0;
 
             BigInteger buf = 0;
+            BigInteger test = 0;
             int uid = 1;
 
             switch (uid)
@@ -107,35 +107,36 @@ namespace Eduard.Security
                 case 1:
 
                     root = TonelliShanks(val, field);
+                    test = BarrettReducer.MulMod(root, root);
 
-                    if (val == (root * root) % field)
+                    if (val == test)
                         return root;
 
                     goto case 2;
 
                 case 2:
 
-                    qnr = BigInteger.Next(rand, 2, field - 1);
+                    qnr = SecureRandom.Range(2, field - 1);
 
                     if (BigInteger.Jacobi(qnr, field) != -1)
                         goto case 2;
 
-                    BigInteger square = (qnr * qnr) % field;
-                    delta = (delta * square) % field;
+                    BigInteger square = BarrettReducer.MulMod(qnr, qnr);
+                    delta = BarrettReducer.MulMod(delta, square);
+                    temp = BarrettReducer.MulMod(temp, qnr);
 
-                    temp = (temp * qnr) % field;
                     buf = TonelliShanks(delta, field);
+                    test = BarrettReducer.MulMod(buf, buf);
 
-                    if (delta != (buf * buf) % field)
+                    if (delta != test)
                         goto case 2;
                     goto case 3;
 
                 case 3:
 
-                    BigInteger vtemp = (2 * temp) % field;
-                    BigInteger inv = vtemp.Inverse(field);
-
-                    root = (buf * inv) % field;
+                    BigInteger vtemp = BarrettReducer.AddMod(temp, temp);
+                    BigInteger inv = BarrettReducer.InvMod(vtemp);
+                    root = BarrettReducer.MulMod(buf, inv);
                     break;
             }
 
