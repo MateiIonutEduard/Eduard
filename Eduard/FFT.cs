@@ -412,6 +412,10 @@ namespace Eduard
 
             while(m12 > 0)
             {
+                if (kmask == 0 && m12 > 0)
+                    throw new ArithmeticException(
+                        "Insufficient prime candidates" 
+                        + " for FFT initialization.");
                 do
                 {
                     kmask--;
