@@ -1,8 +1,7 @@
 ﻿#if RELEASE && USE_BENCHMARKING
-using BenchmarkDotNet.Attributes;
 using System;
 using Eduard;
-using CoreCC = System.Security.Cryptography;
+using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
 namespace BenchmarkTests.Core.BigInt
@@ -12,18 +11,15 @@ namespace BenchmarkTests.Core.BigInt
         [Params(128, 160, 192, 256, 320, 384, 512, 768, 1024)]
         public int bits;
 
-        private CoreCC.RandomNumberGenerator rand;
         private BigInteger val, square, field;
         private BigInteger constant;
 
         [GlobalSetup]
         public void Setup()
         {
-            rand = CoreCC.RandomNumberGenerator.Create();
-            field = BigInteger.GenProbablePrime(rand, bits, 50);
-
+            field = SecureRandom.GenProbablePrime(bits);
             constant = BigInteger.BarrettConstant(field);
-            val = BigInteger.Next(rand, 1, field - 1);
+            val = SecureRandom.Range(1, field - 1);
             square = val * val;
         }
 
