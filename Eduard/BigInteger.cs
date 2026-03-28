@@ -192,13 +192,22 @@ namespace Eduard
             if (radix == Radix.Decimal && digits[0] == '-')
                 StartPos = 1;
 
-            for(int k = StartPos; k < digits.Length; k++)
+            for (int k = StartPos; k < digits.Length; k++)
             {
-                if (radix == Radix.Decimal && (digits[k] < '0' || digits[k] > '9'))
-                    return false;
+                char c = digits[k];
 
-                if (radix == Radix.HexaDecimal && (digits[k] < '0' || digits[k] > 'F' || (digits[k] > '9' && digits[k] < 'A')))
-                    return false;
+                if (radix == Radix.Decimal)
+                {
+                    if (c < '0' || c > '9')
+                        return false;
+                }
+                else if (radix == Radix.HexaDecimal)
+                {
+                    if (!((c >= '0' && c <= '9') ||
+                          (c >= 'A' && c <= 'F') ||
+                          (c >= 'a' && c <= 'f')))
+                        return false;
+                }
             }
 
             return true;
