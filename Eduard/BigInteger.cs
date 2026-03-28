@@ -1106,7 +1106,7 @@ namespace Eduard
             // Miller-Rabin primality test
             for(int j = 1; j <= trials; j++)
             {
-                BigInteger witness = Next(rand, 2, val - 2);
+                BigInteger witness = RandomInRange(rand, 2, val - 2);
                 BigInteger test = Pow(witness, field, val);
 
                 if(test != 1 && test != val - 1)
@@ -1829,22 +1829,45 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Generates a random <seealso cref="BigInteger"/> in a specified range.
+        /// Generates a cryptographically secure random integer within the specified inclusive range.
         /// </summary>
-        /// <param name="rand"></param>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
-        /// <returns></returns>
-        public static BigInteger Next(RandomNumberGenerator rand, BigInteger min, BigInteger max)
+        /// <param name="rand">Cryptographically strong random number generator.</param>
+        /// <param name="min">Inclusive lower bound.</param>
+        /// <param name="max">Inclusive upper bound.</param>
+        /// <returns>A random integer in the range [<paramref name="min"/>, <paramref name="max"/>].</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="rand"/> is null.</exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="min"/> > <paramref name="max"/>, or the range exceeds the maximum representable value.
+        /// </exception>
+        /// <remarks>
+        /// Uses rejection sampling to ensure uniform distribution without modulo bias.
+        /// </remarks>
+        public static BigInteger RandomInRange(RandomNumberGenerator rand, BigInteger min, BigInteger max)
         {
+            if (rand == null)
+                throw new ArgumentNullException(nameof(rand), 
+                    "Random number generator cannot be null.");
+
+            if (min > max)
+                throw new ArgumentException(
+                    $"Minimum value {min} cannot " + 
+                    $"be greater than maximum value {max}.", 
+                    nameof(min));
+
             BigInteger modulus = max - min + 1;
+
+            if (modulus <= 0)
+                throw new ArgumentException(
+                    $"The range [{min}, {max}] " + 
+                    "is too large to represent.", 
+                    nameof(max));
+
             BigInteger result = new BigInteger(modulus.GetBits(), rand);
 
             if (result >= modulus)
                 result -= modulus;
 
             result += min;
-
             return result;
         }
 

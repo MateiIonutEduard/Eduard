@@ -40,7 +40,7 @@ namespace Eduard
         {
             lock (locker)
             {
-                BigInteger val = BigInteger.Next(rand, min, max);
+                BigInteger val = BigInteger.RandomInRange(rand, min, max);
                 return val;
             }
         }
