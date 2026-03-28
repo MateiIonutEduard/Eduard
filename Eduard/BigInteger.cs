@@ -192,13 +192,22 @@ namespace Eduard
             if (radix == Radix.Decimal && digits[0] == '-')
                 StartPos = 1;
 
-            for(int k = StartPos; k < digits.Length; k++)
+            for (int k = StartPos; k < digits.Length; k++)
             {
-                if (radix == Radix.Decimal && (digits[k] < '0' || digits[k] > '9'))
-                    return false;
+                char c = digits[k];
 
-                if (radix == Radix.HexaDecimal && (digits[k] < '0' || digits[k] > 'F' || (digits[k] > '9' && digits[k] < 'A')))
-                    return false;
+                if (radix == Radix.Decimal)
+                {
+                    if (c < '0' || c > '9')
+                        return false;
+                }
+                else if (radix == Radix.HexaDecimal)
+                {
+                    if (!((c >= '0' && c <= '9') ||
+                          (c >= 'A' && c <= 'F') ||
+                          (c >= 'a' && c <= 'f')))
+                        return false;
+                }
             }
 
             return true;
@@ -1106,7 +1115,7 @@ namespace Eduard
             // Miller-Rabin primality test
             for(int j = 1; j <= trials; j++)
             {
-                BigInteger witness = Next(rand, 2, val - 2);
+                BigInteger witness = RandomInRange(rand, 2, val - 2);
                 BigInteger test = Pow(witness, field, val);
 
                 if(test != 1 && test != val - 1)
@@ -1750,19 +1759,32 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the number of bits for this <seealso cref="BigInteger"/> value.
+        /// Returns the bit length of the current <see cref="BigInteger"/> value.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// The number of bits required to represent the absolute value in binary. <br/>
+        /// Returns 0 for zero. For negative numbers, returns the bit length of the <br/>
+        /// positive magnitude.
+        /// </returns>
+        /// <remarks>
+        /// Equivalent to floor(log2(|value|)) + 1. Used for key size determination, algorithm <br/>
+        /// threshold selection, and memory allocation in cryptographic operations.
+        /// </remarks>
         public int GetBits()
         {
+            if (IsZero)
+                return 0;
+
             int bits = 0;
             BigInteger self = Abs();
 
             bits = 32 * self.data.Used;
+            uint word = self.data[self.data.Used - 1];
+
             uint mask = 0x80000000;
             int remBits = 0;
 
-            while((self.data[self.data.Used - 1] & mask) == 0 && mask != 0)
+            while((word & mask) == 0 && mask != 0)
             {
                 ++remBits;
                 mask >>= 1;
@@ -1772,49 +1794,114 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a boolean value that is the value specified by the selected bit.
+        /// Tests whether the bit at the specified position is set.
         /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
+        /// <param name="n">The zero-based index of the bit to test.</param>
+        /// <returns><c>true</c> if the bit at position <paramref name="n"/> is set; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="n"/> is negative or exceeds the internal buffer capacity.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Bit indexing follows little-endian convention where bit 0 corresponds to the least significant bit. <br/>
+        /// For negative numbers, this method tests bits in the two's complement representation.
+        /// </para>
+        /// <para>
+        /// Cryptographic considerations:
+        /// <list type="bullet">
+        /// <item><description>Bit testing is constant-time relative to the bit position</description></item>
+        /// <item><description>Useful for implementing constant-time scalar multiplication and exponentiation algorithms</description></item>
+        /// <item><description>Essential for side-channel resistant implementations of binary exponentiation and Montgomery ladder</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// Performance: O(1) with respect to the bit position. The method performs a <br/>
+        /// single array lookup and bitwise operation regardless of the integer's size.
+        /// </para>
+        /// </remarks>
         public bool TestBit(int n)
         {
             if (n < 0)
-                throw new ArgumentException("The argument is not a valid value.");
+                throw new ArgumentOutOfRangeException(nameof(n), 
+                    "Bit index cannot be negative.");
 
-            int j = n >> 5;
-            int k = n & 0x1F;
+            int wordIndex = n >> 5;
+            int bitOffset = n & 0x1F;
 
-            uint mask = (uint)1 << k;
-            return (data[j] & mask) != 0;
+            if (wordIndex > data.Used)
+                throw new ArgumentOutOfRangeException(nameof(n),
+                    $"Bit index {n} exceeds the integer's " + 
+                    $"capacity of {data.Used * 32} bits.");
+
+            uint mask = (uint)1 << bitOffset;
+            return (data[wordIndex] & mask) != 0;
         }
 
         /// <summary>
-        /// Generates a random <seealso cref="BigInteger"/> in a specified range.
+        /// Generates a cryptographically secure random integer within the specified inclusive range.
         /// </summary>
-        /// <param name="rand"></param>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
-        /// <returns></returns>
-        public static BigInteger Next(RandomNumberGenerator rand, BigInteger min, BigInteger max)
+        /// <param name="rand">Cryptographically strong random number generator.</param>
+        /// <param name="min">Inclusive lower bound.</param>
+        /// <param name="max">Inclusive upper bound.</param>
+        /// <returns>A random integer in the range [<paramref name="min"/>, <paramref name="max"/>].</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="rand"/> is null.</exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="min"/> > <paramref name="max"/>, or the range exceeds the maximum representable value.
+        /// </exception>
+        /// <remarks>
+        /// Uses rejection sampling to ensure uniform distribution without modulo bias.
+        /// </remarks>
+        public static BigInteger RandomInRange(RandomNumberGenerator rand, BigInteger min, BigInteger max)
         {
+            if (rand == null)
+                throw new ArgumentNullException(nameof(rand), 
+                    "Random number generator cannot be null.");
+
+            if (min > max)
+                throw new ArgumentException(
+                    $"Minimum value {min} cannot " + 
+                    $"be greater than maximum value {max}.", 
+                    nameof(min));
+
             BigInteger modulus = max - min + 1;
+
+            if (modulus <= 0)
+                throw new ArgumentException(
+                    $"The range [{min}, {max}] " + 
+                    "is too large to represent.", 
+                    nameof(max));
+
             BigInteger result = new BigInteger(modulus.GetBits(), rand);
 
             if (result >= modulus)
                 result -= modulus;
 
             result += min;
-
             return result;
         }
 
         /// <summary>
-        /// Returns the hash code for this instance.
+        /// Returns a hash code for the current <see cref="BigInteger"/> value.
         /// </summary>
-        /// <returns>A 32-bit signed integer has code.</returns>
+        /// <returns>A 32-bit signed integer hash code.</returns>
+        /// <remarks>
+        /// The hash code incorporates both the magnitude and sign of the value, <br/>
+        /// ensuring that equal values produce the same hash code.
+        /// </remarks>
         public override int GetHashCode()
         {
-            return data.GetHashCode();
+            unchecked
+            {
+                int hash = 17;
+
+                for (int i = 0; i < data.Used; i++)
+                    hash = (hash * 31) + (int)data[i];
+
+                if (IsNegative)
+                    hash = ~hash;
+
+                return hash;
+            }
         }
 
         /// <summary>

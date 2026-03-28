@@ -2,7 +2,6 @@
 using Eduard;
 using System;
 using BenchmarkDotNet.Attributes;
-using CoreCC = System.Security.Cryptography;
 #pragma warning disable
 
 namespace BenchmarkTests.Core.BigInt
@@ -12,18 +11,15 @@ namespace BenchmarkTests.Core.BigInt
         [Params(8, 16, 32, 64, 128, 256, 512, 1024, 1152, 1280, 1408, 1536, 1664, 1792, 1920, 2048)]
         public int words;
 
-        private CoreCC.RandomNumberGenerator rand;
         private BigInteger left, field;
         private BigInteger right;
 
         [GlobalSetup]
         public void Setup()
         {
-            rand = CoreCC.RandomNumberGenerator.Create();
             int bits = words << 5;
-
-            left = new BigInteger(bits, rand);
-            right = new BigInteger(bits, rand);
+            left = SecureRandom.GenRandom(bits);
+            right = SecureRandom.GenRandom(bits);
         }
 
         [Benchmark]

@@ -5,7 +5,7 @@ namespace Eduard
     /// <summary>
     /// Provides optimized modular reduction using Barrett's algorithm with modulus caching.
     /// </summary>
-    public class BarrettReducer
+    internal class BarrettReducer
     {
         /// <summary>
         /// Cached modulus from last operation.
@@ -28,7 +28,7 @@ namespace Eduard
         /// Initializes the reducer with a new modulus and pre-computes its Barrett constant.
         /// </summary>
         /// <param name="p">The modulus for subsequent reductions.</param>
-        public static void SetModulus(BigInteger p)
+        internal static void SetModulus(BigInteger p)
         {
             k = BigInteger.BarrettConstant(p);
             isEnabled = true; field = p;
@@ -44,7 +44,7 @@ namespace Eduard
         /// <remarks>
         /// Call <see cref="SetModulus"/> or <see cref="Reduce"/> before invoking this method.
         /// </remarks>
-        public static BigInteger GetModulus()
+        internal static BigInteger GetModulus()
         {
             if (!isEnabled)
                 throw new InvalidOperationException(
@@ -117,7 +117,7 @@ namespace Eduard
         /// Performs multiplication followed by Barrett reduction. More efficient than<br/>
         /// using <see cref="Reduce"/> separately when both<br/> operands are already reduced.
         /// </remarks>
-        internal static BigInteger MulMod(BigInteger left, BigInteger right)
+        internal static BigInteger MultMod(BigInteger left, BigInteger right)
         {
             if (!isEnabled)
                 throw new InvalidOperationException(
@@ -129,15 +129,38 @@ namespace Eduard
         }
 
         /// <summary>
+        /// Computes the modular inverse of a value modulo the cached field.
+        /// </summary>
+        /// <param name="val">The value to invert.</param>
+        /// <returns>The modular inverse x such that (val * x) % field = 1.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
+        /// <exception cref="ArithmeticException">Thrown when val has no modular inverse (non-coprime).</exception>
+        /// <remarks>
+        /// Uses the extended Euclidean algorithm. For prime fields, every non-zero value <br/>
+        /// has a unique inverse. Essential for projective to affine conversion, point <br/>
+        /// addition slopes, and polynomial arithmetic.
+        /// </remarks>
+        internal static BigInteger InvMod(BigInteger val)
+        {
+            if (!isEnabled)
+                throw new InvalidOperationException(
+                    "Barrett reducer modulus not initialized."
+                    + " Call SetModulus() or Reduce() first.");
+
+            BigInteger result = val.Inverse(field);
+            return result;
+        }
+
+        /// <summary>
         /// Reduces a value modulo the specified field using Barrett's algorithm. <br/>
         /// Automatically caches the modulus on first use for subsequent calls.
         /// </summary>
         /// <param name="val">The value to reduce.</param>
         /// <param name="p">The modulus. Cached after first invocation.</param>
         /// <returns>val mod p in range [0, p-1].</returns>
-        public static BigInteger Reduce(BigInteger val, BigInteger p)
+        internal static BigInteger Reduce(BigInteger val, BigInteger p)
         {
-            if (!isEnabled) SetModulus(p);
+            if (!isEnabled || (isEnabled && field != p)) SetModulus(p);
             return BigInteger.BarrettReduction(val, p, k);
         }
     }

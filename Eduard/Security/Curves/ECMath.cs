@@ -49,51 +49,34 @@ namespace Eduard.Security.Curves
 
             if (left != right)
             {
-                xDiff = right.x - left.x;
-                yDiff = right.y - left.y;
-
-                if (xDiff < 0)
-                    xDiff += curve.field;
-
-                if (yDiff < 0)
-                    yDiff += curve.field;
-
+                xDiff = BarrettReducer.SubMod(right.x, left.x);
+                yDiff = BarrettReducer.SubMod(right.y, left.y);
                 if (xDiff == 0) return ECPoint.POINT_INFINITY;
-                inv = xDiff.Inverse(curve.field);
-                lambda = (inv * yDiff) % curve.field;
+
+                inv = BarrettReducer.InvMod(xDiff);
+                lambda = BarrettReducer.MultMod(inv, yDiff);
             }
             else
             {
-                xDiff = (3 * left.x) % curve.field;
-                xDiff = (xDiff * left.x) % curve.field;
+                xDiff = BarrettReducer.MultMod(3, left.x);
+                xDiff = BarrettReducer.MultMod(xDiff, left.x);
 
-                xDiff = (xDiff + curve.a) % curve.field;
-                yDiff = (2 * left.y) % curve.field;
-
+                xDiff = BarrettReducer.AddMod(xDiff, curve.a);
+                yDiff = BarrettReducer.AddMod(left.y, left.y);
                 if (yDiff == 0) return ECPoint.POINT_INFINITY;
-                inv = yDiff.Inverse(curve.field);
-                lambda = (xDiff * inv) % curve.field;
+
+                inv = BarrettReducer.InvMod(yDiff);
+                lambda = BarrettReducer.MultMod(xDiff, inv);
             }
 
-            BigInteger temp = (lambda * lambda) % curve.field;
-            BigInteger delta = (left.x + right.x) % curve.field;
+            BigInteger temp = BarrettReducer.MultMod(lambda, lambda);
+            BigInteger delta = BarrettReducer.AddMod(left.x, right.x);
 
-            BigInteger x = temp - delta;
+            BigInteger x = BarrettReducer.SubMod(temp, delta);
+            BigInteger y = BarrettReducer.SubMod(left.x, x);
 
-            if (x < 0)
-                x += curve.field;
-
-            BigInteger y = left.x - x;
-
-            if (y < 0)
-                y += curve.field;
-
-            y = (y * lambda) % curve.field;
-            y -= left.y;
-
-            if (y < 0)
-                y += curve.field;
-
+            y = BarrettReducer.MultMod(y, lambda);
+            y = BarrettReducer.SubMod(y, left.y);
             return new ECPoint(x, y);
         }
 

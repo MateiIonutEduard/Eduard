@@ -78,7 +78,7 @@ namespace Eduard.Security
         /// </summary>
         public static Field operator *(Field left, Field right)
         {
-            BigInteger val = BarrettReducer.MulMod(left.fn, right.fn);
+            BigInteger val = BarrettReducer.MultMod(left.fn, right.fn);
             return val;
         }
 
@@ -89,7 +89,7 @@ namespace Eduard.Security
         {
             BigInteger field = BarrettReducer.GetModulus();
             BigInteger inv = right.fn.Inverse(field);
-            BigInteger val = BarrettReducer.MulMod(inv, left.fn);
+            BigInteger val = BarrettReducer.MultMod(inv, left.fn);
             return val;
         }
 
@@ -98,7 +98,7 @@ namespace Eduard.Security
         /// </summary>
         public static Field Sqrt(Field val)
         {
-            BigInteger root = Polynomial.Sqrt((BigInteger)val, true);
+            BigInteger root = ModSqrtUtil.Sqrt((BigInteger)val, true);
             return root;
         }
 

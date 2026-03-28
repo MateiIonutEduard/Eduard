@@ -1,7 +1,6 @@
 ﻿using System;
 using Eduard;
 using System.Diagnostics;
-using MSCrypto = System.Security.Cryptography;
 using Eduard.Security.Primitives;
 
 namespace Eduard.Security.Curves
@@ -41,9 +40,6 @@ namespace Eduard.Security.Curves
         /// </summary>
         public BigInteger cofactor;
         private ECPoint basePoint;
-
-        private static MSCrypto.RandomNumberGenerator rand;
-        private static bool enableSpeedup;
 
         /// <summary>
         /// If true, operations are performed on the quadratic twist for optimization.
@@ -90,7 +86,6 @@ namespace Eduard.Security.Curves
             if (args.Length > 5)
                 throw new ArgumentException("Too many arguments.");
 
-            rand = MSCrypto.RandomNumberGenerator.Create();
             a = args[0];
             d = args[1];
 
@@ -98,8 +93,11 @@ namespace Eduard.Security.Curves
             basePoint = ECPoint.POINT_INFINITY;
             cofactor = args[4];
 
-            BigInteger t = (field + a - d) % field;
-            t = (t * ((a * d) % field)) % field;
+            BarrettReducer.SetModulus(field);
+            BigInteger t1 = BarrettReducer.SubMod(a, d);
+
+            BigInteger t2 = BarrettReducer.MultMod(a, d);
+            BigInteger t = BarrettReducer.MultMod(t1, t2);
 
             if((cofactor & 0x3) != 0 || t == 0)
                 throw new InvalidOperationException(
@@ -109,19 +107,20 @@ namespace Eduard.Security.Curves
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
 
-            enableSpeedup = ModSqrtUtil.CanSpeedup(field);
-            ModSqrtUtil.InitParams(field);
-
+            ModSqrtUtil.InitParams();
             computeOnTwist = false;
             kt = aroot = 0;
 
             /* see Hisil et al. (2008) "Twisted Edwards curves revisited." pp. 326-343 */
             if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
             {
-                aroot = Sqrt(field - a, true);
-                BigInteger ma = ((aroot * aroot) % field).Inverse(field);
+                aroot = ModSqrtUtil.Sqrt(field - a, true);
+                BigInteger ta = BarrettReducer.MultMod(aroot, aroot);
 
-                kt = (2 * d * ma) % field;
+                BigInteger ma = BarrettReducer.InvMod(ta);
+                BigInteger kt1 = BarrettReducer.MultMod(d, ma);
+
+                kt = BarrettReducer.AddMod(kt1, kt1);
                 computeOnTwist = true;
             }
         }
@@ -168,16 +167,17 @@ namespace Eduard.Security.Curves
         /// Evaluates the right-hand side of the twisted Edwards equation at a given y-coordinate.
         /// </summary>
         /// <param name="y">The y-coordinate to evaluate.</param>
-        /// <returns>The value x^2 = (1 - y^2) / (a - d·y^2) mod p.</returns>
+        /// <returns>The value x^2 = (1 - y^2) / (a - d*(y^2)) mod p.</returns>
         public BigInteger Evaluate(BigInteger y)
         {
-            BigInteger A1 = (y * y) % field;
-            BigInteger A2 = (d * A1) % field;
+            BigInteger A1 = BarrettReducer.MultMod(y, y);
+            BigInteger A2 = BarrettReducer.MultMod(d, A1);
 
-            BigInteger A3 = (field + 1 - A1) % field;
-            BigInteger A4 = (field + a - A2) % field;
+            BigInteger A3 = BarrettReducer.SubMod(1, A1);
+            BigInteger A4 = BarrettReducer.SubMod(a, A2);
 
-            BigInteger X2 = (A3 * A4.Inverse(field)) % field;
+            BigInteger A4i = BarrettReducer.InvMod(A4);
+            BigInteger X2 = BarrettReducer.MultMod(A3, A4i);
             return X2;
         }
 
@@ -199,7 +199,7 @@ namespace Eduard.Security.Curves
 
             do
             {
-                y = BigInteger.Next(rand, 0, field - 1);
+                y = SecureRandom.Range(0, field - 1);
                 temp = Evaluate(y);
 
                 if (temp < 2)
@@ -208,15 +208,16 @@ namespace Eduard.Security.Curves
                 if (BigInteger.Jacobi(temp, field) == 1)
                 {
                     done = true;
-                    x = Sqrt(temp);
+                    x = ModSqrtUtil.Sqrt(temp);
 
-                    BigInteger eval = (x * x) % field;
+                    BigInteger eval = BarrettReducer.MultMod(x, x);
                     if (temp != eval) done = false;
 
                     if (done)
                     {
                         ECPoint tempPoint = new ECPoint(x, y);
-                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, 
+                            tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
                         done = (basePoint != ECPoint.POINT_INFINITY);
                     }
                 }
@@ -246,7 +247,7 @@ namespace Eduard.Security.Curves
             else
             {
                 BigInteger x = tempPoint.GetAffineX();
-                BigInteger eval = (x * x) % field;
+                BigInteger eval = BarrettReducer.MultMod(x, x);
 
                 if (eval != temp)
                     throw new InvalidOperationException(
@@ -254,8 +255,11 @@ namespace Eduard.Security.Curves
                         + " twisted Edwards curve.");
                 else
                 {
-                    ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                    if (testPoint != ECPoint.POINT_INFINITY) basePoint = tempPoint;
+                    ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, 
+                        tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+
+                    if (testPoint != ECPoint.POINT_INFINITY) 
+                        basePoint = tempPoint;
                     else
                         throw new InvalidOperationException(
                             "Chosen generator point yields a"
@@ -263,25 +267,6 @@ namespace Eduard.Security.Curves
                             + "twisted Edwards curve.");
                 }
             }
-        }
-
-        /// <summary>
-        /// Computes modular square root using optimal algorithm.
-        /// </summary>
-        /// <param name="val">Value to find root for.</param>
-        /// <param name="forceOutput">If true, forces root computation.</param>
-        /// <returns>Square root r with r^2 = val (mod p).</returns>
-        public BigInteger Sqrt(BigInteger val, bool forceOutput = false)
-        {
-            /* compute the modular square root using the optimized Rotaru-Iftene method */
-            if (enableSpeedup)
-                return OptimizedRotaruIftene.Sqrt(val);
-
-            /* if the correct output is required, the algorithm will solve random quadratic equations to find the real root */
-            if (forceOutput) return ModSqrtUtil.Sqrt(val, field);
-
-            /* uses the standard Tonelli-Shanks algorithm to obtain the modular square root */
-            return ModSqrtUtil.TonelliShanks(val, field);
         }
     }
 }
