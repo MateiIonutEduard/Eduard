@@ -1750,19 +1750,32 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the number of bits for this <seealso cref="BigInteger"/> value.
+        /// Returns the bit length of the current <see cref="BigInteger"/> value.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// The number of bits required to represent the absolute value in binary. <br/>
+        /// Returns 0 for zero. For negative numbers, returns the bit length of the <br/>
+        /// positive magnitude.
+        /// </returns>
+        /// <remarks>
+        /// Equivalent to floor(log2(|value|)) + 1. Used for key size determination, algorithm <br/>
+        /// threshold selection, and memory allocation in cryptographic operations.
+        /// </remarks>
         public int GetBits()
         {
+            if (IsZero)
+                return 0;
+
             int bits = 0;
             BigInteger self = Abs();
 
             bits = 32 * self.data.Used;
+            uint word = self.data[self.data.Used - 1];
+
             uint mask = 0x80000000;
             int remBits = 0;
 
-            while((self.data[self.data.Used - 1] & mask) == 0 && mask != 0)
+            while((word & mask) == 0 && mask != 0)
             {
                 ++remBits;
                 mask >>= 1;
@@ -1806,7 +1819,7 @@ namespace Eduard
             int wordIndex = n >> 5;
             int bitOffset = n & 0x1F;
 
-            if (wordIndex >= data.Used)
+            if (wordIndex > data.Used)
                 throw new ArgumentOutOfRangeException(nameof(n),
                     $"Bit index {n} exceeds the integer's " + 
                     $"capacity of {data.Used * 32} bits.");
