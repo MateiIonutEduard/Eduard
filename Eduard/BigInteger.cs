@@ -1872,12 +1872,27 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the hash code for this instance.
+        /// Returns a hash code for the current <see cref="BigInteger"/> value.
         /// </summary>
-        /// <returns>A 32-bit signed integer has code.</returns>
+        /// <returns>A 32-bit signed integer hash code.</returns>
+        /// <remarks>
+        /// The hash code incorporates both the magnitude and sign of the value, <br/>
+        /// ensuring that equal values produce the same hash code.
+        /// </remarks>
         public override int GetHashCode()
         {
-            return data.GetHashCode();
+            unchecked
+            {
+                int hash = 17;
+
+                for (int i = 0; i < data.Used; i++)
+                    hash = (hash * 31) + (int)data[i];
+
+                if (IsNegative)
+                    hash = ~hash;
+
+                return hash;
+            }
         }
 
         /// <summary>
