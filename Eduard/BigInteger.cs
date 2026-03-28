@@ -1772,20 +1772,47 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a boolean value that is the value specified by the selected bit.
+        /// Tests whether the bit at the specified position is set.
         /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
+        /// <param name="n">The zero-based index of the bit to test.</param>
+        /// <returns><c>true</c> if the bit at position <paramref name="n"/> is set; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="n"/> is negative or exceeds the internal buffer capacity.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Bit indexing follows little-endian convention where bit 0 corresponds to the least significant bit. <br/>
+        /// For negative numbers, this method tests bits in the two's complement representation.
+        /// </para>
+        /// <para>
+        /// Cryptographic considerations:
+        /// <list type="bullet">
+        /// <item><description>Bit testing is constant-time relative to the bit position</description></item>
+        /// <item><description>Useful for implementing constant-time scalar multiplication and exponentiation algorithms</description></item>
+        /// <item><description>Essential for side-channel resistant implementations of binary exponentiation and Montgomery ladder</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// Performance: O(1) with respect to the bit position. The method performs a <br/>
+        /// single array lookup and bitwise operation regardless of the integer's size.
+        /// </para>
+        /// </remarks>
         public bool TestBit(int n)
         {
             if (n < 0)
-                throw new ArgumentException("The argument is not a valid value.");
+                throw new ArgumentOutOfRangeException(nameof(n), 
+                    "Bit index cannot be negative.");
 
-            int j = n >> 5;
-            int k = n & 0x1F;
+            int wordIndex = n >> 5;
+            int bitOffset = n & 0x1F;
 
-            uint mask = (uint)1 << k;
-            return (data[j] & mask) != 0;
+            if (wordIndex >= data.Used)
+                throw new ArgumentOutOfRangeException(nameof(n),
+                    $"Bit index {n} exceeds the integer's " + 
+                    $"capacity of {data.Used * 32} bits.");
+
+            uint mask = (uint)1 << bitOffset;
+            return (data[wordIndex] & mask) != 0;
         }
 
         /// <summary>
