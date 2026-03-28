@@ -359,7 +359,7 @@ namespace Eduard.Security
                 for (int k = 0; k <= right.degree; k++)
                 {
                     if (right.GetCoeff(k) == 0) continue;
-                    result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MulMod(left.GetCoeff(j), right.GetCoeff(k)));
+                    result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MultMod(left.GetCoeff(j), right.GetCoeff(k)));
                 }
             }
 
@@ -373,7 +373,7 @@ namespace Eduard.Security
             Polynomial result = new Polynomial(degree);
 
             for (int i = 0; i <= poly.degree; i++)
-                result.coeffs[2 * i] = BarrettReducer.MulMod(poly.GetCoeff(i), poly.GetCoeff(i));
+                result.coeffs[2 * i] = BarrettReducer.MultMod(poly.GetCoeff(i), poly.GetCoeff(i));
 
             for(int j = 0; j < poly.degree; j++)
             {
@@ -381,8 +381,8 @@ namespace Eduard.Security
 
                 for(int k = j + 1; k <= poly.degree; k++)
                 {
-                    BigInteger t = BarrettReducer.MulMod(poly.GetCoeff(j), poly.GetCoeff(k));
-                    result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MulMod(2, t));
+                    BigInteger t = BarrettReducer.MultMod(poly.GetCoeff(j), poly.GetCoeff(k));
+                    result.coeffs[j + k] = BarrettReducer.AddMod(result.coeffs[j + k], BarrettReducer.MultMod(2, t));
                 }
             }
 
@@ -440,7 +440,7 @@ namespace Eduard.Security
                 List <BigInteger> words = new List<BigInteger>();
 
                 for (int i = 0; i <= left.degree; i++)
-                    words.Add(BarrettReducer.MulMod(left.coeffs[i], vn));
+                    words.Add(BarrettReducer.MultMod(left.coeffs[i], vn));
 
                 words.Reverse();
                 return new Polynomial(words.ToArray());
@@ -462,10 +462,10 @@ namespace Eduard.Security
             
             for (int k = m - n; k >= 0; k--)
             {
-                quo.coeffs[k] = BarrettReducer.MulMod(rem.coeffs[n + k], inv);
+                quo.coeffs[k] = BarrettReducer.MultMod(rem.coeffs[n + k], inv);
 
                 for(int j = n + k; j >= k; j--)
-                    rem.coeffs[j] = BarrettReducer.SubMod(rem.coeffs[j], BarrettReducer.MulMod(quo.coeffs[k], right.coeffs[j - k]));
+                    rem.coeffs[j] = BarrettReducer.SubMod(rem.coeffs[j], BarrettReducer.MultMod(quo.coeffs[k], right.coeffs[j - k]));
             }
 
             quo.Update();
@@ -493,6 +493,25 @@ namespace Eduard.Security
             Polynomial quo, rem;
             Divide(left, right, out quo, out rem);
             return rem;
+        }
+
+        /// <summary>
+        /// Multiplies two polynomials and reduces the result modulo a third polynomial over the current finite field.
+        /// </summary>
+        /// <param name="left">The first polynomial operand.</param>
+        /// <param name="right">The second polynomial operand.</param>
+        /// <param name="modulus">The modulus polynomial.</param>
+        /// <returns>The product polynomial reduced modulo the modulus.</returns>
+        /// <remarks>
+        /// Combines multiplication and reduction in a single operation.<br/>
+        /// Equivalent to (left * right) % modulus. Automatically selects between<br/>
+        /// schoolbook or FFT-based algorithms based on polynomial degrees.
+        /// </remarks>
+        public static Polynomial MultMod(Polynomial left, Polynomial right, Polynomial modulus)
+        {
+            Polynomial res = left * right;
+            res = Reduce(res, modulus);
+            return res;
         }
 
         /// <summary>
@@ -526,11 +545,11 @@ namespace Eduard.Security
 
                 Polynomial[] table = new Polynomial[store];
                 table[0] = nb % modulus;
-                Polynomial b2 = Reduce(table[0] * table[0], modulus);
+                Polynomial b2 = MultMod(table[0], table[0], modulus);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
-                    table[i] = Reduce(table[i - 1] * b2, modulus);
+                    table[i] = MultMod(table[i - 1], b2, modulus);
 
                 int bits = exponent.GetBits();
                 int ubits = 0, tbits = 0;
@@ -540,15 +559,15 @@ namespace Eduard.Security
                     int win = WindowUtil.Window(exponent, i, ref ubits, ref tbits);
 
                     for (int j = 0; j < ubits; j++)
-                        result = Reduce(result * result, modulus);
+                        result = MultMod(result, result, modulus);
 
                     if (win != 0)
-                        result = Reduce(result * table[win >> 1], modulus);
+                        result = MultMod(result, table[win >> 1], modulus);
                     i -= ubits;
                     if (tbits != 0)
                     {
                         for (int j = 0; j < tbits; j++)
-                            result = Reduce(result * result, modulus);
+                            result = MultMod(result, result, modulus);
                         i -= tbits;
                     }
                 }
@@ -633,8 +652,8 @@ namespace Eduard.Security
 
             for(int k = 1; k <= degree; k++)
             {
-                val = BarrettReducer.MulMod(val, x);
-                BigInteger test = BarrettReducer.MulMod(val, coeffs[k]);
+                val = BarrettReducer.MultMod(val, x);
+                BigInteger test = BarrettReducer.MultMod(val, coeffs[k]);
                 sum = BarrettReducer.AddMod(sum, test);
             }
 
@@ -676,7 +695,7 @@ namespace Eduard.Security
             {
                 BigInteger inv = BarrettReducer.InvMod(poly.coeffs[1]);
                 BigInteger b = field - poly.coeffs[0];
-                BigInteger root = BarrettReducer.MulMod(b, inv);
+                BigInteger root = BarrettReducer.MultMod(b, inv);
 
                 roots.Add(root);
                 return 1;
@@ -684,26 +703,26 @@ namespace Eduard.Security
             
             if(poly.degree == 2)
             {
-                BigInteger sb = BarrettReducer.MulMod(poly.coeffs[1], poly.coeffs[1]);
-                BigInteger ac4 = BarrettReducer.MulMod(field - 4, poly.coeffs[2]);
+                BigInteger sb = BarrettReducer.MultMod(poly.coeffs[1], poly.coeffs[1]);
+                BigInteger ac4 = BarrettReducer.MultMod(field - 4, poly.coeffs[2]);
 
-                ac4 = BarrettReducer.MulMod(ac4, poly.coeffs[0]);
+                ac4 = BarrettReducer.MultMod(ac4, poly.coeffs[0]);
                 BigInteger delta = BarrettReducer.AddMod(sb, ac4);
 
                 int jSymbol = BigInteger.Jacobi(delta, field);
                 if (jSymbol == -1) return -1;
 
                 BigInteger root = ModSqrtUtil.Sqrt(delta, true);
-                BigInteger val = BarrettReducer.MulMod(2, poly.coeffs[2]);
+                BigInteger val = BarrettReducer.MultMod(2, poly.coeffs[2]);
 
                 BigInteger inv = val.Inverse(field);
                 BigInteger t = BarrettReducer.AddMod(field - poly.coeffs[1], root);
 
-                t = BarrettReducer.MulMod(inv, t);
+                t = BarrettReducer.MultMod(inv, t);
                 roots.Add(t);
 
                 t = BarrettReducer.AddMod(field - poly.coeffs[1], field - root);
-                t = BarrettReducer.MulMod(inv, t);
+                t = BarrettReducer.MultMod(inv, t);
 
                 roots.Add(t);
                 return 1;
@@ -871,7 +890,7 @@ namespace Eduard.Security
             Polynomial diff = new Polynomial(poly.degree - 1);
 
             for (int k = 1; k <= poly.degree; k++)
-                diff.coeffs[k - 1] = BarrettReducer.MulMod(k, poly.coeffs[k]);
+                diff.coeffs[k - 1] = BarrettReducer.MultMod(k, poly.coeffs[k]);
 
             return diff;
         }

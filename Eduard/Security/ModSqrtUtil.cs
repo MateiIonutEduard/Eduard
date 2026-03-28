@@ -143,10 +143,10 @@ namespace Eduard.Security
             r = e;
 
             x = BigInteger.Pow(val, (q - 1) >> 1, p);
-            BigInteger sx = BarrettReducer.MulMod(x, x);
+            BigInteger sx = BarrettReducer.MultMod(x, x);
 
-            b = BarrettReducer.MulMod(val, sx);
-            x = BarrettReducer.MulMod(val, x);
+            b = BarrettReducer.MultMod(val, sx);
+            x = BarrettReducer.MultMod(val, x);
 
             while (true)
             {
@@ -164,10 +164,10 @@ namespace Eduard.Security
                 /* has failed */
                 if (s == r) return 0;
                 t = BigInteger.Pow(y, (long)Math.Pow(2, r - s - 1), p);
-                y = BarrettReducer.MulMod(t, t);
+                y = BarrettReducer.MultMod(t, t);
 
-                x = BarrettReducer.MulMod(x, t);
-                b = BarrettReducer.MulMod(b, y);
+                x = BarrettReducer.MultMod(x, t);
+                b = BarrettReducer.MultMod(b, y);
                 r = s;
             }
         }
@@ -187,7 +187,7 @@ namespace Eduard.Security
                 return BigInteger.Pow(val, (p + 1) >> 2, p);
 
             BigInteger root = 0;
-            BigInteger delta = BarrettReducer.MulMod(p - 4, p - val);
+            BigInteger delta = BarrettReducer.MultMod(p - 4, p - val);
 
             BigInteger temp = 1;
             BigInteger qnr = 0;
@@ -201,7 +201,7 @@ namespace Eduard.Security
                 case 1:
 
                     root = TonelliShanks(val);
-                    test = BarrettReducer.MulMod(root, root);
+                    test = BarrettReducer.MultMod(root, root);
 
                     if (val == test)
                         return root;
@@ -215,12 +215,12 @@ namespace Eduard.Security
                     if (BigInteger.Jacobi(qnr, p) != -1)
                         goto case 2;
 
-                    BigInteger square = BarrettReducer.MulMod(qnr, qnr);
-                    delta = BarrettReducer.MulMod(delta, square);
-                    temp = BarrettReducer.MulMod(temp, qnr);
+                    BigInteger square = BarrettReducer.MultMod(qnr, qnr);
+                    delta = BarrettReducer.MultMod(delta, square);
+                    temp = BarrettReducer.MultMod(temp, qnr);
 
                     buf = TonelliShanks(delta);
-                    test = BarrettReducer.MulMod(buf, buf);
+                    test = BarrettReducer.MultMod(buf, buf);
 
                     if (delta != test)
                         goto case 2;
@@ -230,7 +230,7 @@ namespace Eduard.Security
 
                     BigInteger vtemp = BarrettReducer.AddMod(temp, temp);
                     BigInteger inv = BarrettReducer.InvMod(vtemp);
-                    root = BarrettReducer.MulMod(buf, inv);
+                    root = BarrettReducer.MultMod(buf, inv);
                     break;
             }
 
@@ -280,7 +280,7 @@ namespace Eduard.Security
             D_modp[0] = BigInteger.Pow(d_prec, t, p);
 
             for (int i = 1; i <= s - 1; i++)
-                D_modp[i] = BarrettReducer.MulMod(D_modp[i - 1], D_modp[i - 1]);
+                D_modp[i] = BarrettReducer.MultMod(D_modp[i - 1], D_modp[i - 1]);
         }
 
         /// <summary>
@@ -303,9 +303,9 @@ namespace Eduard.Security
             int index_check, i, j;
 
             aux_A = BigInteger.Pow(2 * a_modp, (t - 1) >> 1, p);
-            BigInteger A1 = BarrettReducer.MulMod(aux_A, aux_A);
+            BigInteger A1 = BarrettReducer.MultMod(aux_A, aux_A);
 
-            BigInteger A2 = BarrettReducer.MulMod(a_modp, A1);
+            BigInteger A2 = BarrettReducer.MultMod(a_modp, A1);
             A_prec = BarrettReducer.AddMod(A2, A2);
             aux = A_prec;
 
@@ -315,7 +315,7 @@ namespace Eduard.Security
 
             for (i = 1; i <= s - 2; i++)
             {
-                aux = BarrettReducer.MulMod(aux, aux);
+                aux = BarrettReducer.MultMod(aux, aux);
                 index_check = s - 1 - i;
 
                 if ((index_check % k == 0) && (index_check / k >= 1) && (index_check / k <= q))
@@ -346,25 +346,25 @@ namespace Eduard.Security
             for (int j = step; j <= s - 2; j++)
             {
                 if (e[j])
-                    aux_ACC = BarrettReducer.MulMod(aux_ACC, D_modp[j - step]);
+                    aux_ACC = BarrettReducer.MultMod(aux_ACC, D_modp[j - step]);
             }
 
-            BigInteger At = BarrettReducer.MulMod(aux_ACC, aux_ACC);
-            ACC[0] = BarrettReducer.MulMod(A_modp[0], At);
+            BigInteger At = BarrettReducer.MultMod(aux_ACC, aux_ACC);
+            ACC[0] = BarrettReducer.MultMod(A_modp[0], At);
 
             for (int h = 1; h <= rem - 1; h++)
-                ACC[h] = BarrettReducer.MulMod(ACC[h - 1], ACC[h - 1]);
+                ACC[h] = BarrettReducer.MultMod(ACC[h - 1], ACC[h - 1]);
 
             for (int j = rem; j >= 3; j--)
             {
                 if (ACC[j - 1] == minus_one_modp)
                 {
-                    aux_ACC = BarrettReducer.MulMod(aux_ACC, D_modp[s - 1 - j]);
-                    At = BarrettReducer.MulMod(aux_ACC, aux_ACC);
-                    ACC[0] = BarrettReducer.MulMod(A_modp[0], At);
+                    aux_ACC = BarrettReducer.MultMod(aux_ACC, D_modp[s - 1 - j]);
+                    At = BarrettReducer.MultMod(aux_ACC, aux_ACC);
+                    ACC[0] = BarrettReducer.MultMod(A_modp[0], At);
 
                     for (int h = 1; h <= j - 2; h++)
-                        ACC[h] = BarrettReducer.MulMod(ACC[h - 1], ACC[h - 1]);
+                        ACC[h] = BarrettReducer.MultMod(ACC[h - 1], ACC[h - 1]);
 
                     e[s - 2] = true;
                 }
@@ -385,15 +385,15 @@ namespace Eduard.Security
                 {
                     if (!e[s - 3])
                     {
-                        aux_ACC = BarrettReducer.MulMod(aux_ACC, D_modp[s - 3]);
+                        aux_ACC = BarrettReducer.MultMod(aux_ACC, D_modp[s - 3]);
                         e[s - 3] = true;
                     }
 
                     else
                     {
-                        At = BarrettReducer.MulMod(aux_ACC, D_modp[s - 3]);
-                        BigInteger At2 = BarrettReducer.MulMod(D_modp[s - 2], D_modp[s - 1]);
-                        aux_ACC = BarrettReducer.MulMod(At, At2);
+                        At = BarrettReducer.MultMod(aux_ACC, D_modp[s - 3]);
+                        BigInteger At2 = BarrettReducer.MultMod(D_modp[s - 2], D_modp[s - 1]);
+                        aux_ACC = BarrettReducer.MultMod(At, At2);
                         e[s - 3] = false;
                     }
                 }
@@ -404,7 +404,7 @@ namespace Eduard.Security
             {
                 if (ACC[1] == one_modp)
                 {
-                    aux_ACC = BarrettReducer.MulMod(aux_ACC, D_modp[s - 3]);
+                    aux_ACC = BarrettReducer.MultMod(aux_ACC, D_modp[s - 3]);
                     e[s - 2] = true;
                 }
 
@@ -425,11 +425,11 @@ namespace Eduard.Security
             for (int j = step; j <= s - 2; j++)
             {
                 if (e[j])
-                    ACC[0] = BarrettReducer.MulMod(ACC[0], D_modp[j - k + 2]);
+                    ACC[0] = BarrettReducer.MultMod(ACC[0], D_modp[j - k + 2]);
             }
 
             for (int j = 1; j <= k - 1; j++)
-                ACC[j] = BarrettReducer.MulMod(ACC[j - 1], ACC[j - 1]);
+                ACC[j] = BarrettReducer.MultMod(ACC[j - 1], ACC[j - 1]);
         }
 
         private static void CompleteInnerLoop()
@@ -441,10 +441,10 @@ namespace Eduard.Security
             {
                 if (ACC[j - 1] == minus_one_modp)
                 {
-                    ACC[0] = BarrettReducer.MulMod(ACC[0], D_modp[s - j]);
+                    ACC[0] = BarrettReducer.MultMod(ACC[0], D_modp[s - j]);
 
                     for (h = 1; h <= j - 2; h++)
-                        ACC[h] = BarrettReducer.MulMod(ACC[h - 1], ACC[h - 1]);
+                        ACC[h] = BarrettReducer.MultMod(ACC[h - 1], ACC[h - 1]);
 
                     e[s - 2] = true;
                 }

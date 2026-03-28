@@ -237,11 +237,11 @@ namespace Eduard.Security.Curves
         public static ECPoint CompleteAdd(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
         {
             BigInteger p = curve.field;
-            BigInteger A1 = BarrettReducer.MulMod(left.x, right.y);
+            BigInteger A1 = BarrettReducer.MultMod(left.x, right.y);
 
-            BigInteger A2 = BarrettReducer.MulMod(left.y, right.x);
-            BigInteger A12 = BarrettReducer.MulMod(A1, A2);
-            BigInteger A3 = BarrettReducer.MulMod(curve.d, A12);
+            BigInteger A2 = BarrettReducer.MultMod(left.y, right.x);
+            BigInteger A12 = BarrettReducer.MultMod(A1, A2);
+            BigInteger A3 = BarrettReducer.MultMod(curve.d, A12);
 
             BigInteger tx = BarrettReducer.AddMod(A3, 1);
             if (tx == 0) return ECPoint.POINT_INFINITY;
@@ -249,21 +249,21 @@ namespace Eduard.Security.Curves
             BigInteger ty = BarrettReducer.SubMod(1, A3);
             if (ty == 0) return ECPoint.POINT_INFINITY;
 
-            BigInteger Axy = BarrettReducer.MulMod(tx, ty);
+            BigInteger Axy = BarrettReducer.MultMod(tx, ty);
             BigInteger txy = BarrettReducer.InvMod(Axy);
 
             BigInteger x = BarrettReducer.AddMod(A1, A2);
-            BigInteger t = BarrettReducer.MulMod(x, txy);
-            x = BarrettReducer.MulMod(t, ty);
+            BigInteger t = BarrettReducer.MultMod(x, txy);
+            x = BarrettReducer.MultMod(t, ty);
 
-            BigInteger A4 = BarrettReducer.MulMod(left.y, right.y);
-            BigInteger B1t = BarrettReducer.MulMod(left.x, right.x);
-            BigInteger A5 = BarrettReducer.MulMod(curve.a, B1t);
+            BigInteger A4 = BarrettReducer.MultMod(left.y, right.y);
+            BigInteger B1t = BarrettReducer.MultMod(left.x, right.x);
+            BigInteger A5 = BarrettReducer.MultMod(curve.a, B1t);
 
             BigInteger y = BarrettReducer.SubMod(A4, A5);
-            BigInteger B2t = BarrettReducer.MulMod(y, txy);
+            BigInteger B2t = BarrettReducer.MultMod(y, txy);
 
-            y = BarrettReducer.MulMod(B2t, tx);
+            y = BarrettReducer.MultMod(B2t, tx);
             return new ECPoint(x, y);
         }
 
@@ -281,13 +281,13 @@ namespace Eduard.Security.Curves
         public static ECPoint DedicatedAdd(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
         {
             BigInteger p = curve.field;
-            BigInteger A1 = BarrettReducer.MulMod(left.x, left.y);
+            BigInteger A1 = BarrettReducer.MultMod(left.x, left.y);
 
-            BigInteger A2 = BarrettReducer.MulMod(right.x, right.y);
-            BigInteger A3 = BarrettReducer.MulMod(left.y, right.y);
+            BigInteger A2 = BarrettReducer.MultMod(right.x, right.y);
+            BigInteger A3 = BarrettReducer.MultMod(left.y, right.y);
 
-            BigInteger B1 = BarrettReducer.MulMod(left.x, right.x);
-            BigInteger A4 = BarrettReducer.MulMod(curve.a, B1);
+            BigInteger B1 = BarrettReducer.MultMod(left.x, right.x);
+            BigInteger A4 = BarrettReducer.MultMod(curve.a, B1);
 
             BigInteger A5 = BarrettReducer.AddMod(A1, A2);
             BigInteger A6 = BarrettReducer.AddMod(A3, A4);
@@ -295,20 +295,20 @@ namespace Eduard.Security.Curves
             if (A6 == 0) return ECPoint.POINT_INFINITY;
             BigInteger A7 = BarrettReducer.SubMod(A1, A2);
 
-            BigInteger A8 = BarrettReducer.MulMod(left.x, right.y);
-            BigInteger A9 = BarrettReducer.MulMod(left.y, right.x);
+            BigInteger A8 = BarrettReducer.MultMod(left.x, right.y);
+            BigInteger A9 = BarrettReducer.MultMod(left.y, right.x);
 
             BigInteger A10 = BarrettReducer.SubMod(A8, A9);
             if (A10 == 0) return ECPoint.POINT_INFINITY;
 
-            BigInteger A11t = BarrettReducer.MulMod(A6, A10);
+            BigInteger A11t = BarrettReducer.MultMod(A6, A10);
             BigInteger A11 = BarrettReducer.InvMod(A11t);
 
-            BigInteger B2 = BarrettReducer.MulMod(A5, A10);
-            BigInteger x = BarrettReducer.MulMod(B2, A11);
+            BigInteger B2 = BarrettReducer.MultMod(A5, A10);
+            BigInteger x = BarrettReducer.MultMod(B2, A11);
 
-            BigInteger B3 = BarrettReducer.MulMod(A6, A7);
-            BigInteger y = BarrettReducer.MulMod(B3, A11);
+            BigInteger B3 = BarrettReducer.MultMod(A6, A7);
+            BigInteger y = BarrettReducer.MultMod(B3, A11);
             return new ECPoint(x, y);
         }
 
@@ -325,12 +325,12 @@ namespace Eduard.Security.Curves
         public static ECPoint DedicatedDoubling(TwistedEdwardsCurve curve, ECPoint point)
         {
             BigInteger p = curve.field;
-            BigInteger B1 = BarrettReducer.MulMod(point.x, point.y);
+            BigInteger B1 = BarrettReducer.MultMod(point.x, point.y);
             BigInteger A1 = BarrettReducer.AddMod(B1, B1);
 
-            BigInteger A2 = BarrettReducer.MulMod(point.y, point.y);
-            BigInteger B2 = BarrettReducer.MulMod(point.x, point.x);
-            BigInteger A3 = BarrettReducer.MulMod(curve.a, B2);
+            BigInteger A2 = BarrettReducer.MultMod(point.y, point.y);
+            BigInteger B2 = BarrettReducer.MultMod(point.x, point.x);
+            BigInteger A3 = BarrettReducer.MultMod(curve.a, B2);
 
             BigInteger A4 = BarrettReducer.AddMod(A2, A3);
             if (A4 == 0) return ECPoint.POINT_INFINITY;
@@ -338,16 +338,16 @@ namespace Eduard.Security.Curves
             BigInteger A5 = BarrettReducer.SubMod(2, A4);
             if (A5 == 0) return ECPoint.POINT_INFINITY;
 
-            BigInteger A6t = BarrettReducer.MulMod(A4, A5);
+            BigInteger A6t = BarrettReducer.MultMod(A4, A5);
             BigInteger A6 = BarrettReducer.InvMod(A6t);
 
-            BigInteger B3 = BarrettReducer.MulMod(A1, A5);
-            BigInteger x = BarrettReducer.MulMod(B3, A6);
+            BigInteger B3 = BarrettReducer.MultMod(A1, A5);
+            BigInteger x = BarrettReducer.MultMod(B3, A6);
 
             BigInteger y = BarrettReducer.SubMod(A2, A3);
-            BigInteger B4 = BarrettReducer.MulMod(y, A4);
+            BigInteger B4 = BarrettReducer.MultMod(y, A4);
 
-            y = BarrettReducer.MulMod(B4, A6);
+            y = BarrettReducer.MultMod(B4, A6);
             return new ECPoint(x, y);
         }
 

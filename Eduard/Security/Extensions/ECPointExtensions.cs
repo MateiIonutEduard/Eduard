@@ -28,11 +28,11 @@ namespace Eduard.Security.Extensions
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
-            BigInteger iZ2 = BarrettReducer.MulMod(inv_Z, inv_Z);
-            BigInteger iZ3 = BarrettReducer.MulMod(iZ2, inv_Z);
+            BigInteger iZ2 = BarrettReducer.MultMod(inv_Z, inv_Z);
+            BigInteger iZ3 = BarrettReducer.MultMod(iZ2, inv_Z);
 
-            BigInteger X = BarrettReducer.MulMod(point.x, iZ2);
-            BigInteger Y = BarrettReducer.MulMod(point.y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
             return new ECPoint(X, Y);
         }
 
@@ -52,8 +52,8 @@ namespace Eduard.Security.Extensions
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
-            BigInteger X = BarrettReducer.MulMod(point.x, inv_Z);
-            BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
+            BigInteger X = BarrettReducer.MultMod(point.x, inv_Z);
+            BigInteger Y = BarrettReducer.MultMod(point.y, inv_Z);
 
             if (X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
@@ -75,9 +75,9 @@ namespace Eduard.Security.Extensions
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
-            BigInteger X = BarrettReducer.MulMod(point.x, inv_Z);
+            BigInteger X = BarrettReducer.MultMod(point.x, inv_Z);
 
-            BigInteger Y = BarrettReducer.MulMod(point.y, inv_Z);
+            BigInteger Y = BarrettReducer.MultMod(point.y, inv_Z);
             if(X == 0 && Y == 1) return ECPoint.POINT_INFINITY;
             return new ECPoint(X, Y);
         }
@@ -98,7 +98,7 @@ namespace Eduard.Security.Extensions
             if(point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1)) 
                 return ECPoint4.POINT_INFINITY;
 
-            BigInteger t = BarrettReducer.MulMod(point.x, point.y);
+            BigInteger t = BarrettReducer.MultMod(point.x, point.y);
             return new ECPoint4(point.x, point.y, t, 1);
         }
 
@@ -117,11 +117,11 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint3.POINT_INFINITY)
                 return ECPoint4.POINT_INFINITY;
 
-            BigInteger xz = BarrettReducer.MulMod(point.x, point.z);
-            BigInteger yz = BarrettReducer.MulMod(point.y, point.z);
+            BigInteger xz = BarrettReducer.MultMod(point.x, point.z);
+            BigInteger yz = BarrettReducer.MultMod(point.y, point.z);
 
-            BigInteger xy = BarrettReducer.MulMod(point.x, point.y);
-            BigInteger z2 = BarrettReducer.MulMod(point.z, point.z);
+            BigInteger xy = BarrettReducer.MultMod(point.x, point.y);
+            BigInteger z2 = BarrettReducer.MultMod(point.z, point.z);
             return new ECPoint4(xz, yz, xy, z2);
         }
 
@@ -253,14 +253,14 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint5w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger Z5 = BarrettReducer.MulMod(point.z2, point.z3);
+            BigInteger Z5 = BarrettReducer.MultMod(point.z2, point.z3);
             BigInteger iZ5 = BarrettReducer.InvMod(Z5);
 
-            BigInteger iZ2 = BarrettReducer.MulMod(iZ5, point.z3);
-            BigInteger iZ3 = BarrettReducer.MulMod(iZ5, point.z2);
+            BigInteger iZ2 = BarrettReducer.MultMod(iZ5, point.z3);
+            BigInteger iZ3 = BarrettReducer.MultMod(iZ5, point.z2);
 
-            BigInteger X = BarrettReducer.MulMod(point.x, iZ2);
-            BigInteger Y = BarrettReducer.MulMod(point.y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
             return new ECPoint(X, Y);
         }
 
@@ -301,11 +301,11 @@ namespace Eduard.Security.Extensions
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
-            BigInteger iZ2 = BarrettReducer.MulMod(inv_Z, inv_Z);
-            BigInteger iZ3 = BarrettReducer.MulMod(iZ2, inv_Z);
+            BigInteger iZ2 = BarrettReducer.MultMod(inv_Z, inv_Z);
+            BigInteger iZ3 = BarrettReducer.MultMod(iZ2, inv_Z);
 
-            BigInteger X = BarrettReducer.MulMod(point.x, iZ2);
-            BigInteger Y = BarrettReducer.MulMod(point.y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
             return new ECPoint(X, Y);
         }
 
@@ -346,8 +346,8 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint5w.POINT_INFINITY) 
                 return ECPoint4w.POINT_INFINITY;
 
-            BigInteger Z4 = BarrettReducer.MulMod(point.z2, point.z2);
-            BigInteger aZ4 = BarrettReducer.MulMod(curve.a, Z4);
+            BigInteger Z4 = BarrettReducer.MultMod(point.z2, point.z2);
+            BigInteger aZ4 = BarrettReducer.MultMod(curve.a, Z4);
 
             ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, 
                 point.y, point.z, aZ4);
@@ -370,9 +370,9 @@ namespace Eduard.Security.Extensions
             if (point == ECPoint3w.POINT_INFINITY) 
                 return ECPoint4w.POINT_INFINITY;
 
-            BigInteger Z2 = BarrettReducer.MulMod(point.z, point.z);
-            BigInteger Z4 = BarrettReducer.MulMod(Z2, Z2);
-            BigInteger aZ4 = BarrettReducer.MulMod(curve.a, Z4);
+            BigInteger Z2 = BarrettReducer.MultMod(point.z, point.z);
+            BigInteger Z4 = BarrettReducer.MultMod(Z2, Z2);
+            BigInteger aZ4 = BarrettReducer.MultMod(curve.a, Z4);
 
             ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, 
                 point.y, point.z, aZ4);

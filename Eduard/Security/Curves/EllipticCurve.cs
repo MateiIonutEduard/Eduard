@@ -45,14 +45,14 @@ namespace Eduard.Security.Curves
             a = SecureRandom.Range(1, field - 1);
             ModSqrtUtil.InitParams();
 
-            BigInteger temp = BarrettReducer.MulMod(a, a);
-            temp = BarrettReducer.MulMod(temp, a);
-            temp = BarrettReducer.MulMod(4, temp);
+            BigInteger temp = BarrettReducer.MultMod(a, a);
+            temp = BarrettReducer.MultMod(temp, a);
+            temp = BarrettReducer.MultMod(4, temp);
 
             b = SecureRandom.Range(1, field - 1);
-            BigInteger B2 = BarrettReducer.MulMod(b, b);
+            BigInteger B2 = BarrettReducer.MultMod(b, b);
 
-            BigInteger val = BarrettReducer.MulMod(27, B2);
+            BigInteger val = BarrettReducer.MultMod(27, B2);
             BigInteger check = BarrettReducer.AddMod(temp, val);
 
             order = 1; cofactor = 1;
@@ -61,9 +61,9 @@ namespace Eduard.Security.Curves
             while (check == 0)
             {
                 b = SecureRandom.Range(1, field - 1);
-                B2 = BarrettReducer.MulMod(b, b);
+                B2 = BarrettReducer.MultMod(b, b);
 
-                val = BarrettReducer.MulMod(27, B2);
+                val = BarrettReducer.MultMod(27, B2);
                 check = BarrettReducer.AddMod(temp, val);
             }
         }
@@ -87,13 +87,13 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BarrettReducer.SetModulus(field);
-            BigInteger A2 = BarrettReducer.MulMod(a, a);
+            BigInteger A2 = BarrettReducer.MultMod(a, a);
 
-            BigInteger B2 = BarrettReducer.MulMod(b, b);
-            BigInteger delta = BarrettReducer.MulMod(a, A2);
+            BigInteger B2 = BarrettReducer.MultMod(b, b);
+            BigInteger delta = BarrettReducer.MultMod(a, A2);
 
-            delta = BarrettReducer.MulMod(4, delta);
-            BigInteger val = BarrettReducer.MulMod(27, B2);
+            delta = BarrettReducer.MultMod(4, delta);
+            BigInteger val = BarrettReducer.MultMod(27, B2);
             delta = BarrettReducer.AddMod(delta, val);
 
             if (delta == 0)
@@ -134,10 +134,10 @@ namespace Eduard.Security.Curves
         /// <returns>y^2 = x^3 + ax + b (mod p).</returns>
         public BigInteger Evaluate(BigInteger x)
         {
-            BigInteger result = BarrettReducer.MulMod(x, x);
-            result = BarrettReducer.MulMod(result, x);
+            BigInteger result = BarrettReducer.MultMod(x, x);
+            result = BarrettReducer.MultMod(result, x);
 
-            BigInteger ax = BarrettReducer.MulMod(a, x);
+            BigInteger ax = BarrettReducer.MultMod(a, x);
             BigInteger temp = BarrettReducer.AddMod(ax, b);
 
             result = BarrettReducer.AddMod(result, temp);
@@ -153,7 +153,7 @@ namespace Eduard.Security.Curves
         public ECPoint GetPoint(BigInteger m, int r=30)
         {
             BigInteger test = (r + 1) * m;
-            BigInteger xs = BarrettReducer.MulMod(m, r);
+            BigInteger xs = BarrettReducer.MultMod(m, r);
 
             /* if the product exceeds the value of the prime field, the algorithm fails */
             if (test >= field) return ECPoint.POINT_INFINITY;
@@ -229,7 +229,7 @@ namespace Eduard.Security.Curves
                     done = true;
                     y = ModSqrtUtil.Sqrt(temp);
 
-                    BigInteger eval = BarrettReducer.MulMod(y, y);
+                    BigInteger eval = BarrettReducer.MultMod(y, y);
                     if (temp != eval) done = false;
 
                     if (done)
@@ -267,7 +267,7 @@ namespace Eduard.Security.Curves
             else
             {
                 BigInteger y = tempPoint.GetAffineY();
-                BigInteger eval = BarrettReducer.MulMod(y, y);
+                BigInteger eval = BarrettReducer.MultMod(y, y);
 
                 if (eval != Y2)
                     throw new InvalidOperationException(

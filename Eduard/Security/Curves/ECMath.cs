@@ -54,28 +54,28 @@ namespace Eduard.Security.Curves
                 if (xDiff == 0) return ECPoint.POINT_INFINITY;
 
                 inv = BarrettReducer.InvMod(xDiff);
-                lambda = BarrettReducer.MulMod(inv, yDiff);
+                lambda = BarrettReducer.MultMod(inv, yDiff);
             }
             else
             {
-                xDiff = BarrettReducer.MulMod(3, left.x);
-                xDiff = BarrettReducer.MulMod(xDiff, left.x);
+                xDiff = BarrettReducer.MultMod(3, left.x);
+                xDiff = BarrettReducer.MultMod(xDiff, left.x);
 
                 xDiff = BarrettReducer.AddMod(xDiff, curve.a);
                 yDiff = BarrettReducer.AddMod(left.y, left.y);
                 if (yDiff == 0) return ECPoint.POINT_INFINITY;
 
                 inv = BarrettReducer.InvMod(yDiff);
-                lambda = BarrettReducer.MulMod(xDiff, inv);
+                lambda = BarrettReducer.MultMod(xDiff, inv);
             }
 
-            BigInteger temp = BarrettReducer.MulMod(lambda, lambda);
+            BigInteger temp = BarrettReducer.MultMod(lambda, lambda);
             BigInteger delta = BarrettReducer.AddMod(left.x, right.x);
 
             BigInteger x = BarrettReducer.SubMod(temp, delta);
             BigInteger y = BarrettReducer.SubMod(left.x, x);
 
-            y = BarrettReducer.MulMod(y, lambda);
+            y = BarrettReducer.MultMod(y, lambda);
             y = BarrettReducer.SubMod(y, left.y);
             return new ECPoint(x, y);
         }

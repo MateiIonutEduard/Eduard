@@ -126,7 +126,7 @@ namespace Eduard.Security
 
             while(head != null)
             {
-                BigInteger coeff = BarrettReducer.MulMod(head.coeff, head.degx);
+                BigInteger coeff = BarrettReducer.MultMod(head.coeff, head.degx);
 
                 if (coeff != 0)
                     result.AddTerm(coeff, head.degx - 1, head.degy);
@@ -149,7 +149,7 @@ namespace Eduard.Security
 
             while (head != null)
             {
-                BigInteger coeff = BarrettReducer.MulMod(head.coeff, head.degy);
+                BigInteger coeff = BarrettReducer.MultMod(head.coeff, head.degy);
 
                 if (coeff != 0)
                     result.AddTerm(coeff, head.degx, head.degy - 1);
@@ -181,7 +181,7 @@ namespace Eduard.Security
             py[0] = 1;
 
             for (int i = 1; i < py.Length; i++)
-                py[i] = BarrettReducer.MulMod(py[i - 1], y);
+                py[i] = BarrettReducer.MultMod(py[i - 1], y);
 
             head = this.head;
             BigInteger[] coeffs = new BigInteger[head.degx + 1];
@@ -191,7 +191,7 @@ namespace Eduard.Security
 
             while(head != null)
             {
-                coeffs[head.degx] = BarrettReducer.AddMod(coeffs[head.degx], BarrettReducer.MulMod(head.coeff, py[head.degy]));
+                coeffs[head.degx] = BarrettReducer.AddMod(coeffs[head.degx], BarrettReducer.MultMod(head.coeff, py[head.degy]));
                 head = head.next;
             }
 
@@ -327,7 +327,7 @@ namespace Eduard.Security
 
             while (lptr != null && lptr.degx >= rptr.degx && lptr.degy >= rptr.degy)
             {
-                BigInteger q = BarrettReducer.MulMod(lptr.coeff, inv);
+                BigInteger q = BarrettReducer.MultMod(lptr.coeff, inv);
                 int degx = lptr.degx - rptr.degx;
 
                 int degy = lptr.degy - rptr.degy;
@@ -363,7 +363,7 @@ namespace Eduard.Security
 
             while(lptr != null && lptr.degx >= rptr.degx && lptr.degy >= rptr.degy)
             {
-                BigInteger q = BarrettReducer.MulMod(lptr.coeff, inv);
+                BigInteger q = BarrettReducer.MultMod(lptr.coeff, inv);
                 int degx = lptr.degx - rptr.degx;
 
                 int degy = lptr.degy - rptr.degy;

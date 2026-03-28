@@ -68,7 +68,7 @@ namespace Eduard.Security.Curves
             BigInteger t = BarrettReducer.InvMod(4);
             BigInteger At = BarrettReducer.AddMod(A, 2);
 
-            A24 = BarrettReducer.MulMod(At, t);
+            A24 = BarrettReducer.MultMod(At, t);
             ModSqrtUtil.InitParams();
         }
 
@@ -105,14 +105,14 @@ namespace Eduard.Security.Curves
         /// <returns>The value y^2 = (x^3 + A * x^2 + x) / B (mod p).</returns>
         public BigInteger Evaluate(BigInteger x)
         {
-            BigInteger X2 = BarrettReducer.MulMod(x, x);
-            BigInteger res = BarrettReducer.MulMod(x, X2);
+            BigInteger X2 = BarrettReducer.MultMod(x, x);
+            BigInteger res = BarrettReducer.MultMod(x, X2);
 
-            BigInteger tx = BarrettReducer.MulMod(A, X2);
+            BigInteger tx = BarrettReducer.MultMod(A, X2);
             tx = BarrettReducer.AddMod(tx, x);
 
             res = BarrettReducer.AddMod(res, tx);
-            return BarrettReducer.MulMod(res, BInv);
+            return BarrettReducer.MultMod(res, BInv);
         }
     }
 }

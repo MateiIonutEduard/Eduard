@@ -96,8 +96,8 @@ namespace Eduard.Security.Curves
             BarrettReducer.SetModulus(field);
             BigInteger t1 = BarrettReducer.SubMod(a, d);
 
-            BigInteger t2 = BarrettReducer.MulMod(a, d);
-            BigInteger t = BarrettReducer.MulMod(t1, t2);
+            BigInteger t2 = BarrettReducer.MultMod(a, d);
+            BigInteger t = BarrettReducer.MultMod(t1, t2);
 
             if((cofactor & 0x3) != 0 || t == 0)
                 throw new InvalidOperationException(
@@ -115,10 +115,10 @@ namespace Eduard.Security.Curves
             if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
             {
                 aroot = ModSqrtUtil.Sqrt(field - a, true);
-                BigInteger ta = BarrettReducer.MulMod(aroot, aroot);
+                BigInteger ta = BarrettReducer.MultMod(aroot, aroot);
 
                 BigInteger ma = BarrettReducer.InvMod(ta);
-                BigInteger kt1 = BarrettReducer.MulMod(d, ma);
+                BigInteger kt1 = BarrettReducer.MultMod(d, ma);
 
                 kt = BarrettReducer.AddMod(kt1, kt1);
                 computeOnTwist = true;
@@ -170,14 +170,14 @@ namespace Eduard.Security.Curves
         /// <returns>The value x^2 = (1 - y^2) / (a - d*(y^2)) mod p.</returns>
         public BigInteger Evaluate(BigInteger y)
         {
-            BigInteger A1 = BarrettReducer.MulMod(y, y);
-            BigInteger A2 = BarrettReducer.MulMod(d, A1);
+            BigInteger A1 = BarrettReducer.MultMod(y, y);
+            BigInteger A2 = BarrettReducer.MultMod(d, A1);
 
             BigInteger A3 = BarrettReducer.SubMod(1, A1);
             BigInteger A4 = BarrettReducer.SubMod(a, A2);
 
             BigInteger A4i = BarrettReducer.InvMod(A4);
-            BigInteger X2 = BarrettReducer.MulMod(A3, A4i);
+            BigInteger X2 = BarrettReducer.MultMod(A3, A4i);
             return X2;
         }
 
@@ -210,7 +210,7 @@ namespace Eduard.Security.Curves
                     done = true;
                     x = ModSqrtUtil.Sqrt(temp);
 
-                    BigInteger eval = BarrettReducer.MulMod(x, x);
+                    BigInteger eval = BarrettReducer.MultMod(x, x);
                     if (temp != eval) done = false;
 
                     if (done)
@@ -247,7 +247,7 @@ namespace Eduard.Security.Curves
             else
             {
                 BigInteger x = tempPoint.GetAffineX();
-                BigInteger eval = BarrettReducer.MulMod(x, x);
+                BigInteger eval = BarrettReducer.MultMod(x, x);
 
                 if (eval != temp)
                     throw new InvalidOperationException(

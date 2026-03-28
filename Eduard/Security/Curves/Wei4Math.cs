@@ -48,44 +48,44 @@ namespace Eduard.Security.Curves
             if (left == ECPoint4w.POINT_INFINITY) return right;
             if (right == ECPoint4w.POINT_INFINITY) return left;
 
-            BigInteger A1 = BarrettReducer.MulMod(left.z, left.z);
-            BigInteger A2 = BarrettReducer.MulMod(right.z, right.z);
+            BigInteger A1 = BarrettReducer.MultMod(left.z, left.z);
+            BigInteger A2 = BarrettReducer.MultMod(right.z, right.z);
 
-            BigInteger A3 = BarrettReducer.MulMod(left.x, A2);
-            BigInteger A4 = BarrettReducer.MulMod(right.x, A1);
+            BigInteger A3 = BarrettReducer.MultMod(left.x, A2);
+            BigInteger A4 = BarrettReducer.MultMod(right.x, A1);
 
-            BigInteger B1 = BarrettReducer.MulMod(left.y, right.z);
-            BigInteger A5 = BarrettReducer.MulMod(B1, A2);
+            BigInteger B1 = BarrettReducer.MultMod(left.y, right.z);
+            BigInteger A5 = BarrettReducer.MultMod(B1, A2);
 
-            BigInteger B2 = BarrettReducer.MulMod(right.y, left.z);
-            BigInteger A6 = BarrettReducer.MulMod(B2, A1);
+            BigInteger B2 = BarrettReducer.MultMod(right.y, left.z);
+            BigInteger A6 = BarrettReducer.MultMod(B2, A1);
 
             BigInteger A7 = BarrettReducer.SubMod(A4, A3);
-            BigInteger A8 = BarrettReducer.MulMod(A7, A7);
-            BigInteger A9 = BarrettReducer.MulMod(A7, A8);
+            BigInteger A8 = BarrettReducer.MultMod(A7, A7);
+            BigInteger A9 = BarrettReducer.MultMod(A7, A8);
 
             BigInteger A10 = BarrettReducer.SubMod(A6, A5);
-            BigInteger A11 = BarrettReducer.MulMod(A3, A8);
+            BigInteger A11 = BarrettReducer.MultMod(A3, A8);
 
-            BigInteger B3 = BarrettReducer.MulMod(A10, A10);
+            BigInteger B3 = BarrettReducer.MultMod(A10, A10);
             BigInteger B4 = BarrettReducer.SubMod(B3, A9);
 
             BigInteger B5 = BarrettReducer.AddMod(A11, A11);
             BigInteger X = BarrettReducer.SubMod(B4, B5);
 
             BigInteger B6 = BarrettReducer.SubMod(A11, X);
-            BigInteger B7 = BarrettReducer.MulMod(A10, B6);
+            BigInteger B7 = BarrettReducer.MultMod(A10, B6);
 
-            BigInteger B8 = BarrettReducer.MulMod(A5, A9);
+            BigInteger B8 = BarrettReducer.MultMod(A5, A9);
             BigInteger Y = BarrettReducer.SubMod(B7, B8);
 
-            BigInteger B9 = BarrettReducer.MulMod(left.z, right.z);
-            BigInteger Z = BarrettReducer.MulMod(A7, B9);
+            BigInteger B9 = BarrettReducer.MultMod(left.z, right.z);
+            BigInteger Z = BarrettReducer.MultMod(A7, B9);
 
             if (Z == 0) return ECPoint4w.POINT_INFINITY;
-            BigInteger Z2 = BarrettReducer.MulMod(Z, Z);
+            BigInteger Z2 = BarrettReducer.MultMod(Z, Z);
 
-            BigInteger aZ4 = BarrettReducer.MulMod(curve.a, Z2);
+            BigInteger aZ4 = BarrettReducer.MultMod(curve.a, Z2);
             return new ECPoint4w(X, Y, Z, aZ4);
         }
 
@@ -105,32 +105,32 @@ namespace Eduard.Security.Curves
             if (jacobianPoint == ECPoint4w.POINT_INFINITY) 
                 return ECPoint4w.POINT_INFINITY;
 
-            BigInteger A1 = BarrettReducer.MulMod(jacobianPoint.x, jacobianPoint.x);
-            BigInteger A2 = BarrettReducer.MulMod(jacobianPoint.y, jacobianPoint.y);
+            BigInteger A1 = BarrettReducer.MultMod(jacobianPoint.x, jacobianPoint.x);
+            BigInteger A2 = BarrettReducer.MultMod(jacobianPoint.y, jacobianPoint.y);
 
-            BigInteger A3t = BarrettReducer.MulMod(A2, A2);
-            BigInteger A3 = BarrettReducer.MulMod(8, A3t);
+            BigInteger A3t = BarrettReducer.MultMod(A2, A2);
+            BigInteger A3 = BarrettReducer.MultMod(8, A3t);
 
-            BigInteger B1 = BarrettReducer.MulMod(jacobianPoint.x, A2);
-            BigInteger A4 = BarrettReducer.MulMod(4, B1);
+            BigInteger B1 = BarrettReducer.MultMod(jacobianPoint.x, A2);
+            BigInteger A4 = BarrettReducer.MultMod(4, B1);
 
-            BigInteger B2 = BarrettReducer.MulMod(3, A1);
+            BigInteger B2 = BarrettReducer.MultMod(3, A1);
             BigInteger A5 = BarrettReducer.AddMod(B2, jacobianPoint.aZ4);
 
-            BigInteger A6 = BarrettReducer.MulMod(A5, A5);
+            BigInteger A6 = BarrettReducer.MultMod(A5, A5);
             BigInteger Xt = BarrettReducer.AddMod(A4, A4);
 
             BigInteger X = BarrettReducer.SubMod(A6, Xt);
             BigInteger Yt = BarrettReducer.SubMod(A4, X);
 
-            BigInteger Y = BarrettReducer.MulMod(A5, Yt);
+            BigInteger Y = BarrettReducer.MultMod(A5, Yt);
             Y = BarrettReducer.SubMod(Y, A3);
 
-            BigInteger YZ = BarrettReducer.MulMod(jacobianPoint.y, jacobianPoint.z);
+            BigInteger YZ = BarrettReducer.MultMod(jacobianPoint.y, jacobianPoint.z);
             BigInteger Z = BarrettReducer.AddMod(YZ, YZ);
 
             if (Z == 0) return ECPoint4w.POINT_INFINITY;
-            BigInteger Zt = BarrettReducer.MulMod(A3, jacobianPoint.aZ4);
+            BigInteger Zt = BarrettReducer.MultMod(A3, jacobianPoint.aZ4);
 
             BigInteger aZ4 = BarrettReducer.AddMod(Zt, Zt);
             return new ECPoint4w(X, Y, Z, aZ4);

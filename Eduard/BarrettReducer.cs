@@ -117,7 +117,7 @@ namespace Eduard
         /// Performs multiplication followed by Barrett reduction. More efficient than<br/>
         /// using <see cref="Reduce"/> separately when both<br/> operands are already reduced.
         /// </remarks>
-        internal static BigInteger MulMod(BigInteger left, BigInteger right)
+        internal static BigInteger MultMod(BigInteger left, BigInteger right)
         {
             if (!isEnabled)
                 throw new InvalidOperationException(

@@ -59,36 +59,36 @@ namespace Eduard.Security.Curves
                 if (xDiff == 0) return ECPoint.POINT_INFINITY;
 
                 inv = BarrettReducer.InvMod(xDiff);
-                lambda = BarrettReducer.MulMod(inv, yDiff);
+                lambda = BarrettReducer.MultMod(inv, yDiff);
             }
             else
             {
-                xDiff = BarrettReducer.MulMod(left.x, left.x);
-                xDiff = BarrettReducer.MulMod(3, xDiff);
+                xDiff = BarrettReducer.MultMod(left.x, left.x);
+                xDiff = BarrettReducer.MultMod(3, xDiff);
 
-                BigInteger Ax = BarrettReducer.MulMod(curve.A, left.x);
+                BigInteger Ax = BarrettReducer.MultMod(curve.A, left.x);
                 Ax = BarrettReducer.AddMod(Ax, Ax);
 
                 Ax = BarrettReducer.AddMod(Ax, 1);
                 xDiff = BarrettReducer.AddMod(xDiff, Ax);
 
-                yDiff = BarrettReducer.MulMod(curve.B, left.y);
+                yDiff = BarrettReducer.MultMod(curve.B, left.y);
                 yDiff = BarrettReducer.AddMod(yDiff, yDiff);
                 if (yDiff == 0) return ECPoint.POINT_INFINITY;
 
                 inv = BarrettReducer.InvMod(yDiff);
-                lambda = BarrettReducer.MulMod(xDiff, inv);
+                lambda = BarrettReducer.MultMod(xDiff, inv);
             }
 
-            BigInteger temp = BarrettReducer.MulMod(lambda, lambda);
-            temp = BarrettReducer.MulMod(curve.B, temp);
+            BigInteger temp = BarrettReducer.MultMod(lambda, lambda);
+            temp = BarrettReducer.MultMod(curve.B, temp);
             BigInteger delta = BarrettReducer.AddMod(curve.A, left.x);
 
             delta = BarrettReducer.AddMod(delta, right.x);
             BigInteger x = BarrettReducer.SubMod(temp, delta);
 
             BigInteger y = BarrettReducer.SubMod(left.x, x);
-            y = BarrettReducer.MulMod(y, lambda);
+            y = BarrettReducer.MultMod(y, lambda);
 
             y = BarrettReducer.SubMod(y, left.y);
             return new ECPoint(x, y);

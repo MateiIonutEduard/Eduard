@@ -40,7 +40,7 @@ namespace Eduard.Security.Extensions
             else
             {
                 BigInteger y = point.GetAffineY();
-                BigInteger Yp2 = BarrettReducer.MulMod(y, y);
+                BigInteger Yp2 = BarrettReducer.MultMod(y, y);
 
                 /* point not on this Weierstrass curve; likely on the twist */
                 if (Yp2 != Y2) return false;
@@ -94,7 +94,7 @@ namespace Eduard.Security.Extensions
             else
             {
                 BigInteger x = point.GetAffineX();
-                BigInteger Xp2 = BarrettReducer.MulMod(x, x);
+                BigInteger Xp2 = BarrettReducer.MultMod(x, x);
 
                 /* the affine point does not lie on the twisted Edwards curve */
                 if (Xp2 != X2) return false;
