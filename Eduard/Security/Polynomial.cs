@@ -522,6 +522,7 @@ namespace Eduard.Security
             {
                 int windowSize = 5;
                 int store = 1 << (windowSize - 1);
+                SetPolyMod(modulus);
 
                 Polynomial[] table = new Polynomial[store];
                 table[0] = nb % modulus;
