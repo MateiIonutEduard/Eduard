@@ -32,7 +32,7 @@ namespace Eduard
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public sealed class BigInteger
+    public sealed class BigInteger : IComparable<BigInteger>
     {
         internal Data data;
 
@@ -1110,13 +1110,19 @@ namespace Eduard
         /// </returns>
         public static int Compare(BigInteger left, BigInteger right)
         {
-            if (left > right)
-                return 1;
+            if (left.IsNegative != right.IsNegative)
+                return left.IsNegative ? -1 : 1;
 
-            if (left == right)
-                return 0;
+            if (left.data.Used != right.data.Used)
+                return left.data.Used < right.data.Used ? -1 : 1;
 
-            return -1;
+            for (int k = left.data.Used - 1; k >= 0; k--)
+            {
+                if (left.data[k] != right.data[k])
+                    return left.data[k] < right.data[k] ? -1 : 1;
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -1289,7 +1295,7 @@ namespace Eduard
         /// <item><description>128 trials for 2^(-256) error probability (recommended for high-security applications)</description></item>
         /// </list>
         /// <para>
-        /// This method automatically falls back to the deterministic test for for numbers less than 2^64.
+        /// This method automatically falls back to the deterministic test for numbers less than 2^64.
         /// </para>
         /// </remarks>
         public static bool IsProbablePrime(RandomNumberGenerator rand, BigInteger val, int trials)
@@ -1978,19 +1984,7 @@ namespace Eduard
             if (object.ReferenceEquals(left, null) || object.ReferenceEquals(right, null))
                 throw new ArgumentNullException();
 
-            if (left.IsNegative != right.IsNegative)
-                return left.IsNegative;
-
-            if (left.data.Used != right.data.Used)
-                return (left.data.Used < right.data.Used);
-
-            for (int k = left.data.Used - 1; k >= 0; k--)
-            {
-                if (left.data[k] != right.data[k])
-                    return (left.data[k] < right.data[k]);
-            }
-
-            return false;
+            return Compare(left, right) < 0;
         }
 
         /// <summary>
@@ -2005,18 +1999,7 @@ namespace Eduard
             if (object.ReferenceEquals(left, null) || object.ReferenceEquals(right, null))
                 throw new ArgumentNullException();
 
-            if (left.IsNegative != right.IsNegative)
-                return right.IsNegative;
-
-            if (left.data.Used != right.data.Used)
-                return (left.data.Used > right.data.Used);
-
-            for (int k = left.data.Used - 1; k >= 0; k--)
-            {
-                if (left.data[k] != right.data[k])
-                    return (left.data[k] > right.data[k]);
-            }
-            return false;
+            return Compare(left, right) > 0;
         }
 
         /// <summary>
@@ -2027,7 +2010,7 @@ namespace Eduard
         /// <returns><c>true</c> if <paramref name="left"/> is greater than or equal to <paramref name="right"/>; otherwise, <c>false</c>.</returns>
         public static bool operator >=(BigInteger left, BigInteger right)
         {
-            return (Compare(left, right) >= 0);
+            return Compare(left, right) >= 0;
         }
 
         /// <summary>
@@ -2038,7 +2021,7 @@ namespace Eduard
         /// <returns><c>true</c> if <paramref name="left"/> is less than or equal to <paramref name="right"/>; otherwise, <c>false</c>.</returns>
         public static bool operator <=(BigInteger left, BigInteger right)
         {
-            return (Compare(left, right) <= 0);
+            return Compare(left, right) <= 0;
         }
 
         /// <summary>
