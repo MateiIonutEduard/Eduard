@@ -32,7 +32,7 @@ namespace Eduard
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public sealed class BigInteger : IComparable<BigInteger>
+    public sealed class BigInteger : IEquatable<BigInteger>, IComparable<BigInteger>
     {
         internal Data data;
 
@@ -2048,14 +2048,32 @@ namespace Eduard
             if (object.ReferenceEquals(this, obj))
                 return true;
 
-            BigInteger Obj = (BigInteger)obj;
-
-            if (data.Used != Obj.data.Used)
+            if (!(obj is BigInteger))
                 return false;
 
-            for(int k = 0; k < data.Used; k++)
+            BigInteger other = (BigInteger)obj;
+            return Equals(other);
+        }
+
+        /// <summary>
+        /// Determines whether this instance is equal to another BigInteger.
+        /// </summary>
+        /// <param name="other">The BigInteger to compare with this instance.</param>
+        /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
+        public bool Equals(BigInteger other)
+        {
+            if (object.ReferenceEquals(other, null))
+                return false;
+
+            if (object.ReferenceEquals(this, other))
+                return true;
+
+            if (data.Used != other.data.Used)
+                return false;
+
+            for (int k = 0; k < data.Used; k++)
             {
-                if (data[k] != Obj.data[k])
+                if (data[k] != other.data[k])
                     return false;
             }
 
@@ -2070,6 +2088,9 @@ namespace Eduard
         /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
         public static bool operator ==(BigInteger left, BigInteger right)
         {
+            if (object.ReferenceEquals(left, null))
+                return object.ReferenceEquals(right, null);
+
             return left.Equals(right);
         }
 
