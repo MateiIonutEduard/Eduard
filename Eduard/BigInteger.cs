@@ -114,21 +114,35 @@ namespace Eduard
         /// </summary>
         /// <param name="digits">The string representation of the integer.</param>
         /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
-        /// <exception cref="FormatException">Thrown when the string contains characters invalid for the specified radix.</exception>
+        /// <exception cref="FormatException">
+        /// Thrown when the string contains characters invalid for the specified radix.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// For decimal strings, parsing is performed in chunks of 9 digits. For hexadecimal strings, <br/>
         /// parsing is performed in chunks of 8 characters (32 bits) for optimal performance.
         /// </para>
         /// <para>
-        /// Hexadecimal strings may contain digits 0-9, letters A-F (case-insensitive), and may <br/>
-        /// optionally include a leading minus sign.
+        /// Hexadecimal strings may contain digits 0-9, letters A-F (case-insensitive).
         /// </para>
         /// </remarks>
         public BigInteger(string digits, Radix radix)
         {
+            if (string.IsNullOrEmpty(digits))
+                throw new FormatException(
+                    "Input string cannot be" 
+                    + " null or empty.");
+
             if (!Check(digits, radix))
-                throw new FormatException("The format of string is invalid.");
+            {
+                string validChars = radix == Radix.Decimal
+                    ? "digits 0-9"
+                    : "digits 0-9, letters A-F or a-f";
+
+                throw new FormatException(
+                    $"Invalid format for {radix.ToString().ToLower()} number." 
+                    + $" The string must contain only {validChars}.");
+            }
 
             if (radix == Radix.Decimal)
                 BuildDecimal(digits);
@@ -211,8 +225,8 @@ namespace Eduard
         {
             if (n <= 0)
                 throw new ArgumentException(
-                    $"The number of bits must" + 
-                    " be positive. Specified: {n}.",
+                    "The number of bits must" + 
+                    $" be positive. Specified: {n}.",
                     nameof(n));
 
             if (rand == null)
@@ -678,9 +692,6 @@ namespace Eduard
 
         private static void SingleDivide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
-            if (right.IsZero)
-                throw new DivideByZeroException();
-
             Data RemainderData = new Data(left.data);
             RemainderData.Update();
 
@@ -720,9 +731,6 @@ namespace Eduard
 
         private static void MultiDivide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
-            if (right.IsZero)
-                throw new DivideByZeroException();
-
             uint val = right.data[right.data.Used - 1];
             int d = 0;
 
