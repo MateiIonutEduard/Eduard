@@ -96,15 +96,26 @@ namespace Eduard
         /// Initializes a new instance of the <see cref="BigInteger"/> class from a decimal string representation.
         /// </summary>
         /// <param name="digits">The decimal string representation of the integer. May include a leading minus sign.</param>
-        /// <exception cref="FormatException">Thrown when the string contains non-digit characters or an invalid format.</exception>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="digits"/> is null, empty, or contains characters that are
+        /// not valid decimal digits (0-9), or has an invalid format such as a misplaced minus sign.
+        /// </exception>
         /// <remarks>
         /// Parsing is performed in chunks of 9 digits for optimal performance. Leading zeros are <br/>
         /// allowed but ignored. The string may be arbitrarily long, subject to memory constraints.
         /// </remarks>
         public BigInteger(string digits)
         {
+            if (string.IsNullOrEmpty(digits))
+                throw new FormatException(
+                    "Input string cannot be" +
+                    " null or empty.");
+
             if (!Check(digits, Radix.Decimal))
-                throw new FormatException("The format of string is invalid.");
+                throw new FormatException(
+                    $"Invalid format for decimal number." +
+                    $" The string must contain only digits 0-9" +
+                    $" and an optional leading minus sign.");
 
             BuildDecimal(digits);
         }
