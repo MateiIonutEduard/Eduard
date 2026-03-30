@@ -200,7 +200,7 @@ namespace Eduard
         /// </summary>
         /// <param name="n">The number of bits for the generated value. Must be greater than 0.</param>
         /// <param name="rand">A cryptographically secure random number generator.</param>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="n"/> is less than or equal to 0.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="n"/> is less than or equal to zero.</exception>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="rand"/> is null.</exception>
         /// <remarks>
         /// The generated value is uniformly distributed across all numbers with exactly <paramref name="n"/>
@@ -210,10 +210,15 @@ namespace Eduard
         public BigInteger(int n, RandomNumberGenerator rand)
         {
             if (n <= 0)
-                throw new ArgumentException("Number of bits must be greater than 0.");
+                throw new ArgumentException(
+                    $"The number of bits must" + 
+                    " be positive. Specified: {n}.",
+                    nameof(n));
 
             if (rand == null)
-                throw new NullReferenceException("The generator cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(rand), "The random number" + 
+                    " generator cannot be null.");
 
             int bufLen = n >> 5;
             int remLen = n & 0x1F;
@@ -661,8 +666,8 @@ namespace Eduard
         /// <item><description>FFT-based O(n*log n) for large operands (above FFT threshold)</description></item>
         /// </list>
         /// <para>
-        /// When both operands are equal, the squaring optimization is applied, which is <br/>
-        /// approximately twice as fast as general multiplication.
+        /// When both operands are equal, the squaring optimization is applied, <br/>
+        /// which is approximately twice as fast as general multiplication.
         /// </para>
         /// </remarks>
         public static BigInteger operator *(BigInteger left, BigInteger right)
@@ -808,7 +813,9 @@ namespace Eduard
         /// <param name="left">The dividend.</param>
         /// <param name="right">The divisor.</param>
         /// <returns>The integer quotient of <paramref name="left"/> divided by <paramref name="right"/>.</returns>
-        /// <exception cref="DivideByZeroException">Thrown when <paramref name="right"/> is zero.</exception>
+        /// <exception cref="DivideByZeroException">Thrown when attempting to divide by zero. 
+        /// Division by zero is mathematically undefined and cryptographically invalid.
+        /// </exception>
         /// <remarks>
         /// Division is performed using the standard long division algorithm optimized for arbitrary precision. <br/>
         /// For single-limb divisors, a specialized algorithm is used for better performance. The quotient is <br/>
@@ -817,7 +824,9 @@ namespace Eduard
         public static BigInteger operator /(BigInteger left, BigInteger right)
         {
             if (right.IsZero)
-                throw new DivideByZeroException();
+                throw new DivideByZeroException(
+                    "Division by zero is not allowed." + 
+                    " The divisor cannot be zero.");
 
             bool Sign = (left.IsNegative != right.IsNegative);
 
@@ -842,7 +851,9 @@ namespace Eduard
         /// <param name="left">The dividend.</param>
         /// <param name="right">The divisor.</param>
         /// <returns>The remainder after dividing <paramref name="left"/> by <paramref name="right"/>.</returns>
-        /// <exception cref="DivideByZeroException">Thrown when <paramref name="right"/> is zero.</exception>
+        /// <exception cref="DivideByZeroException">Thrown when <paramref name="right"/> is zero. 
+        /// Modulo operation is undefined when the divisor is zero.
+        /// </exception>
         /// <remarks>
         /// The remainder has the same sign as the dividend (consistent with <br/>
         /// C# remainder operator). This operation is equivalent to: <br/> 
@@ -851,7 +862,9 @@ namespace Eduard
         public static BigInteger operator %(BigInteger left, BigInteger right)
         {
             if (right.IsZero)
-                throw new DivideByZeroException();
+                throw new DivideByZeroException(
+                    "Modulo operation is undefined" + 
+                    " when the divisor is zero.");
 
             BigInteger Quotient, Remainder;
             bool Sign = left.IsNegative;
@@ -1107,13 +1120,13 @@ namespace Eduard
         /// </returns>
         /// <remarks>
         /// <para>
-        /// This method implements a deterministic primality test for numbers less than 2^64, <br/>
-        /// and a probabilistic test for larger numbers. The algorithm combines:
+        /// This method implements a deterministic primality test for numbers less than <br/>
+        /// 2^64, and a probabilistic test for larger numbers. The algorithm combines:
         /// </para>
         /// <list type="bullet">
         /// <item><description>Small prime trial division (up to 256)</description></item>
         /// <item><description>Miller-Rabin test with base 2</description></item>
-        /// <item><description>Lucas test with Baillie-PSW parameters</description></item>
+        /// <item><description>Extra strong Lucas test with Baillie-PSW parameters</description></item>
         /// </list>
         /// <para>
         /// For numbers less than 2^64, this provides deterministic results. For larger numbers, <br/>
@@ -1246,7 +1259,7 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Determines whether a number is probably prime using the Miller-Rabin test with multiple random bases.
+        /// Determines whether a number is a strong probable prime using the Miller-Rabin test with multiple random bases.
         /// </summary>
         /// <param name="rand">A cryptographically secure random number generator.</param>
         /// <param name="val">The value to test for primality.</param>
@@ -1257,7 +1270,7 @@ namespace Eduard
         /// <remarks>
         /// <para>
         /// The Miller-Rabin primality test provides a probabilistic guarantee. The probability <br/>of a
-        /// composite number being incorrectly identified as prime is (1/4)^trials.
+        /// composite number being incorrectly identified as prime is at most (1/4)^<paramref name="trials"/>.
         /// </para>
         /// <para>
         /// For cryptographic applications, the number of trials should be chosen based on the desired
@@ -1268,7 +1281,7 @@ namespace Eduard
         /// <item><description>128 trials for 2^(-256) error probability (recommended for high-security applications)</description></item>
         /// </list>
         /// <para>
-        /// This method automatically falls back to the deterministic test for numbers with fewer than 64 bits.
+        /// This method automatically falls back to the deterministic test for for numbers less than 2^64.
         /// </para>
         /// </remarks>
         public static bool IsProbablePrime(RandomNumberGenerator rand, BigInteger val, int trials)
@@ -1316,12 +1329,12 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Generates a random BigInteger of the specified bit length that is strong probably prime.
+        /// Generates a random BigInteger of the specified bit length that is a strong probable prime.
         /// </summary>
         /// <param name="rand">A cryptographically secure random number generator.</param>
         /// <param name="n">The number of bits for the generated prime.</param>
         /// <param name="trials">The number of Miller-Rabin test iterations for primality verification.</param>
-        /// <returns>A random BigInteger of exactly <paramref name="n"/> bits that is strong probably prime.</returns>
+        /// <returns>A random BigInteger of exactly <paramref name="n"/> bits that is a strong probable prime.</returns>
         /// <remarks>
         /// <para>
         /// This method generates odd numbers of the specified bit length (most significant bit set to 1) and <br/>
@@ -1543,8 +1556,14 @@ namespace Eduard
         /// <param name="val">The base value.</param>
         /// <param name="exp">The exponent, which must be non-negative.</param>
         /// <returns>The result of <paramref name="val"/> raised to the power <paramref name="exp"/>.</returns>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="exp"/> is negative.</exception>
-        /// <exception cref="ArithmeticException">Thrown when both <paramref name="val"/> and <paramref name="exp"/> are zero.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="exp"/> is negative. Negative exponents would 
+        /// produce fractional results, which are not supported by integer exponentiation.
+        /// </exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when both <paramref name="val"/> and <paramref name="exp"/> are zero, as zero 
+        /// raised to the power of zero is mathematically undefined.
+        /// </exception>
         /// <remarks>
         /// This method uses binary exponentiation (exponentiation by squaring) <br/>
         /// which performs O(log exp) multiplications. For modular exponentiation, <br/>
@@ -1553,10 +1572,14 @@ namespace Eduard
         public static BigInteger Pow(BigInteger val, int exp)
         {
             if (exp < 0)
-                throw new ArgumentOutOfRangeException("The exponent must be positive.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(exp), "The exponent must " + 
+                    $"be non-negative. Specified: {exp}.");
 
             if (val == 0 && exp == 0)
-                throw new ArithmeticException("Arithmetic operation unsupported.");
+                throw new ArithmeticException(
+                    "Zero raised to the power " +
+                    "of zero is undefined.");
 
             BigInteger result = 1;
 
@@ -1579,9 +1602,19 @@ namespace Eduard
         /// <param name="exponent">The exponent (must be non-negative).</param>
         /// <param name="modulus">The modulus for the reduction.</param>
         /// <returns>The result of <paramref name="val"/> raised to <paramref name="exponent"/> modulo <paramref name="modulus"/>.</returns>
-        /// <exception cref="DivideByZeroException">Thrown when <paramref name="modulus"/> is zero.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="exponent"/> is negative.</exception>
-        /// <exception cref="ArithmeticException">Thrown when both <paramref name="val"/> and <paramref name="exponent"/> are zero.</exception>
+        /// <exception cref="DivideByZeroException">
+        /// Thrown when <paramref name="modulus"/> is zero. 
+        /// Modular arithmetic is undefined modulo zero.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="exponent"/> is negative. 
+        /// Negative exponents are not supported as they would 
+        /// require modular inversion.
+        /// </exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when both <paramref name="val"/> and <paramref name="exponent"/> 
+        /// are zero, as zero raised to the power of zero is mathematically undefined.
+        /// </exception>
         /// <remarks>
         /// This method implements optimized modular exponentiation using:
         /// <list type="bullet">
@@ -1595,13 +1628,20 @@ namespace Eduard
         public static BigInteger Pow(BigInteger val, BigInteger exponent, BigInteger modulus)
         {
             if (modulus.IsZero)
-                throw new DivideByZeroException("Attempted to divide by zero.");
+                throw new DivideByZeroException(
+                    "Modular exponentiation requires" + 
+                    " a non-zero modulus. Operation " + 
+                    "modulo zero is undefined.");
 
             if (val.IsZero && exponent.IsZero)
-                throw new ArithmeticException("Arithmetic operation unsupported.");
+                throw new ArithmeticException(
+                    "Zero raised to the power" + 
+                    " of zero is undefined.");
 
             if (exponent.IsNegative)
-                throw new ArgumentOutOfRangeException("The exponent must be positive.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(exponent), "The exponent must be " + 
+                    $"non-negative. Specified exponent: {exponent}.");
 
             if (modulus.IsNegative)
                 modulus = -modulus;
@@ -1726,7 +1766,14 @@ namespace Eduard
         /// </summary>
         /// <param name="modulus">The modulus for the inverse operation.</param>
         /// <returns>The value x such that (this * x) % modulus = 1.</returns>
-        /// <exception cref="ArithmeticException">Thrown when this and <paramref name="modulus"/> are not coprime (GCD != 1).</exception>
+        /// <exception cref="DivideByZeroException">
+        /// Thrown when <paramref name="modulus"/> is zero. 
+        /// Modular arithmetic is undefined modulo zero.
+        /// </exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when this and <paramref name="modulus"/> 
+        /// are not coprime (GCD != 1), or when this is zero.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// The modular inverse is a fundamental operation in public-key cryptography:
@@ -1738,13 +1785,25 @@ namespace Eduard
         /// </list>
         /// <para>
         /// This implementation uses the extended Euclidean algorithm which runs in O(n^2) time. <br/>
-        /// The modulus must be positive and the result is returned in the range [0, modulus-1].
+        /// The modulus must be positive and the result is returned in the range [1, modulus-1].
         /// </para>
         /// </remarks>
         public BigInteger Inverse(BigInteger modulus)
         {
+            if (modulus == 0)
+                throw new DivideByZeroException(
+                    "Modulus cannot be zero for " + 
+                    "modular inverse operation.");
+
+            if (this == 0)
+                throw new ArithmeticException(
+                    "Zero has no modular inverse.");
+
             if (Gcd(this, modulus) != 1)
-                throw new ArithmeticException("The numbers are not coprime.");
+                throw new ArithmeticException(
+                    "The modular inverse does not" + 
+                    " exist because the numbers are" + 
+                    " not coprime.");
 
             BigInteger b0 = modulus, t, q;
             BigInteger x0 = 0, x1 = 1;
@@ -1775,15 +1834,22 @@ namespace Eduard
         /// Computes the integer square root of this BigInteger.
         /// </summary>
         /// <returns>The floor of the square root of this value.</returns>
-        /// <exception cref="ArithmeticException">Thrown when this value is negative.</exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when this value is negative. The square 
+        /// root is not defined for negative numbers in 
+        /// the real number system.
+        /// </exception>
         /// <remarks>
         /// This method uses a binary search algorithm that finds the <br/>
-        /// square root bit by bit, working from the most significant<br/> bit down to the least significant.
+        /// square root bit by bit, working from the most significant <br/> 
+        /// bit down to the least significant.
         /// </remarks>
         public BigInteger Sqrt()
         {
             if (IsNegative)
-                throw new ArithmeticException("Cannot extract square root from negative values.");
+                throw new ArithmeticException(
+                    "The square root is undefined" + 
+                    " for negative numbers.");
 
             uint numBits = (uint)GetBits();
 
@@ -1831,10 +1897,10 @@ namespace Eduard
         /// <summary>
         /// Computes the integer root of this BigInteger of the specified order.
         /// </summary>
-        /// <param name="n">The root order (must be greater then or equal with 2).</param>
+        /// <param name="n">The root order (must be greater than or equal to 2).</param>
         /// <returns>The floor of the <paramref name="n"/>-th root of this value.</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="n"/> is less than 2.</exception>
-        /// <exception cref="ArithmeticException">Thrown when extracting an even root from a negative number.</exception>
+        /// <exception cref="ArithmeticException">Thrown when extracting an even root (n is even) from a negative number, as the result would be imaginary.</exception>
         /// <remarks>
         /// This is a generalization of the square root method, using bit-by-bit construction. <br/>
         /// This operation is rarely used directly in cryptography but appears in certain <br/>
@@ -1843,10 +1909,14 @@ namespace Eduard
         public BigInteger Root(int n)
         {
             if (n < 2)
-                throw new ArgumentException("The order must be greater than or equal with 2.");
+                throw new ArgumentException(
+                    "The root order must be " + 
+                    "greater than or equal to 2.");
 
             if ((n & 1) == 0 && IsNegative)
-                throw new ArithmeticException("Cannot extract root.");
+                throw new ArithmeticException(
+                    "Even roots are undefined " + 
+                    "for negative numbers.");
 
             BigInteger self = Abs();
             uint numBits = (uint)self.GetBits();
@@ -2363,14 +2433,22 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as a 64-bit signed integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is outside the range of a 64-bit signed integer.</exception>
+        /// <exception cref="OverflowException">
+        /// Thrown when the value is outside the range
+        /// of a 64-bit signed integer.
+        /// </exception>
         public static explicit operator long(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
-            long result = ((long)value.data[1] << 32) | value.data[0];
+            if (value > long.MaxValue || value < long.MinValue)
+                throw new OverflowException("Value cannot be " + 
+                    "represented as a 64-bit signed integer. " + 
+                    $"The value must be between {long.MinValue}" + 
+                    $" and {long.MaxValue}.");
 
+            long result = ((long)value.data[1] << 32) | value.data[0];
             return result;
         }
 
@@ -2379,14 +2457,23 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as a 64-bit unsigned integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is negative or exceeds UInt64.MaxValue.</exception>
+        /// <exception cref="OverflowException">
+        /// Thrown when the value is negative or 
+        /// exceeds <see cref="ulong.MaxValue"/>.
+        /// </exception>
         public static explicit operator ulong(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
-            ulong result = ((ulong)value.data[1] << 32) | value.data[0];
+            if (value < 0 || value > ulong.MaxValue)
+                throw new OverflowException(
+                    "Value cannot be represented" + 
+                    " as a 64-bit unsigned integer." + 
+                    " The value must be between 0 and" + 
+                    $" {ulong.MaxValue}.");
 
+            ulong result = ((ulong)value.data[1] << 32) | value.data[0];
             return result;
         }
 
@@ -2395,14 +2482,22 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as a 32-bit signed integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is outside the range of a 32-bit signed integer.</exception>
+        /// <exception cref="OverflowException">
+        /// Thrown when the value is outside the 
+        /// range of a 32-bit signed integer.
+        /// </exception>
         public static explicit operator int(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
-            int result = (int)value.data[0];
+            if (value > int.MaxValue || value < int.MinValue)
+                throw new OverflowException("Value cannot be" + 
+                    " represented as a 32-bit signed integer." + 
+                    $" The value must be between {int.MinValue}" 
+                    + $" and {int.MaxValue}.");
 
+            int result = (int)value.data[0];
             return result;
         }
 
@@ -2411,11 +2506,19 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as a 32-bit unsigned integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is negative or exceeds UInt32.MaxValue.</exception>
+        /// <exception cref="OverflowException">Thrown when 
+        /// the value is negative or exceeds <see cref="uint.MaxValue"/>.
+        /// </exception>
         public static explicit operator uint(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
+
+            if (value < 0 || value > uint.MaxValue)
+                throw new OverflowException("Value" + 
+                    " cannot be represented as a 32-bit" + 
+                    " unsigned integer. The value must be" + 
+                    $" between 0 and {uint.MaxValue}.");
 
             return value.data[0];
         }
@@ -2425,11 +2528,19 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as a 16-bit signed integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is outside the range of a 16-bit signed integer.</exception>
+        /// <exception cref="OverflowException">Thrown when the value 
+        /// is outside the range of a 16-bit signed integer.
+        /// </exception>
         public static explicit operator short(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
+
+            if (value > short.MaxValue || value < short.MinValue)
+                throw new OverflowException("Value cannot be " + 
+                    "represented as a 16-bit signed integer. " + 
+                    $"The value must be between {short.MinValue}" 
+                    + $" and {short.MaxValue}.");
 
             return (short)value.data[0];
         }
@@ -2439,11 +2550,19 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as a 16-bit unsigned integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is negative or exceeds UInt16.MaxValue.</exception>
+        /// <exception cref="OverflowException">Thrown when the value 
+        /// is negative or exceeds <see cref="ushort.MaxValue"/>.
+        /// </exception>
         public static explicit operator ushort(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
+
+            if (value < 0 || value > ushort.MaxValue)
+                throw new OverflowException("Value cannot " + 
+                    "be represented as a 16-bit unsigned " + 
+                    "integer. The value must be between 0 " 
+                    + $"and {ushort.MaxValue}.");
 
             return (ushort)value.data[0];
         }
@@ -2453,11 +2572,19 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as an 8-bit signed integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is outside the range of an 8-bit signed integer.</exception>
+        /// <exception cref="OverflowException">Thrown when the value
+        /// is outside the range of an 8-bit signed integer.
+        /// </exception>
         public static explicit operator sbyte(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
+
+            if (value > sbyte.MaxValue || value < sbyte.MinValue)
+                throw new OverflowException("Value cannot be " + 
+                    "represented as an 8-bit signed integer. " + 
+                    $"The value must be between {sbyte.MinValue}" 
+                    + $" and {sbyte.MaxValue}.");
 
             return (sbyte)value.data[0];
         }
@@ -2467,11 +2594,19 @@ namespace Eduard
         /// </summary>
         /// <param name="value">The BigInteger to convert.</param>
         /// <returns>The value as an 8-bit unsigned integer.</returns>
-        /// <exception cref="OverflowException">Thrown when the value is negative or exceeds Byte.MaxValue.</exception>
+        /// <exception cref="OverflowException">Thrown when the value 
+        /// is negative or exceeds <see cref="byte.MaxValue"/>.
+        /// </exception>
         public static explicit operator byte(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
+
+            if (value < 0 || value > byte.MaxValue)
+                throw new OverflowException("Value " + 
+                    "cannot be represented as an 8-bit" + 
+                    " unsigned integer. The value must " + 
+                    $"be between 0 and {byte.MaxValue}.");
 
             return (byte)value.data[0];
         }
