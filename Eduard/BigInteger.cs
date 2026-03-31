@@ -165,6 +165,9 @@ namespace Eduard
         /// Initializes a new instance of the <see cref="BigInteger"/> class from a byte array in big-endian format.
         /// </summary>
         /// <param name="array">The byte array representing the positive integer in big-endian order.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="array"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="array"/> is empty.</exception>
+        /// <exception cref="ArgumentException">Thrown when the byte array length exceeds the maximum supported size.</exception>
         /// <remarks>
         /// <para>
         /// The byte array is interpreted as a positive integer in big-endian format (most significant byte first). <br/>
@@ -180,6 +183,27 @@ namespace Eduard
         /// </remarks>
         public BigInteger(byte[] array)
         {
+            if (array == null)
+                throw new ArgumentNullException(
+                    nameof(array), "The byte " +
+                    "array cannot be null.");
+
+            if (array.Length == 0)
+                throw new ArgumentException(
+                    "The byte array cannot be" +
+                    " empty. Use the parameterless" +
+                    " constructor for zero values.",
+                    nameof(array));
+
+            const int maxAllowedLength = int.MaxValue >> 2;
+
+            if (array.Length > maxAllowedLength)
+                throw new ArgumentException(
+                    $"The byte array length ({array.Length})" +
+                    " exceeds the maximum supported length" +
+                    $" of {maxAllowedLength} bytes.",
+                    nameof(array));
+
             int length = array.Length >> 2;
             int rem = array.Length & 3;
 
