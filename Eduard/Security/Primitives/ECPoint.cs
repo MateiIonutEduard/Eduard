@@ -113,6 +113,9 @@ namespace Eduard.Security.Primitives
         /// <returns>true if the object is an ECPoint with identical coordinates; otherwise false.</returns>
         public override bool Equals(object obj)
         {
+            if (ReferenceEquals(obj, null))
+                return false;
+
             if (!(obj is ECPoint))
                 return false;
 

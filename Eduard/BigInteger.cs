@@ -2042,10 +2042,10 @@ namespace Eduard
         /// <returns><c>true</c> if <paramref name="obj"/> is a BigInteger and has the same value; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            if (object.ReferenceEquals(obj, null))
+            if (ReferenceEquals(obj, null))
                 return false;
 
-            if (object.ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, obj))
                 return true;
 
             if (!(obj is BigInteger))
@@ -2062,10 +2062,10 @@ namespace Eduard
         /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
         public bool Equals(BigInteger other)
         {
-            if (object.ReferenceEquals(other, null))
+            if (ReferenceEquals(other, null))
                 return false;
 
-            if (object.ReferenceEquals(this, other))
+            if (ReferenceEquals(this, other))
                 return true;
 
             if (data.Used != other.data.Used)

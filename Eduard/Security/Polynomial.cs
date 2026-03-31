@@ -962,6 +962,9 @@ namespace Eduard.Security
         /// </remarks>
         public override bool Equals(object obj)
         {
+            if (ReferenceEquals(obj, null))
+                return false;
+
             if (!(obj is Polynomial))
                 return false;
 
