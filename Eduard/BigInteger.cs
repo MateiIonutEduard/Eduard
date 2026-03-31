@@ -1298,13 +1298,10 @@ namespace Eduard
         /// composite number being incorrectly identified as prime is at most (1/4)^<paramref name="trials"/>.
         /// </para>
         /// <para>
-        /// For cryptographic applications, the number of trials should be chosen based on the desired
-        /// security level:
+        /// For cryptographic applications, 50 iterations is the standard number of trials, <br/>
+        /// yielding an error probability of less than 2^(-100). This is sufficient for most <br/>
+        /// RSA key generation and other cryptographic primitives.
         /// </para>
-        /// <list type="bullet">
-        /// <item><description>50 trials for 2^(-100) error probability (commonly used in RSA key generation)</description></item>
-        /// <item><description>128 trials for 2^(-256) error probability (recommended for high-security applications)</description></item>
-        /// </list>
         /// <para>
         /// This method automatically falls back to the deterministic test for numbers less than 2^64.
         /// </para>
@@ -2088,8 +2085,8 @@ namespace Eduard
         /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
         public static bool operator ==(BigInteger left, BigInteger right)
         {
-            if (object.ReferenceEquals(left, null))
-                return object.ReferenceEquals(right, null);
+            if (ReferenceEquals(left, null))
+                return ReferenceEquals(right, null);
 
             return left.Equals(right);
         }

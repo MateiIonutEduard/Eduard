@@ -44,10 +44,10 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public ECPoint(BigInteger x, BigInteger y, bool isInfinity)
         {
-            if (object.ReferenceEquals(x, null))
+            if (ReferenceEquals(x, null))
                 throw new NullReferenceException("The affine x-coordinate cannot be null.");
 
-            if (object.ReferenceEquals(null, y))
+            if (ReferenceEquals(null, y))
                 throw new NullReferenceException("The affine y-coordinate cannot be null.");
 
             this.isInfinity = isInfinity;

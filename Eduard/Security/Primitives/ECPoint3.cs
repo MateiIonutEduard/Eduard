@@ -47,13 +47,13 @@ namespace Eduard.Security.Primitives
         /// <exception cref="NullReferenceException">Thrown when any coordinate is null.</exception>
         public ECPoint3(BigInteger x, BigInteger y, BigInteger z)
         {
-            if (object.ReferenceEquals(x, null))
+            if (ReferenceEquals(x, null))
                 throw new NullReferenceException("The projective X-coordinate cannot be null.");
 
-            if (object.ReferenceEquals(null, y))
+            if (ReferenceEquals(null, y))
                 throw new NullReferenceException("The projective Y-coordinate cannot be null.");
 
-            if (object.ReferenceEquals(z, null))
+            if (ReferenceEquals(z, null))
                 throw new NullReferenceException("The projective Z-coordinate cannot be null.");
 
             this.x = x;
