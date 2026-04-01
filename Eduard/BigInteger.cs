@@ -2167,7 +2167,7 @@ namespace Eduard
         /// <param name="n">The zero-based index of the bit to test.</param>
         /// <returns><c>true</c> if the bit at position <paramref name="n"/> is set; otherwise, <c>false</c>.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when <paramref name="n"/> is negative or exceeds the internal buffer capacity.
+        /// Thrown when <paramref name="n"/> is negative.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -2190,18 +2190,24 @@ namespace Eduard
         public bool TestBit(int n)
         {
             if (n < 0)
-                throw new ArgumentOutOfRangeException(nameof(n), 
+                throw new ArgumentOutOfRangeException(nameof(n),
                     "Bit index cannot be negative.");
 
             int wordIndex = n >> 5;
             int bitOffset = n & 0x1F;
-
-            if (wordIndex > data.Used)
-                throw new ArgumentOutOfRangeException(nameof(n),
-                    $"Bit index {n} exceeds the integer's " + 
-                    $"capacity of {data.Used * 32} bits.");
-
             uint mask = (uint)1 << bitOffset;
+
+            if (IsNegative)
+            {
+                if (wordIndex >= data.Used)
+                    return true;
+
+                return (data[wordIndex] & mask) != 0;
+            }
+
+            if (wordIndex >= data.Used)
+                return false;
+
             return (data[wordIndex] & mask) != 0;
         }
 
