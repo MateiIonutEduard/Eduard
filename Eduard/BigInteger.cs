@@ -2210,6 +2210,51 @@ namespace Eduard
 
             return (data[wordIndex] & mask) != 0;
         }
+        
+        /// <summary>
+        /// Sets the bit at the specified position to 1.
+        /// </summary>
+        /// <param name="n">The zero-based index of the bit to set.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="n"/> is negative or exceeds the integer's capacity.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Bit indexing follows little-endian convention where bit 0 corresponds to the least significant bit. <br/>
+        /// For negative numbers, this method sets bits in the two's complement representation.
+        /// </para>
+        /// <para>
+        /// This method requires the bit index to be within the current capacity. To set bits beyond <br/>
+        /// the current capacity, the integer must first be expanded using multiplication or shift operations.
+        /// </para>
+        /// <para>
+        /// Cryptographic considerations:
+        /// <list type="bullet">
+        /// <item><description>This method modifies the current instance</description></item>
+        /// <item><description>Does not provide constant-time guarantees; avoid with secret-dependent indices</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// Performance: O(1) when the bit is within the current limb array.
+        /// </para>
+        /// </remarks>
+        public void SetBit(int n)
+        {
+            if (n < 0)
+                throw new ArgumentOutOfRangeException(nameof(n),
+                    "Bit index cannot be negative.");
+
+            int wordIndex = n >> 5;
+            int bitOffset = n & 0x1F;
+
+            if (wordIndex >= data.Used)
+                throw new ArgumentOutOfRangeException(nameof(n),
+                    $"Bit index {n} exceeds the integer's " +
+                    $"capacity of {data.Used * 32} bits.");
+
+            uint mask = (uint)1 << bitOffset;
+            data[wordIndex] |= mask;
+        }
 
         /// <summary>
         /// Generates a cryptographically secure random integer within the specified inclusive range.
