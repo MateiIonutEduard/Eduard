@@ -2392,10 +2392,24 @@ namespace Eduard
             var sb = new StringBuilder();
             int len = data.Used - 1;
 
-            for (int j = 0; j < len; j++)
-                sb.Append(data[j].ToString("X8"));
+            for (int j = len; j >= 0; j--)
+            {
+                uint block = data[j];
+                int k = 7;
 
-            sb.Append(string.Format("{0:X}", data[len]));
+                while(k >= 0)
+                {
+                    uint digit = (block >> (4 * k)) & 0xF;
+
+                    if (digit < 10)
+                        sb.Append((char)(digit + 48));
+                    else
+                        if(digit >= 10 && digit <= 15)
+                            sb.Append((char)(digit + 55));
+                    k--;
+                }
+            }
+
             return sb.ToString();
         }
 
