@@ -368,7 +368,7 @@ namespace Eduard
             if (limit != 0)
                 length++;
 
-            data = new Data(length);
+            data = new Data(length - 1);
             int i = 0;
             uint digit;
 
