@@ -384,9 +384,10 @@ namespace Eduard
                         val -= 48;
                     else
                         if (val >= 'A' && val <= 'F')
-                           val = (val - 'A') + 10;
-                    else
-                        throw new ArgumentOutOfRangeException();
+                            val = (val - 'A') + 10;
+                        else
+                            if (val >= 'a' && val <= 'f')
+                                val = (val - 'a') + 10;
 
                     digit |= (val << (4 * k));
                 }
