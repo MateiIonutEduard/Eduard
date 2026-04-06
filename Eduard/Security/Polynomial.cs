@@ -603,6 +603,24 @@ namespace Eduard.Security
             return res;
         }
 
+        public static Polynomial Compose(Polynomial left, Polynomial right)
+        {
+            Polynomial poly = left;
+            Polynomial res = 0;
+            Polynomial temp = 1;
+
+            for (int k = 0; k <= poly.degree; k++)
+            {
+                BigInteger kt = poly.coeffs[k];
+                Polynomial aux = ScaleMod(kt, temp);
+
+                temp *= right;
+                res += aux;
+            }
+
+            return res;
+        }
+
         /// <summary>
         /// Computes the greatest common divisor of two polynomials over the current finite field.
         /// </summary>
