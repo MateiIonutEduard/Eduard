@@ -200,19 +200,9 @@ namespace Eduard.Security
                     "Polynomial ring modulus not initialized."
                     + " Call SetModulus() first.");
 
-            Polynomial poly = left.poly;
-            Polynomial cpoly = 0;
-            Polynomial temp = 1;
-
-            for(int k = 0; k <= poly.degree; k++)
-            {
-                Polynomial aux = poly.coeffs[k] * temp;
-                temp = Polynomial.Reduce(temp * right.poly, mod);
-                cpoly += aux;
-            }
-
-            PolyMod result = new PolyMod(cpoly);
-            return result;
+            Polynomial res = Polynomial.Compose(left.poly, 
+                right.poly, mod, false);
+            return res;
         }
 
         /// <summary>
