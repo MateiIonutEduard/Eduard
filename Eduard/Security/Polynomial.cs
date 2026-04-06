@@ -633,7 +633,7 @@ namespace Eduard.Security
             return res;
         }
 
-        public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus)
+        public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus, bool prepareModulus = true)
         {
             if (modulus.degree == 0 && modulus.coeffs[0] == 0)
                 throw new DivideByZeroException(
@@ -651,7 +651,8 @@ namespace Eduard.Security
 
             if (modulus.degree >= DEGREE_THRESHOLD)
             {
-                SetPolyMod(modulus);
+                if (prepareModulus)
+                    SetPolyMod(modulus);
 
                 for (int k = 0; k <= poly.degree; k++)
                 {
