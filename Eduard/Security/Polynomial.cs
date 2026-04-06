@@ -603,6 +603,18 @@ namespace Eduard.Security
             return res;
         }
 
+        /// <summary>
+        /// Composes two polynomials, computing P(Q(x)) over the current finite field.
+        /// </summary>
+        /// <param name="left">The outer polynomial P(x).</param>
+        /// <param name="right">The inner polynomial Q(x).</param>
+        /// <returns>The composition polynomial P(Q(x)) reduced modulo the field.</returns>
+        /// <remarks>
+        /// Uses Horner's method for efficient composition. Critical for constructing <br/>
+        /// endomorphisms in GLV/GLS elliptic curve scalar multiplication and for <br/>
+        /// isogeny-based cryptography (CSIDH, SIKE). The result degree is <br/>
+        /// deg(P) * deg(Q).
+        /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right)
         {
             Polynomial poly = left;
