@@ -633,6 +633,50 @@ namespace Eduard.Security
             return res;
         }
 
+        public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus)
+        {
+            if (modulus.degree == 0 && modulus.coeffs[0] == 0)
+                throw new DivideByZeroException(
+                    "Modulus polynomial cannot be zero.");
+
+#if !USE_BENCHMARKING
+            int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
+#else
+            int DEGREE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_POW_MOD);
+#endif
+
+            Polynomial poly = left;
+            Polynomial res = 0;
+            Polynomial temp = 1;
+
+            if (modulus.degree >= DEGREE_THRESHOLD)
+            {
+                SetPolyMod(modulus);
+
+                for (int k = 0; k <= poly.degree; k++)
+                {
+                    BigInteger kt = poly.coeffs[k];
+                    Polynomial aux = ScaleMod(kt, temp);
+
+                    temp = MultMod(temp, right, modulus);
+                    res += aux;
+                }
+            }
+            else
+            {
+                for (int k = 0; k <= poly.degree; k++)
+                {
+                    BigInteger kt = poly.coeffs[k];
+                    Polynomial aux = ScaleMod(kt, temp);
+
+                    temp = (temp * right) % modulus;
+                    res += aux;
+                }
+            }
+
+            return res;
+        }
+
         /// <summary>
         /// Computes the greatest common divisor of two polynomials over the current finite field.
         /// </summary>
