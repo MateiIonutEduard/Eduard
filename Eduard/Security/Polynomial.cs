@@ -592,6 +592,17 @@ namespace Eduard.Security
             return result;
         }
 
+        private static Polynomial ScaleMod(BigInteger k, Polynomial poly)
+        {
+            Polynomial res = new Polynomial(poly.degree);
+            int j;
+
+            for (j = 0; j <= res.degree; j++)
+                res.coeffs[j] = BarrettReducer.MultMod(k, poly.coeffs[j]);
+
+            return res;
+        }
+
         /// <summary>
         /// Computes the greatest common divisor of two polynomials over the current finite field.
         /// </summary>
