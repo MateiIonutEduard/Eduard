@@ -436,6 +436,21 @@ namespace Eduard
         }
 
         /// <summary>
+        /// Converts the string representation of a number in the specified radix to its <see cref="BigInteger"/> equivalent.
+        /// </summary>
+        /// <param name="value">A string containing a number to convert.</param>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <returns>A <see cref="BigInteger"/> equivalent to the number contained in <paramref name="value"/>.</returns>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="value"/> is null, empty, or 
+        /// contains characters invalid for the specified radix.
+        /// </exception>
+        public static BigInteger Parse(string value, Radix radix)
+        {
+            return new BigInteger(value, radix);
+        }
+
+        /// <summary>
         /// Adds two BigInteger values and returns the result.
         /// </summary>
         /// <param name="left">The first value to add.</param>
