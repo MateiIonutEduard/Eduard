@@ -2499,6 +2499,24 @@ namespace Eduard
         }
 
         /// <summary>
+        /// Converts the numeric value of this instance to its equivalent string representation in the specified radix.
+        /// </summary>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <returns>The string representation of the value in the specified radix.</returns>
+        /// <remarks>
+        /// For <see cref="Radix.Decimal"/>, this method delegates to <see cref="ToString"/> which performs <br/>
+        /// chunked conversion (9 digits per iteration). For <see cref="Radix.HexaDecimal"/>, this method <br/>
+        /// delegates to <see cref="ToHexString"/>.
+        /// </remarks>
+        public string ToString(Radix radix)
+        {
+            if (radix == Radix.Decimal)
+                return ToString();
+
+            return ToHexString();
+        }
+
+        /// <summary>
         /// Converts the BigInteger to a byte array in big-endian format.
         /// </summary>
         /// <returns>A byte array representing the absolute value in big-endian order (most significant byte first).</returns>
