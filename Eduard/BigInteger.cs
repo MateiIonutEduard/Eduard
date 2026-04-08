@@ -403,12 +403,13 @@ namespace Eduard
                 uint val = digits[k];
 
                 if (val >= '0' && val <= '9')
-                    val -= '0';
+                    val -= 48;
                 else
                     if (val >= 'A' && val <= 'F')
-                    val = (val - 'A') + 10;
-                else
-                    throw new ArgumentOutOfRangeException();
+                        val = (val - 'A') + 10;
+                    else
+                        if (val >= 'a' && val <= 'f')
+                            val = (val - 'a') + 10;
 
                 digit |= (val << shift);
                 shift += 4;
@@ -418,6 +419,20 @@ namespace Eduard
                 data[i] = digit;
 
             data.Update();
+        }
+
+        /// <summary>
+        /// Converts the string representation of a decimal number to its <see cref="BigInteger"/> equivalent.
+        /// </summary>
+        /// <param name="value">A string containing a decimal number to convert.</param>
+        /// <returns>A <see cref="BigInteger"/> equivalent to the number contained in <paramref name="value"/>.</returns>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="value"/> is null, empty, or contains characters that are
+        /// not valid decimal digits (0-9), or has an invalid format such as a misplaced minus sign.
+        /// </exception>
+        public static BigInteger Parse(string value)
+        {
+            return new BigInteger(value);
         }
 
         /// <summary>
