@@ -478,6 +478,34 @@ namespace Eduard
         }
 
         /// <summary>
+        /// Tries to convert the string representation of a number in the specified radix to its <see cref="BigInteger"/> equivalent.
+        /// </summary>
+        /// <param name="value">A string containing a number to convert.</param>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <param name="result">
+        /// When this method returns, contains the <see cref="BigInteger"/> equivalent if conversion succeeded,
+        /// or zero if the conversion failed.
+        /// </param>
+        /// <returns><c>true</c> if conversion succeeded; otherwise, <c>false</c>.</returns>
+        public static bool TryParse(string value, Radix radix, out BigInteger result)
+        {
+            result = 0;
+
+            if (string.IsNullOrEmpty(value)) 
+                return false;
+
+            try 
+            { 
+                result = Parse(value, radix); 
+                return true; 
+            }
+            catch (FormatException) 
+            { 
+                return false; 
+            }
+        }
+
+        /// <summary>
         /// Adds two BigInteger values and returns the result.
         /// </summary>
         /// <param name="left">The first value to add.</param>
