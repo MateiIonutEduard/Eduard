@@ -2551,7 +2551,7 @@ namespace Eduard
         {
             byte[] buffer = new byte[4 * data.Used];
 
-            for(int k = 0; k < data.Used; k++)
+            for(int k = data.Used - 1; k >= 0; k--)
             {
                 byte[] array = BitConverter.GetBytes(data[k]);
                 Array.Copy(array, 0, buffer, 4 * k, 4);
