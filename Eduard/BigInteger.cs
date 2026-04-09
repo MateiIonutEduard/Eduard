@@ -2495,7 +2495,21 @@ namespace Eduard
                 }
             }
 
-            return sb.ToString();
+            string result = sb.ToString().TrimStart('0');
+            if (result.Length == 0) result = "0";
+
+            if (!IsNegative)
+            {
+                char firstChar = result[0];
+                int nibble = (firstChar >= '0' && firstChar <= '9')
+                    ? (char)(firstChar - 48)
+                    : (char)(firstChar - 55);
+
+                if (nibble >= 8)
+                    result = "0" + result;
+            }
+
+            return result;
         }
 
         /// <summary>
