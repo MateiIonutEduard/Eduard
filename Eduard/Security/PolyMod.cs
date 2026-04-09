@@ -178,20 +178,21 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Computes polynomial composition f(g(X)) modulo the ring modulus.
+        /// Composes two ring elements, computing f(g(X)) modulo the ring modulus.
         /// </summary>
-        /// <param name="left">The outer polynomial f.</param>
-        /// <param name="right">The inner polynomial g.</param>
-        /// <returns>f(g(X)) mod m(X).</returns>
+        /// <param name="left">The outer polynomial f(X).</param>
+        /// <param name="right">The inner polynomial g(X).</param>
+        /// <returns>The composition f(g(X)) reduced modulo the ring modulus m(X).</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the ring modulus has not been initialized.
+        /// Thrown when the ring modulus has not been initialized via <see cref="SetModulus"/>.
         /// </exception>
         /// <exception cref="DivideByZeroException">
-        /// Thrown when modulus polynomial is zero.
+        /// Thrown when the ring modulus is zero.
         /// </exception>
         /// <remarks>
-        /// Implements Horner's method for composition. Complexity O(n^2) where n is the degree.<br/>
-        /// Used in certain cryptographic transformations and homomorphic operations.
+        /// Delegates to <see cref="Polynomial.Compose(Polynomial, Polynomial, Polynomial, bool)"/> <br/>
+        /// with <c>prepareModulus = false</c> since FFT parameters are precomputed by <br/>
+        /// <see cref="SetModulus"/>.
         /// </remarks>
         public static PolyMod Compose(PolyMod left, PolyMod right)
         {
