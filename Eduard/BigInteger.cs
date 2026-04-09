@@ -332,7 +332,9 @@ namespace Eduard
 
         private void BuildDecimal(string digits)
         {
-            int sign = (digits[0] == '-' ? 1 : 0);
+            bool isNegative = (digits[0] == '-');
+            int startPos = isNegative ? 1 : 0;
+
             BigInteger res = 0, mult = 1;
             const int size = 9;
 
@@ -343,9 +345,9 @@ namespace Eduard
             for (int i = 1; i < size; i++)
                 table[i] = table[i - 1] * 10;
 
-            for (int i = len; i > sign; i -= size)
+            for (int i = len; i > startPos; i -= size)
             {
-                int startIndex = Math.Max(0, i - size);
+                int startIndex = Math.Max(startPos, i - size);
                 int length = i - startIndex;
 
                 string chunk = digits.Substring(startIndex, length);
@@ -355,6 +357,8 @@ namespace Eduard
                 mult *= table[length - 1];
             }
 
+            if (isNegative) 
+                res = -res;
             data = res.data;
         }
 
