@@ -610,10 +610,8 @@ namespace Eduard.Security
         /// <param name="right">The inner polynomial Q(x).</param>
         /// <returns>The composition polynomial P(Q(x)) reduced modulo the field.</returns>
         /// <remarks>
-        /// Uses Horner's method for efficient composition. Critical for constructing <br/>
-        /// endomorphisms in GLV/GLS elliptic curve scalar multiplication and for <br/>
-        /// isogeny-based cryptography (CSIDH, SIKE). The result degree is <br/>
-        /// deg(P) * deg(Q).
+        /// Implements Horner's method for polynomial composition. The result degree is deg(P) * deg(Q). For <br/>
+        /// composition with modular reduction, use <see cref="Compose(Polynomial, Polynomial, Polynomial, bool)"/>.
         /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right)
         {
@@ -633,6 +631,31 @@ namespace Eduard.Security
             return res;
         }
 
+        /// <summary>
+        /// Composes two polynomials modulo a third polynomial, computing P(Q(x)) mod M(x) over the current finite field.
+        /// </summary>
+        /// <param name="left">The outer polynomial P(x).</param>
+        /// <param name="right">The inner polynomial Q(x).</param>
+        /// <param name="modulus">The modulus polynomial M(x).</param>
+        /// <param name="prepareModulus">
+        /// If <c>true</c>, precomputes FFT parameters for the modulus using <see cref="SetPolyMod"/>.
+        /// Set to <c>false</c> when calling repeatedly with the same modulus.
+        /// </param>
+        /// <returns>The composition polynomial P(Q(x)) reduced modulo M(x) over the current field.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
+        /// <remarks>
+        /// <para>
+        /// Implements polynomial modular composition using:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>Horner's method with step-wise modular reduction</description></item>
+        /// <item><description>Barrett reduction and precomputed FFT parameters for moduli meeting the degree threshold</description></item>
+        /// </list>
+        /// <para>
+        /// Critical for GLV/GLS endomorphisms, isogeny evaluation in CSIDH/SIKE, and Frobenius <br/>
+        /// endomorphisms in pairing-based cryptography. The result degree is bounded by deg(M) - 1.
+        /// </para>
+        /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus, bool prepareModulus = true)
         {
             if (modulus.degree == 0 && modulus.coeffs[0] == 0)
