@@ -164,14 +164,15 @@ namespace Eduard
         /// <summary>
         /// Initializes a new instance of the <see cref="BigInteger"/> class from a byte array in big-endian format.
         /// </summary>
-        /// <param name="array">The byte array representing the positive integer in big-endian order.</param>
+        /// <param name="array">The byte array representing the integer in big-endian order.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="array"/> is null.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="array"/> is empty.</exception>
         /// <exception cref="ArgumentException">Thrown when the byte array length exceeds the maximum supported size.</exception>
         /// <remarks>
         /// <para>
-        /// The byte array is interpreted as a positive integer in big-endian format (most significant byte first). <br/>
-        /// The array may be of any length and leading zero bytes are preserved in the internal representation.
+        /// The byte array is interpreted in big-endian format (most significant byte first). <br/>
+        /// If the most significant bit of the first byte is set, the number is interpreted as <br/>
+        /// negative using two's complement encoding.
         /// </para>
         /// <para>
         /// This constructor is commonly used to convert cryptographic primitives like RSA parameters, <br/>
@@ -207,12 +208,10 @@ namespace Eduard
             int length = array.Length >> 2;
             int rem = array.Length & 3;
 
-            if (rem != 0)
-                length++;
+            if (rem != 0) length++;
+            data = new Data(length - 1);
 
-            data = new Data(length);
             uint digit;
-
             int h = 0;
 
             for(int i = array.Length - 1; i >= rem; i -= 4)
