@@ -48,6 +48,11 @@ namespace Eduard
         POLY_DEGREE_THRESHOLD = 16,
 
         /// <summary>
+        /// The minimum polynomial degree for FFT-accelerated Horner modular composition.
+        /// </summary>
+        POLY_MOD_COMPOSE_THRESHOLD = 88,
+
+        /// <summary>
         /// Minimum words for sliding window exponentiation to outperform binary method.
         /// </summary>
         BIGINT_WORDS_THRESHOLD = 10

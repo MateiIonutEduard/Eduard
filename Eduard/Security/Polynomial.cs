@@ -663,16 +663,16 @@ namespace Eduard.Security
                     "Modulus polynomial cannot be zero.");
 
 #if !USE_BENCHMARKING
-            int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
+            int POLY_MOD_COMPOSE_THRESHOLD = (int)Threshold.POLY_MOD_COMPOSE_THRESHOLD;
 #else
-            int DEGREE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_POW_MOD);
+            int POLY_MOD_COMPOSE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER);
 #endif
 
             Polynomial poly = left;
             Polynomial res = 0;
             Polynomial temp = 1;
 
-            if (modulus.degree >= DEGREE_THRESHOLD)
+            if (modulus.degree >= POLY_MOD_COMPOSE_THRESHOLD)
             {
                 if (prepareModulus)
                     SetPolyMod(modulus);
