@@ -6,42 +6,45 @@ using BenchmarkDotNet.Attributes;
 
 namespace BenchTests.Core.Poly
 {
-    public class DegreePowBenchmark
+    public class ComposeModBenchmark
     {
         [Params(160, 192, 256, 384, 512)]
         public int bitSize;
 
-        [Params(16, 32, 64, 96, 128)]
+        [Params(64, 72, 80, 88, 96, 128)]
         public int degree;
 
         private Polynomial mod;
         private BigInteger field;
+        private Polynomial XP;
 
         [GlobalSetup]
         public void Setup()
         {
             field = SecureRandom.GenProbablePrime(bitSize);
             Polynomial.SetField(field);
+
             mod = new Polynomial(degree);
+            Polynomial X = new Polynomial(1, 0);
 
             for (int i = 0; i <= degree; i++)
                 mod.coeffs[i] = SecureRandom.Range(1, field - 1);
+
+            XP = Polynomial.Pow(X, field, mod);
         }
 
         [Benchmark]
-        public void BinaryPolyPowMod()
+        public void StandardHorner()
         {
-            PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_POW_MOD, degree << 1);
-            Polynomial X = new Polynomial(1, 0);
-            Polynomial XP = Polynomial.Pow(X, field, mod);
+            PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree << 1);
+            Polynomial XPP = Polynomial.Compose(XP, XP, mod);
         }
 
         [Benchmark]
-        public void ImprovedPolyPowMod()
+        public void ImprovedHorner()
         {
-            PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_POW_MOD, degree);
-            Polynomial X = new Polynomial(1, 0);
-            Polynomial XP = Polynomial.Pow(X, field, mod);
+            PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree);
+            Polynomial XPP = Polynomial.Compose(XP, XP, mod);
         }
     }
 }

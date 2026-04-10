@@ -4,7 +4,7 @@ using Eduard;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchmarkTests.Core.BigInt
+namespace BenchTests.Core.BigInt
 {
     public class PrimeBenchmark
     {
