@@ -362,36 +362,60 @@ namespace Eduard
             data = res.data;
         }
 
+        private uint GetDigit(char hexDigit)
+        {
+            uint val = hexDigit;
+
+            if (val >= '0' && val <= '9')
+                val -= 48;
+            else
+                if (val >= 'A' && val <= 'F')
+                    val = (val - 'A') + 10;
+                else
+                    if (val >= 'a' && val <= 'f')
+                        val = (val - 'a') + 10;
+
+            return val;
+        }
+
         private void BuildHexaDecimal(string digits)
         {
-            int limit = digits.Length & 7;
-            int bufLen = digits.Length >> 3;
+            int skipDigits = 0;
+            int i = 0, j, k;
+
+            while (i < digits.Length - 1)
+            {
+                uint nextDigit = GetDigit(digits[i + 1]);
+
+                if (digits[i] == 'F' && nextDigit >= 8)
+                {
+                    skipDigits++;
+                    i++;
+                }
+                else
+                    break;
+            }
+
+            int size = digits.Length - skipDigits;
+            int limit = size & 7;
+
+            int bufLen = size >> 3;
             int length = bufLen;
 
             if (limit != 0)
                 length++;
 
-            data = new Data(length - 1);
-            int i = 0;
+            data = new Data(length);
+            i = 0;
             uint digit;
 
-            for (int j = digits.Length - 1; j >= limit; j -= 8)
+            for (j = digits.Length - 1; j >= limit; j -= 8)
             {
                 digit = 0;
 
-                for(int k = 0; k < 8; k++)
+                for(k = 0; k < 8; k++)
                 {
-                    uint val = digits[j - k];
-
-                    if (val >= '0' && val <= '9')
-                        val -= 48;
-                    else
-                        if (val >= 'A' && val <= 'F')
-                            val = (val - 'A') + 10;
-                        else
-                            if (val >= 'a' && val <= 'f')
-                                val = (val - 'a') + 10;
-
+                    uint val = GetDigit(digits[j - k]);
                     digit |= (val << (4 * k));
                 }
 
@@ -401,19 +425,9 @@ namespace Eduard
             digit = 0;
             int shift = 0;
 
-            for(int k = limit - 1; k >= 0; k--)
+            for(k = limit - 1; k >= 0; k--)
             {
-                uint val = digits[k];
-
-                if (val >= '0' && val <= '9')
-                    val -= 48;
-                else
-                    if (val >= 'A' && val <= 'F')
-                        val = (val - 'A') + 10;
-                    else
-                        if (val >= 'a' && val <= 'f')
-                            val = (val - 'a') + 10;
-
+                uint val = GetDigit(digits[k]);
                 digit |= (val << shift);
                 shift += 4;
             }
