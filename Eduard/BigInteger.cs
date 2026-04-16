@@ -380,6 +380,7 @@ namespace Eduard
 
         private void BuildHexaDecimal(string digits)
         {
+            bool isNegative = GetDigit(digits[0]) >= 8;
             int skipDigits = 0;
             int i = 0, j, k;
 
@@ -405,35 +406,27 @@ namespace Eduard
             if (limit != 0)
                 length++;
 
-            data = new Data(length);
-            i = 0;
+            data = new Data(length - 1);
             uint digit;
+            i = 0;
 
-            for (j = digits.Length - 1; j >= limit; j -= 8)
+            for (j = size - 1; j >= 0; j -= 8)
             {
                 digit = 0;
+                uint val = 0;
 
                 for(k = 0; k < 8; k++)
                 {
-                    uint val = GetDigit(digits[j - k]);
+                    val = (j >= k) ? 
+                        GetDigit(digits[j - k])
+                        : (uint)(isNegative ? 
+                        0xFF : 0x00);
+
                     digit |= (val << (4 * k));
                 }
 
                 data[i++] = digit;
             }
-
-            digit = 0;
-            int shift = 0;
-
-            for(k = limit - 1; k >= 0; k--)
-            {
-                uint val = GetDigit(digits[k]);
-                digit |= (val << shift);
-                shift += 4;
-            }
-
-            if (limit != 0)
-                data[i] = digit;
 
             data.Update();
         }
