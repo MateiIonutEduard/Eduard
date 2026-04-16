@@ -205,8 +205,9 @@ namespace Eduard
                     $" of {maxAllowedLength} bytes.",
                     nameof(array));
 
-            uint mask = 0x80;
-            bool isNegative = (array[0] & mask) == mask;
+            const uint mask = 0x80;
+            bool isNegative = (array[0] 
+                & mask) == mask;
 
             int skipBytes = 0;
             int i = 0, j, k;
@@ -215,7 +216,7 @@ namespace Eduard
             {
                 uint nextByte = array[i + 1];
 
-                if (array[i] == 0xFF && nextByte >= 0x80)
+                if (array[i] == 0xFF && (nextByte & mask) == mask)
                 {
                     skipBytes++;
                     i++;
@@ -240,10 +241,12 @@ namespace Eduard
 
                 for(j = 0; j < 4; j++)
                 {
-                    uint val = (i >= j) ? 
-                        (uint)array[i - j] << (8 * j)
-                        : (uint)(isNegative ? 0xFF : 0x00);
+                    uint block = (i >= j) ? 
+                        (uint)array[i - j] : 
+                        (uint)(isNegative ? 
+                        0xFF : 0x00);
 
+                    uint val = block << (8 * j);
                     digit |= val;
                 }
 
@@ -2572,24 +2575,39 @@ namespace Eduard
         {
             byte[] buffer = new byte[4 * data.Used];
 
-            for(int k = data.Used - 1; k >= 0; k--)
+            for (int k = data.Used - 1; k >= 0; k--)
             {
                 byte[] array = BitConverter.GetBytes(data[k]);
                 Array.Copy(array, 0, buffer, 4 * k, 4);
             }
 
-            int j = buffer.Length;
-            int remove = 0;
+            bool isNegative = IsNegative;
+            byte signByte = (byte)(isNegative ? 0xFF : 0x00);
+            const byte highBitMask = 0x80;
 
-            while(buffer[j - 1] == 0 && j > 1)
+            int trimCount = 0;
+            int lastIndex = buffer.Length;
+
+            while (lastIndex > 1)
             {
-                ++remove;
-                j--;
+                byte currentByte = buffer[lastIndex - 1];
+                byte nextByte = buffer[lastIndex - 2];
+
+                bool shouldTrim = isNegative
+                    ? currentByte == 0xFF && (nextByte & highBitMask) == highBitMask
+                    : currentByte == 0x00 && (currentByte & highBitMask) == 0x00;
+
+                if (!shouldTrim)
+                    break;
+
+                trimCount++;
+                lastIndex--;
             }
 
-            Array.Resize<byte>(ref buffer, buffer.Length - remove);
-            Array.Reverse(buffer);
+            if (trimCount > 0)
+                Array.Resize(ref buffer, buffer.Length - trimCount);
 
+            Array.Reverse(buffer);
             return buffer;
         }
 
