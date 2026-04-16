@@ -2595,7 +2595,7 @@ namespace Eduard
 
                 bool shouldTrim = isNegative
                     ? currentByte == 0xFF && (nextByte & highBitMask) == highBitMask
-                    : currentByte == 0x00 && (currentByte & highBitMask) == 0x00;
+                    : currentByte == 0x00 && (nextByte & highBitMask) == 0x00;
 
                 if (!shouldTrim)
                     break;
