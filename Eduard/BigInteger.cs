@@ -410,17 +410,17 @@ namespace Eduard
             uint digit;
             i = 0;
 
-            for (j = size - 1; j >= 0; j -= 8)
+            for (j = digits.Length - 1; j >= skipDigits; j -= 8)
             {
                 digit = 0;
                 uint val = 0;
 
-                for(k = 0; k < 8; k++)
+                for (k = 0; k < 8; k++)
                 {
-                    val = (j >= k) ? 
+                    val = (j >= k) ?
                         GetDigit(digits[j - k])
-                        : (uint)(isNegative ? 
-                        0xFF : 0x00);
+                        : (uint)(isNegative ?
+                        0xF : 0x0);
 
                     digit |= (val << (4 * k));
                 }
