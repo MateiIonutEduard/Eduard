@@ -205,8 +205,28 @@ namespace Eduard
                     $" of {maxAllowedLength} bytes.",
                     nameof(array));
 
-            int length = array.Length >> 2;
-            int rem = array.Length & 3;
+            uint mask = 0x80;
+            bool isNegative = (array[0] & mask) == mask;
+
+            int skipBytes = 0;
+            int i = 0, j, k;
+
+            while (i < array.Length - 1)
+            {
+                uint nextByte = array[i + 1];
+
+                if (array[i] == 0xFF && nextByte >= 0x80)
+                {
+                    skipBytes++;
+                    i++;
+                }
+                else
+                    break;
+            }
+
+            int size = array.Length - skipBytes;
+            int length = size >> 2;
+            int rem = size & 3;
 
             if (rem != 0) length++;
             data = new Data(length - 1);
@@ -214,31 +234,21 @@ namespace Eduard
             uint digit;
             int h = 0;
 
-            for(int i = array.Length - 1; i >= rem; i -= 4)
+            for(i = array.Length - 1; i >= skipBytes; i -= 4)
             {
                 digit = 0;
 
-                for(int j = 0; j < 4; j++)
+                for(j = 0; j < 4; j++)
                 {
-                    uint val = (uint)array[i - j] << (8 * j);
+                    uint val = (i >= j) ? 
+                        (uint)array[i - j] << (8 * j)
+                        : (uint)(isNegative ? 0xFF : 0x00);
+
                     digit |= val;
                 }
 
                 data[h++] = digit;
             }
-
-            digit = 0;
-            int shift = 0;
-
-            for(int k = rem - 1; k >= 0; k--)
-            {
-                uint val = (uint)array[k] << shift;
-                digit |= val;
-                shift += 8;
-            }
-
-            if (rem > 0)
-                data[h] = digit;
 
             data.Update();
         }
