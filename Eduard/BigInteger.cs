@@ -394,23 +394,26 @@ namespace Eduard
         private void BuildHexaDecimal(string digits)
         {
             bool isNegative = GetDigit(digits[0]) >= 8;
-            int skipDigits = 0;
+            int trimCount = 0;
             int i = 0, j, k;
 
             while (i < digits.Length - 1)
             {
+                uint currentDigit = GetDigit(digits[i]);
                 uint nextDigit = GetDigit(digits[i + 1]);
 
-                if (digits[i] == 'F' && nextDigit >= 8)
-                {
-                    skipDigits++;
-                    i++;
-                }
-                else
+                bool shouldTrim = isNegative ?
+                    currentDigit == 0xF && (nextDigit & 0x8) == 0x8
+                    : currentDigit == 0 && (nextDigit & 0x8) == 0;
+
+                if (!shouldTrim)
                     break;
+
+                trimCount++;
+                i++;
             }
 
-            int size = digits.Length - skipDigits;
+            int size = digits.Length - trimCount;
             int limit = size & 7;
 
             int bufLen = size >> 3;
@@ -423,7 +426,7 @@ namespace Eduard
             uint digit;
             i = 0;
 
-            for (j = digits.Length - 1; j >= skipDigits; j -= 8)
+            for (j = digits.Length - 1; j >= trimCount; j -= 8)
             {
                 digit = 0;
                 uint val = 0;
