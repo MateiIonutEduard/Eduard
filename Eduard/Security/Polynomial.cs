@@ -515,6 +515,49 @@ namespace Eduard.Security
         }
 
         /// <summary>
+        /// Computes exponentiation of a polynomial raised to an integer exponent over the current finite field.
+        /// </summary>
+        /// <param name="val">The base polynomial.</param>
+        /// <param name="exponent">The exponent value.</param>
+        /// <returns>The base polynomial raised to the exponent.</returns>
+        /// <exception cref="ArithmeticException">Thrown when both base and exponent are zero (0^0 is undefined).</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when exponent is negative.</exception>
+        /// <remarks>
+        /// Implements binary exponentiation (square-and-multiply).<br/>
+        /// For modular exponentiation, use <see cref="Pow(Polynomial, BigInteger, Polynomial)"/>.
+        /// </remarks>
+        public static Polynomial Pow(Polynomial val, int exponent)
+        {
+            if (val == 0 && exponent == 0)
+                throw new ArithmeticException(
+                    "Cannot compute 0^0: zero " + 
+                    "polynomial raised to power" + 
+                    " zero is undefined.");
+
+            if (exponent < 0)
+                throw new ArgumentOutOfRangeException(
+                    "Exponent cannot be negative for " 
+                    + "polynomial exponentiation.");
+
+            if (exponent == 0) return 1;
+            if (exponent == 1) return val;
+
+            Polynomial res = 1;
+            int e = exponent;
+            
+            while(e != 0)
+            {
+                if ((e & 1) == 1)
+                    res *= val;
+
+                val = val * val;
+                e >>= 1;
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Computes modular exponentiation of a polynomial raised to a big integer exponent.
         /// </summary>
         /// <param name="val">The base polynomial.</param>
