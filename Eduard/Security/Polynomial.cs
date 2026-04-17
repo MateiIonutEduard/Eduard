@@ -522,6 +522,8 @@ namespace Eduard.Security
         /// <param name="modulus">The modulus polynomial.</param>
         /// <returns>The base polynomial raised to the exponent modulo the modulus.</returns>
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when exponent is negative.</exception>
+        /// <exception cref="ArithmeticException">Thrown when both base and exponent are zero (0^0 is undefined).</exception>
         public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial modulus)
         {
             Polynomial nb = new Polynomial(val);
@@ -530,6 +532,17 @@ namespace Eduard.Security
             if(modulus.degree == 0 && modulus.coeffs[0] == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
+
+            if (val == 0 && exponent == 0)
+                throw new ArithmeticException(
+                    "Cannot compute 0^0: zero " + 
+                    "polynomial raised to power " 
+                    + "zero is undefined.");
+
+            if (exponent < 0)
+                throw new ArgumentOutOfRangeException(
+                    "Exponent cannot be negative for " + 
+                    "polynomial modular exponentiation.");
 
 #if !USE_BENCHMARKING
             int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
