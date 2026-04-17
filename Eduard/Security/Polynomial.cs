@@ -544,6 +544,10 @@ namespace Eduard.Security
                     "Exponent cannot be negative for " + 
                     "polynomial modular exponentiation.");
 
+            if (exponent == 0) return 1;
+            Polynomial b = nb % modulus;
+            if (exponent == 1) return b;
+
 #if !USE_BENCHMARKING
             int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
 #else
@@ -557,8 +561,8 @@ namespace Eduard.Security
                 SetPolyMod(modulus);
 
                 Polynomial[] table = new Polynomial[store];
-                table[0] = nb % modulus;
-                Polynomial b2 = MultMod(table[0], table[0], modulus);
+                table[0] = b;
+                Polynomial b2 = MultMod(b, b, modulus);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
@@ -592,13 +596,9 @@ namespace Eduard.Security
                 for(int k = 0; k < size; k++)
                 {
                     if (exponent.TestBit(k))
-                    {
-                        Polynomial temp = nb * result;
-                        result = temp % modulus;
-                    }
+                        result = (b * result) % modulus;
 
-                    nb = nb * nb;
-                    nb %= modulus;
+                    b = (b * b) % modulus;
                 }
             }
 
