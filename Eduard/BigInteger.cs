@@ -2501,41 +2501,52 @@ namespace Eduard
         {
             if (IsZero) return "0";
             var sb = new StringBuilder();
-            int len = data.Used - 1;
 
-            for (int j = len; j >= 0; j--)
+            uint[] digits = new uint[data.Used << 3];
+            int len = data.Used - 1;
+            int i = 0, j, k;
+
+            for (j = len; j >= 0; j--)
             {
                 uint block = data[j];
-                int k = 7;
+                k = 7;
 
                 while(k >= 0)
                 {
-                    uint digit = (block >> (4 * k)) & 0xF;
-
-                    if (digit < 10)
-                        sb.Append((char)(digit + 48));
-                    else
-                        if(digit >= 10 && digit <= 15)
-                            sb.Append((char)(digit + 55));
-                    k--;
+                    digits[i] = (block >> (4 * k)) & 0xF;
+                    k--; i++;
                 }
             }
 
-            string result = sb.ToString().TrimStart('0');
-            if (result.Length == 0) result = "0";
+            int trimCount = 0;
+            k = 0;
 
-            if (!IsNegative)
+            while(k < i - 1)
             {
-                char firstChar = result[0];
-                int nibble = (firstChar >= '0' && firstChar <= '9')
-                    ? (char)(firstChar - 48)
-                    : (char)(firstChar - 55);
+                uint currentDigit = digits[k];
+                uint nextDigit = digits[k + 1];
 
-                if (nibble >= 8)
-                    result = "0" + result;
+                bool shouldTrim = IsNegative ?
+                    currentDigit == 0xF && (nextDigit & 0x8) == 0x8
+                    : currentDigit == 0 && (nextDigit & 0x8) == 0;
+
+                if (!shouldTrim)
+                    break;
+
+                trimCount++;
+                k++;
             }
 
-            return result;
+            for(k = trimCount; k < i; k++)
+            {
+                if (digits[k] < 10)
+                    sb.Append((char)(digits[k] + 48));
+                else
+                    if (digits[k] >= 10 && digits[k] <= 15)
+                        sb.Append((char)(digits[k] + 55));
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>
