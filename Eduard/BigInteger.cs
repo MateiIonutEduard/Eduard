@@ -1715,42 +1715,46 @@ namespace Eduard
         /// Raises a BigInteger to the power of a specified integer exponent.
         /// </summary>
         /// <param name="val">The base value.</param>
-        /// <param name="exp">The exponent, which must be non-negative.</param>
-        /// <returns>The result of <paramref name="val"/> raised to the power <paramref name="exp"/>.</returns>
+        /// <param name="exponent">The exponent, which must be non-negative.</param>
+        /// <returns>The result of <paramref name="val"/> raised to the power <paramref name="exponent"/>.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when <paramref name="exp"/> is negative. Negative exponents would 
+        /// Thrown when <paramref name="exponent"/> is negative. Negative exponents would 
         /// produce fractional results, which are not supported by integer exponentiation.
         /// </exception>
         /// <exception cref="ArithmeticException">
-        /// Thrown when both <paramref name="val"/> and <paramref name="exp"/> are zero, as zero 
+        /// Thrown when both <paramref name="val"/> and <paramref name="exponent"/> are zero, as zero 
         /// raised to the power of zero is mathematically undefined.
         /// </exception>
         /// <remarks>
         /// This method uses binary exponentiation (exponentiation by squaring) <br/>
-        /// which performs O(log exp) multiplications. For modular exponentiation, <br/>
+        /// which performs O(log n) multiplications. For modular exponentiation, <br/>
         /// use the overload with modulus parameter.
         /// </remarks>
-        public static BigInteger Pow(BigInteger val, int exp)
+        public static BigInteger Pow(BigInteger val, int exponent)
         {
-            if (exp < 0)
+            if (exponent < 0)
                 throw new ArgumentOutOfRangeException(
-                    nameof(exp), "The exponent must " + 
-                    $"be non-negative. Specified: {exp}.");
+                    nameof(exponent), "The exponent must " + 
+                    $"be non-negative. Specified: {exponent}.");
 
-            if (val == 0 && exp == 0)
+            if (val == 0 && exponent == 0)
                 throw new ArithmeticException(
                     "Zero raised to the power " +
                     "of zero is undefined.");
 
-            BigInteger result = 1;
+            if (exponent == 0) return 1;
+            if (exponent == 1) return val;
 
-            while(exp != 0)
+            BigInteger result = 1;
+            int e = exponent;
+
+            while (e != 0)
             {
-                if ((exp & 1) == 1)
+                if ((e & 1) == 1)
                     result = result * val;
 
                 val = val * val;
-                exp >>= 1;
+                e >>= 1;
             }
 
             return result;
