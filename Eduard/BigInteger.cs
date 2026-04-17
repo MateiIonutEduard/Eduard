@@ -209,23 +209,26 @@ namespace Eduard
             bool isNegative = (array[0] 
                 & mask) == mask;
 
-            int skipBytes = 0;
+            int trimCount = 0;
             int i = 0, j, k;
 
             while (i < array.Length - 1)
             {
+                uint currentByte = array[i];
                 uint nextByte = array[i + 1];
 
-                if (array[i] == 0xFF && (nextByte & mask) == mask)
-                {
-                    skipBytes++;
-                    i++;
-                }
-                else
+                bool shouldTrim = isNegative ?
+                    currentByte == 0xFF && (nextByte & mask) == mask
+                    : currentByte == 0 && (nextByte & mask) == 0;
+
+                if (!shouldTrim)
                     break;
+
+                trimCount++;
+                i++;
             }
 
-            int size = array.Length - skipBytes;
+            int size = array.Length - trimCount;
             int length = size >> 2;
             int rem = size & 3;
 
@@ -235,7 +238,7 @@ namespace Eduard
             uint digit;
             int h = 0;
 
-            for(i = array.Length - 1; i >= skipBytes; i -= 4)
+            for(i = array.Length - 1; i >= trimCount; i -= 4)
             {
                 digit = 0;
 
