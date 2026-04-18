@@ -2509,8 +2509,8 @@ namespace Eduard
             if (IsZero) return "0";
             var sb = new StringBuilder();
 
-            uint[] digits = new uint[data.Used << 3];
-            int len = data.Used - 1;
+            uint[] digits = new uint[(data.Used + 1) << 3];
+            int len = data.Used;
             int i = 0, j, k;
 
             for (j = len; j >= 0; j--)
