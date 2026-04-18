@@ -701,11 +701,12 @@ namespace Eduard.Security
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         /// <remarks>
         /// <para>
-        /// Implements polynomial modular composition using:
+        /// Implements polynomial modular composition using a hybrid algorithm strategy:
         /// </para>
         /// <list type="bullet">
-        /// <item><description>Horner's method with step-wise modular reduction</description></item>
-        /// <item><description>Barrett reduction and precomputed FFT parameters for moduli meeting the degree threshold</description></item>
+        /// <item><description>Brent-Kung algorithm for large-degree polynomials, achieving sub-quadratic complexity</description></item>
+        /// <item><description>FFT-accelerated Horner's method for intermediate-degree polynomials</description></item>
+        /// <item><description>Classical Horner's method for small-degree polynomials</description></item>
         /// </list>
         /// <para>
         /// Critical for GLV/GLS endomorphisms, isogeny evaluation in CSIDH/SIKE, and Frobenius <br/>
