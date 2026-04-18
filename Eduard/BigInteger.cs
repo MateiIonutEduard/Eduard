@@ -2594,9 +2594,9 @@ namespace Eduard
         /// </remarks>
         public byte[] ToByteArray()
         {
-            byte[] buffer = new byte[4 * data.Used];
+            byte[] buffer = new byte[4 * (data.Used + 1)];
 
-            for (int k = data.Used - 1; k >= 0; k--)
+            for (int k = data.Used; k >= 0; k--)
             {
                 byte[] array = BitConverter.GetBytes(data[k]);
                 Array.Copy(array, 0, buffer, 4 * k, 4);
