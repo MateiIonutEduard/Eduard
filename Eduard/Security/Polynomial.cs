@@ -720,19 +720,26 @@ namespace Eduard.Security
 
 #if !USE_BENCHMARKING
             int POLY_MOD_COMPOSE_THRESHOLD = (int)Threshold.POLY_MOD_COMPOSE_THRESHOLD;
+            int BRENT_KUNG_MOD_COMPOSE_THRESHOLD = 96;
 #else
             int POLY_MOD_COMPOSE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER);
+            int BRENT_KUNG_MOD_COMPOSE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_BRENT_KUNG);
 #endif
 
             Polynomial poly = left;
             Polynomial res = 0;
             Polynomial temp = 1;
 
-            if (modulus.degree >= POLY_MOD_COMPOSE_THRESHOLD)
-            {
-                if (prepareModulus)
-                    SetPolyMod(modulus);
+            int minDegree = Math.Min(POLY_MOD_COMPOSE_THRESHOLD, 
+                BRENT_KUNG_MOD_COMPOSE_THRESHOLD);
 
+            if (modulus.degree >= minDegree && prepareModulus)
+                SetPolyMod(modulus);
+
+            if (modulus.degree >= BRENT_KUNG_MOD_COMPOSE_THRESHOLD)
+                return BrentKung(left, right, modulus);
+            else if (modulus.degree >= POLY_MOD_COMPOSE_THRESHOLD)
+            {
                 for (int k = 0; k <= poly.degree; k++)
                 {
                     BigInteger kt = poly.coeffs[k];
@@ -755,6 +762,56 @@ namespace Eduard.Security
             }
 
             return res;
+        }
+
+        private static Polynomial BrentKung(Polynomial left, Polynomial right, Polynomial modulus)
+        {
+            Polynomial C = 0, T = 1;
+            int i, j, ik, L;
+
+            int n = modulus.degree;
+            int k = (int)Math.Sqrt(n + 1);
+            if (k * k < n + 1) k++;
+
+            Polynomial Q = 0;
+            Polynomial[] table = new Polynomial[k + 1];
+            table[0] = 1;
+
+            for (i = 1; i <= k; i++)
+                table[i] = MultMod(table[i - 1], right, modulus);
+
+            BigInteger[] x = new BigInteger[k];
+            BigInteger[] y = new BigInteger[k];
+
+            for (i = 0; i < k; i++)
+                x[i] = y[i] = 0;
+
+            for (i = 0; i < k; i++)
+            {
+                ik = i * k;
+                Q = new Polynomial(n);
+
+                for (L = 0; L <= n; L++)
+                {
+                    BigInteger t = 0;
+
+                    for (j = k - 1; j >= 0; j--)
+                    {
+                        x[j] = left.GetCoeff(ik + j);
+                        y[j] = table[j].GetCoeff(L);
+                    }
+
+                    t = DotMult(x, y);
+                    Q.coeffs[L] = t;
+                }
+
+                C += MultMod(Q, T, modulus);
+
+                if (i < k - 1)
+                    T = MultMod(T, table[k], modulus);
+            }
+
+            return C;
         }
 
         private static BigInteger DotMult(BigInteger[] x, BigInteger[] y)
