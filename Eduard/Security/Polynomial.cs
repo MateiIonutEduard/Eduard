@@ -757,6 +757,20 @@ namespace Eduard.Security
             return res;
         }
 
+        private static BigInteger DotMult(BigInteger[] x, BigInteger[] y)
+        {
+            BigInteger res = 0;
+            int i, n = x.Length;
+
+            for (i = 0; i < n; i++)
+            {
+                BigInteger temp = BarrettReducer.MultMod(x[i], y[i]);
+                res = BarrettReducer.AddMod(res, temp);
+            }
+
+            return res;
+        }
+
         /// <summary>
         /// Computes the greatest common divisor of two polynomials over the current finite field.
         /// </summary>
