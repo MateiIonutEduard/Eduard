@@ -16,7 +16,8 @@ namespace Eduard
         POLY_FFT_SQUARE = 5,           // FFT squaring threshold for polynomials
         POLY_FFT_MOD = 6,              // FFT remainder threshold for polynomials
         POLY_DEGREE_POW_MOD = 7,       // Minimum polynomial degree for sliding Window exponentiation
-        POLY_DEGREE_FAST_HORNER = 8    // Minimum polynomial degree for FFT-accelerated Horner modular composition
+        POLY_DEGREE_FAST_HORNER = 8,   // Minimum polynomial degree for FFT-accelerated Horner modular composition
+        POLY_DEGREE_BRENT_KUNG = 9     // Minimum polynomial degree for FFT-accelerated Brent-Kung modular composition
     }
 
     /// <summary>
@@ -35,7 +36,7 @@ namespace Eduard
             thresholds = new int[] { 
                 1792, 16, 32, 10,
                 128, 96, 64, 16, 
-                88
+                88, 96
             };
         }
 
