@@ -10,18 +10,8 @@
     /// subgroup elements (<see cref="EC_SMALL_SUBGROUP"/>) enables proper handling of <br/>
     /// contributory behavior in Diffie-Hellman key agreement and signature verification.
     /// </remarks>
-    internal enum PointCheck
+    internal enum PointCheck : int
     {
-        /// <summary>
-        /// The point satisfies all security-critical validation criteria.
-        /// </summary>
-        /// <remarks>
-        /// The point resides on the intended curve, is not on the quadratic twist, and lies outside <br/>
-        /// all non-trivial small subgroups. This classification guarantees the point generates a <br/>
-        /// subgroup of order at least the large prime factor of the curve order.
-        /// </remarks>
-        EC_VALID,
-
         /// <summary>
         /// The point fails the defining curve equation and does not reside on the quadratic twist.
         /// </summary>
@@ -30,7 +20,7 @@
         /// belonging to a completely unrelated curve. Acceptance of such points would violate the <br/>
         /// fundamental algebraic structure required for cryptographic operations.
         /// </remarks>
-        EC_INVALID,
+        EC_INVALID = -2,
 
         /// <summary>
         /// The point resides on the quadratic twist of the intended curve.
@@ -42,7 +32,7 @@
         /// weaker group. Detection is performed via Jacobi symbol evaluation, ensuring constant-time <br/>
         /// rejection before point arithmetic proceeds.
         /// </remarks>
-        EC_TWIST,
+        EC_TWIST = -1,
 
         /// <summary>
         /// The point lies within a small-order subgroup of the intended curve.
@@ -54,6 +44,16 @@
         /// small-subgroup confinement attacks, particularly dangerous in static-static Diffie-Hellman <br/>
         /// where the adversary may force the shared secret into a trivially enumerable set.
         /// </remarks>
-        EC_SMALL_SUBGROUP
+        EC_SMALL_SUBGROUP = 0,
+
+        /// <summary>
+        /// The point satisfies all security-critical validation criteria.
+        /// </summary>
+        /// <remarks>
+        /// The point resides on the intended curve, is not on the quadratic twist, and lies outside <br/>
+        /// all non-trivial small subgroups. This classification guarantees the point generates a <br/>
+        /// subgroup of order at least the large prime factor of the curve order.
+        /// </remarks>
+        EC_VALID = 1
     }
 }
