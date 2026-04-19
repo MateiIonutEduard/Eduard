@@ -89,21 +89,21 @@ namespace Eduard.Security.Extensions
         /// Uses projective coordinates with unified addition formulas for constant-time <br/>
         /// operation. Essential for Ed25519/Ed448 public key validation.
         /// </remarks>
-        internal static bool ValidatePoint(this TwistedEdwardsCurve curve, ECPoint point)
+        internal static PointCheck ValidatePoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
             var X2 = curve.Evaluate(point.GetAffineY());
             int jSymbol = BigInteger.Jacobi(X2, curve.field);
 
             /* check if x-coordinate is well defined */
             if (jSymbol != 1 && X2 > 0)
-                return false;
+                return PointCheck.EC_INVALID;
             else
             {
                 BigInteger x = point.GetAffineX();
                 BigInteger Xp2 = BarrettReducer.MultMod(x, x);
 
                 /* the affine point does not lie on the twisted Edwards curve */
-                if (Xp2 != X2) return false;
+                if (Xp2 != X2) return PointCheck.EC_TWIST;
             }
 
             ECPoint result = ECPoint.POINT_INFINITY;
@@ -123,7 +123,10 @@ namespace Eduard.Security.Extensions
             }
 
             result = curve.ToAffine(auxPoint);
-            return (result != ECPoint.POINT_INFINITY);
+
+            return (result != ECPoint.POINT_INFINITY) 
+                ? PointCheck.EC_VALID : 
+                PointCheck.EC_SMALL_SUBGROUP;
         }
     }
 }

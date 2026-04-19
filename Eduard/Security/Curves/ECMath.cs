@@ -119,9 +119,9 @@ namespace Eduard.Security.Curves
 
             string[] pointErrors = new string[]
             {
-                "Point does not satisfy the curve equation.",
-                "Point lies on the quadratic twist.",
-                "Point lies in a small subgroup."
+                "Generator is not affine on the Weierstrass curve.",
+                "Generator maps to the quadratic twist (invalid subgroup).",
+                "Point has dangerously small subgroup order."
             };
 
             if (securityCheck)
@@ -130,9 +130,9 @@ namespace Eduard.Security.Curves
                 int index = (int)checkResult;
 
                 if(index < 1)
-                throw new ArgumentException(
-                    pointErrors[index + 2],
-                    nameof(point));
+                    throw new ArgumentException(
+                        pointErrors[index + 2],
+                        nameof(point));
             }
 
             ECPoint temp = point;

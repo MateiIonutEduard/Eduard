@@ -73,11 +73,23 @@ namespace Eduard.Security.Curves
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
-            if (securityCheck && !curve.ValidatePoint(point))
-                throw new ArgumentException(
-                    "Point validation failed: the point does not lie on the twisted Edwards curve. " +
-                    "This may indicate a small-subgroup attack or invalid curve parameters.",
-                    nameof(point));
+            string[] pointErrors = new string[]
+            {
+                "Generator is not affine on the Twisted Edwards curve.",
+                "Generator maps to the quadratic twist (invalid cofactor).",
+                "Point has dangerously small subgroup order."
+            };
+
+            if (securityCheck)
+            {
+                PointCheck checkResult = curve.ValidatePoint(point);
+                int index = (int)checkResult;
+
+                if (index < 1)
+                    throw new ArgumentException(
+                        pointErrors[index + 2],
+                        nameof(point));
+            }
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
