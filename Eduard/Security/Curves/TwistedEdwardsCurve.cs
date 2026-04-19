@@ -231,7 +231,7 @@ namespace Eduard.Security.Curves
         /// Sets a specific point as the curve's base point with validation.
         /// </summary>
         /// <param name="point">The point to set as generator.</param>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="ArgumentException">
         /// Thrown when the point does not satisfy the curve equation, or when multiplied
         /// by the cofactor it yields the point at infinity (indicating small-order subgroup).
         /// </exception>
@@ -241,7 +241,7 @@ namespace Eduard.Security.Curves
             var temp = Evaluate(tempPoint.GetAffineY());
 
             if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     "The generator point is not on the" 
                     + " twisted Edwards curve.");
             else
@@ -250,7 +250,7 @@ namespace Eduard.Security.Curves
                 BigInteger eval = BarrettReducer.MultMod(x, x);
 
                 if (eval != temp)
-                    throw new InvalidOperationException(
+                    throw new ArgumentException(
                         "Invalid generator point for the" 
                         + " twisted Edwards curve.");
                 else
@@ -261,7 +261,7 @@ namespace Eduard.Security.Curves
                     if (testPoint != ECPoint.POINT_INFINITY) 
                         basePoint = tempPoint;
                     else
-                        throw new InvalidOperationException(
+                        throw new ArgumentException(
                             "Chosen generator point yields a"
                             + " small-order subgroup on the " 
                             + "twisted Edwards curve.");
