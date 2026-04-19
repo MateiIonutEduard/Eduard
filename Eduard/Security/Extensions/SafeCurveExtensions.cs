@@ -19,7 +19,10 @@ namespace Eduard.Security.Extensions
         /// </summary>
         /// <param name="curve">The Weierstrass curve.</param>
         /// <param name="point">The affine point to validate.</param>
-        /// <returns><c>true</c> if the point lies on the curve and is not in a small subgroup; otherwise, <c>false</c>.</returns>
+        /// <returns>
+        /// A <see cref="PointCheck"/> value: <see cref="PointCheck.EC_VALID"/> if the point lies on the curve <br/>
+        /// and is not in a small subgroup; otherwise, a specific failure classification.
+        /// </returns>
         /// <remarks>
         /// Performs three critical checks:
         /// <list type="bullet">
@@ -29,21 +32,21 @@ namespace Eduard.Security.Extensions
         /// </list>
         /// Uses modified Jacobian coordinates for constant-time cofactor multiplication.
         /// </remarks>
-        internal static bool ValidatePoint(this EllipticCurve curve, ECPoint point)
+        internal static PointCheck ValidatePoint(this EllipticCurve curve, ECPoint point)
         {
             var Y2 = curve.Evaluate(point.GetAffineX());
             int jSymbol = BigInteger.Jacobi(Y2, curve.field);
 
             /* check if y-coordinate is defined */
             if (jSymbol != 1 && Y2 > 0)
-                return false;
+                return PointCheck.EC_INVALID;
             else
             {
                 BigInteger y = point.GetAffineY();
                 BigInteger Yp2 = BarrettReducer.MultMod(y, y);
 
                 /* point not on this Weierstrass curve; likely on the twist */
-                if (Yp2 != Y2) return false;
+                if (Yp2 != Y2) return PointCheck.EC_TWIST;
             }
 
             ECPoint result = ECPoint.POINT_INFINITY;
@@ -64,7 +67,10 @@ namespace Eduard.Security.Extensions
             }
 
             result = curve.ToAffine(auxPoint);
-            return (result != ECPoint.POINT_INFINITY);
+
+            return (result != ECPoint.POINT_INFINITY) 
+                ? PointCheck.EC_VALID : 
+                PointCheck.EC_SMALL_SUBGROUP;
         }
 
         /// <summary>

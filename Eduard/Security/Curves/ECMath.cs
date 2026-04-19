@@ -117,11 +117,23 @@ namespace Eduard.Security.Curves
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
-            if (!curve.ValidatePoint(point) && securityCheck)
+            string[] pointErrors = new string[]
+            {
+                "Point does not satisfy the curve equation.",
+                "Point lies on the quadratic twist.",
+                "Point lies in a small subgroup."
+            };
+
+            if (securityCheck)
+            {
+                PointCheck checkResult = curve.ValidatePoint(point);
+                int index = (int)checkResult;
+
+                if(index < 1)
                 throw new ArgumentException(
-                    "Point validation failed: the point does not lie on the Weierstrass curve. " +
-                    "This may indicate a small-subgroup attack or invalid curve parameters.",
+                    pointErrors[index + 2],
                     nameof(point));
+            }
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;
