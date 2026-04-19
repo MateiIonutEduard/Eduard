@@ -167,7 +167,6 @@ namespace Eduard
         /// <param name="array">The byte array representing the integer in big-endian order.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="array"/> is null.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="array"/> is empty.</exception>
-        /// <exception cref="ArgumentException">Thrown when the byte array length exceeds the maximum supported size.</exception>
         /// <remarks>
         /// <para>
         /// The byte array is interpreted in big-endian format (most significant byte first). <br/>
@@ -194,15 +193,6 @@ namespace Eduard
                     "The byte array cannot be" +
                     " empty. Use the parameterless" +
                     " constructor for zero values.",
-                    nameof(array));
-
-            const int maxAllowedLength = int.MaxValue >> 2;
-
-            if (array.Length > maxAllowedLength)
-                throw new ArgumentException(
-                    $"The byte array length ({array.Length})" +
-                    " exceeds the maximum supported length" +
-                    $" of {maxAllowedLength} bytes.",
                     nameof(array));
 
             const uint mask = 0x80;
