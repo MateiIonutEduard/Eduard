@@ -37,14 +37,14 @@ namespace BenchTests.Core.Poly
         public void StandardHorner()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree << 1);
-            Polynomial XPP = Polynomial.Compose(XP, XP, mod);
+            Polynomial XPP = Polynomial.Compose(XP, XP, mod, false);
         }
 
         [Benchmark]
         public void ImprovedHorner()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree);
-            Polynomial XPP = Polynomial.Compose(XP, XP, mod);
+            Polynomial XPP = Polynomial.Compose(XP, XP, mod, false);
         }
     }
 }
