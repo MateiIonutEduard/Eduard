@@ -250,7 +250,7 @@ namespace Eduard.Security.Curves
         /// Sets a specific point as the curve's base point with validation.
         /// </summary>
         /// <param name="point">The point to set as generator.</param>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="ArgumentException">
         /// Thrown when the point does not lie on the curve, the y-coordinate does not satisfy
         /// the curve equation, or when multiplied by the cofactor it yields the point at infinity
         /// (indicating it lies in a small-order subgroup).
@@ -261,7 +261,7 @@ namespace Eduard.Security.Curves
             var Y2 = Evaluate(tempPoint.GetAffineX());
 
             if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     "The generator point is not on " 
                     + "the Weierstrass curve.");
             else
@@ -270,7 +270,7 @@ namespace Eduard.Security.Curves
                 BigInteger eval = BarrettReducer.MultMod(y, y);
 
                 if (eval != Y2)
-                    throw new InvalidOperationException(
+                    throw new ArgumentException(
                         "Invalid generator point for " 
                         + "Weierstrass curve.");
                 else
@@ -281,7 +281,7 @@ namespace Eduard.Security.Curves
                     if (testPoint != ECPoint.POINT_INFINITY) 
                         basePoint = tempPoint;
                     else
-                        throw new InvalidOperationException(
+                        throw new ArgumentException(
                             "Chosen generator point yields small-order" 
                             + " subgroup on Weierstrass curve.");
                 }
