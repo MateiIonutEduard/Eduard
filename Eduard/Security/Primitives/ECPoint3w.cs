@@ -54,13 +54,13 @@ namespace Eduard.Security.Primitives
         /// <exception cref="NullReferenceException">Thrown when any coordinate is null.</exception>
         public ECPoint3w(BigInteger x, BigInteger y, BigInteger z)
         {
-            if (object.ReferenceEquals(x, null))
+            if (ReferenceEquals(x, null))
                 throw new NullReferenceException("The projective X-coordinate cannot be null.");
 
-            if (object.ReferenceEquals(null, y))
+            if (ReferenceEquals(null, y))
                 throw new NullReferenceException("The projective Y-coordinate cannot be null.");
 
-            if (object.ReferenceEquals(z, null))
+            if (ReferenceEquals(z, null))
                 throw new NullReferenceException("The projective Z-coordinate cannot be null.");
 
             this.x = x;
@@ -122,6 +122,9 @@ namespace Eduard.Security.Primitives
         /// <returns>true if the object is an ECPoint3w with identical coordinates; otherwise false.</returns>
         public override bool Equals(object obj)
         {
+            if (ReferenceEquals(obj, null))
+                return false;
+
             if (!(obj is ECPoint3w))
                 return false;
 

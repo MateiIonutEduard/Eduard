@@ -4,7 +4,7 @@ using Eduard.Security;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchmarkTests.Core.Poly
+namespace BenchTests.Core.Poly
 {
     public class ModBenchmark
     {

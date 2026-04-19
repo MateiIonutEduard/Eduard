@@ -44,10 +44,10 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public ECPoint(BigInteger x, BigInteger y, bool isInfinity)
         {
-            if (object.ReferenceEquals(x, null))
+            if (ReferenceEquals(x, null))
                 throw new NullReferenceException("The affine x-coordinate cannot be null.");
 
-            if (object.ReferenceEquals(null, y))
+            if (ReferenceEquals(null, y))
                 throw new NullReferenceException("The affine y-coordinate cannot be null.");
 
             this.isInfinity = isInfinity;
@@ -113,6 +113,9 @@ namespace Eduard.Security.Primitives
         /// <returns>true if the object is an ECPoint with identical coordinates; otherwise false.</returns>
         public override bool Equals(object obj)
         {
+            if (ReferenceEquals(obj, null))
+                return false;
+
             if (!(obj is ECPoint))
                 return false;
 

@@ -7,27 +7,55 @@ using System.Security.Cryptography;
 namespace Eduard
 {
     /// <summary>
-    /// Represents an arbitrarily large signed integer.
+    /// Represents an arbitrarily large signed integer with cryptographic-grade operations.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This implementation provides a complete set of arithmetic, bitwise, and cryptographic operations <br/>
+    /// for arbitrary-precision integers. It is optimized for cryptographic applications including: <br/>
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>RSA key generation and encryption operations</description></item>
+    /// <item><description>Elliptic Curve Cryptography (ECC) point arithmetic</description></item>
+    /// <item><description>Modular exponentiation with Barrett reduction</description></item>
+    /// <item><description>Probabilistic primality testing (Miller-Rabin and Lucas)</description></item>
+    /// </list>
+    /// <para>
+    /// Performance optimizations include Karatsuba multiplication for medium-sized operands, <br/>
+    /// FFT-based multiplication for large operands, and Barrett reduction for modular arithmetic.
+    /// </para>
+    /// <para>
+    /// The internal representation uses a 32-bit limb array in little-endian order with two's <br/>
+    /// complement encoding for negative numbers.
+    /// </para>
+    /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
 #endif
-    public sealed class BigInteger
+    public sealed class BigInteger : IEquatable<BigInteger>, IComparable<BigInteger>
     {
         internal Data data;
 
         /// <summary>
-        /// Create a <seealso cref="BigInteger"/> with an integer value of 0.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class with a value of zero.
         /// </summary>
+        /// <remarks>
+        /// This constructor creates a zero-initialized BigInteger suitable for accumulation operations. <br/>
+        /// Memory allocation is minimal (one 32-bit limb).
+        /// </remarks>
         public BigInteger()
         {
             data = new Data(1, 1);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> using a 64-bit signed integer value.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class from a 64-bit signed integer.
         /// </summary>
-        /// <param name="number"></param>
+        /// <param name="number">The 64-bit signed integer value to convert.</param>
+        /// <remarks>
+        /// The conversion preserves the sign and magnitude of the input. The internal representation <br/>
+        /// uses the minimal number of 32-bit limbs required to represent the absolute value.
+        /// </remarks>
         public BigInteger(long number)
         {
             data = new Data(3);
@@ -43,9 +71,13 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> with an unsigned 64-bit integer value.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class from a 64-bit unsigned integer.
         /// </summary>
-        /// <param name="number"></param>
+        /// <param name="number">The 64-bit unsigned integer value to convert.</param>
+        /// <remarks>
+        /// The resulting BigInteger is always non-negative. This constructor is particularly <br/>
+        /// useful when working with cryptographic nonces or initialization vectors.
+        /// </remarks>
         public BigInteger(ulong number)
         {
             data = new Data(3);
@@ -61,28 +93,67 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> in base-10 from the parameter.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class from a decimal string representation.
         /// </summary>
-        /// <param name="digits"></param>
-        /// <exception cref="FormatException"></exception>
+        /// <param name="digits">The decimal string representation of the integer. May include a leading minus sign.</param>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="digits"/> is null, empty, or contains characters that are
+        /// not valid decimal digits (0-9), or has an invalid format such as a misplaced minus sign.
+        /// </exception>
+        /// <remarks>
+        /// Parsing is performed in chunks of 9 digits for optimal performance. Leading zeros are <br/>
+        /// allowed but ignored. The string may be arbitrarily long, subject to memory constraints.
+        /// </remarks>
         public BigInteger(string digits)
         {
+            if (string.IsNullOrEmpty(digits))
+                throw new FormatException(
+                    "Input string cannot be" +
+                    " null or empty.");
+
             if (!Check(digits, Radix.Decimal))
-                throw new FormatException("The format of string is invalid.");
+                throw new FormatException(
+                    $"Invalid format for decimal number." +
+                    $" The string must contain only digits 0-9" +
+                    $" and an optional leading minus sign.");
 
             BuildDecimal(digits);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> in base and value from the parameters.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class from a string in the specified radix.
         /// </summary>
-        /// <param name="digits"></param>
-        /// <param name="radix"></param>
-        /// <exception cref="FormatException"></exception>
+        /// <param name="digits">The string representation of the integer.</param>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <exception cref="FormatException">
+        /// Thrown when the string contains characters invalid for the specified radix.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// For decimal strings, parsing is performed in chunks of 9 digits. For hexadecimal strings, <br/>
+        /// parsing is performed in chunks of 8 characters (32 bits) for optimal performance.
+        /// </para>
+        /// <para>
+        /// Hexadecimal strings may contain digits 0-9, letters A-F (case-insensitive).
+        /// </para>
+        /// </remarks>
         public BigInteger(string digits, Radix radix)
         {
+            if (string.IsNullOrEmpty(digits))
+                throw new FormatException(
+                    "Input string cannot be" 
+                    + " null or empty.");
+
             if (!Check(digits, radix))
-                throw new FormatException("The format of string is invalid.");
+            {
+                string validChars = radix == Radix.Decimal
+                    ? "digits 0-9"
+                    : "digits 0-9, letters A-F or a-f";
+
+                throw new FormatException(
+                    $"Invalid format for {radix.ToString().ToLower()} number." 
+                    + $" The string must contain only {validChars}.");
+            }
 
             if (radix == Radix.Decimal)
                 BuildDecimal(digits);
@@ -91,68 +162,130 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Creates a positive <seealso cref="BigInteger"/> initialized from the byte array.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class from a byte array in big-endian format.
         /// </summary>
-        /// <param name="array"></param>
+        /// <param name="array">The byte array representing the integer in big-endian order.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="array"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="array"/> is empty.</exception>
+        /// <exception cref="ArgumentException">Thrown when the byte array length exceeds the maximum supported size.</exception>
+        /// <remarks>
+        /// <para>
+        /// The byte array is interpreted in big-endian format (most significant byte first). <br/>
+        /// If the most significant bit of the first byte is set, the number is interpreted as <br/>
+        /// negative using two's complement encoding.
+        /// </para>
+        /// <para>
+        /// This constructor is commonly used to convert cryptographic primitives like RSA parameters, <br/>
+        /// ECC coordinates, or hash values into BigInteger format.
+        /// </para>
+        /// <para>
+        /// Performance: O(n) where n is the length of the byte array, with efficient 32-bit word packing.
+        /// </para>
+        /// </remarks>
         public BigInteger(byte[] array)
         {
-            int length = array.Length >> 2;
-            int rem = array.Length & 3;
+            if (array == null)
+                throw new ArgumentNullException(
+                    nameof(array), "The byte " +
+                    "array cannot be null.");
 
-            if (rem != 0)
-                length++;
+            if (array.Length == 0)
+                throw new ArgumentException(
+                    "The byte array cannot be" +
+                    " empty. Use the parameterless" +
+                    " constructor for zero values.",
+                    nameof(array));
 
-            data = new Data(length);
+            const int maxAllowedLength = int.MaxValue >> 2;
+
+            if (array.Length > maxAllowedLength)
+                throw new ArgumentException(
+                    $"The byte array length ({array.Length})" +
+                    " exceeds the maximum supported length" +
+                    $" of {maxAllowedLength} bytes.",
+                    nameof(array));
+
+            const uint mask = 0x80;
+            bool isNegative = (array[0] 
+                & mask) == mask;
+
+            int trimCount = 0;
+            int i = 0, j, k;
+
+            while (i < array.Length - 1)
+            {
+                uint currentByte = array[i];
+                uint nextByte = array[i + 1];
+
+                bool shouldTrim = isNegative ?
+                    currentByte == 0xFF && (nextByte & mask) == mask
+                    : currentByte == 0 && (nextByte & mask) == 0;
+
+                if (!shouldTrim)
+                    break;
+
+                trimCount++;
+                i++;
+            }
+
+            int size = array.Length - trimCount;
+            int length = size >> 2;
+            int rem = size & 3;
+
+            if (rem != 0) length++;
+            data = new Data(length - 1);
+
             uint digit;
-
             int h = 0;
 
-            for(int i = array.Length - 1; i >= rem; i -= 4)
+            for(i = array.Length - 1; i >= trimCount; i -= 4)
             {
                 digit = 0;
 
-                for(int j = 0; j < 4; j++)
+                for(j = 0; j < 4; j++)
                 {
-                    uint val = (uint)array[i - j] << (8 * j);
+                    uint block = (i >= j) ? 
+                        (uint)array[i - j] : 
+                        (uint)(isNegative ? 
+                        0xFF : 0x00);
+
+                    uint val = block << (8 * j);
                     digit |= val;
                 }
 
                 data[h++] = digit;
             }
 
-            digit = 0;
-            int shift = 0;
-
-            for(int k = rem - 1; k >= 0; k--)
-            {
-                uint val = (uint)array[k] << shift;
-                digit |= val;
-                shift += 8;
-            }
-
-            if (rem > 0)
-                data[h] = digit;
-
             data.Update();
         }
 
         /// <summary>
-        /// Creates a random positive <seealso cref="BigInteger"/> on a specified number of bits.
+        /// Initializes a new instance of the <see cref="BigInteger"/> class with a random positive value of the specified bit length.
         /// </summary>
-        /// <param name="bits"></param>
-        /// <param name="rand"></param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="NullReferenceException"></exception>
-        public BigInteger(int bits, RandomNumberGenerator rand)
+        /// <param name="n">The number of bits for the generated value. Must be greater than 0.</param>
+        /// <param name="rand">A cryptographically secure random number generator.</param>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="n"/> is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="rand"/> is null.</exception>
+        /// <remarks>
+        /// The generated value is uniformly distributed across all numbers with exactly <paramref name="n"/>
+        /// bits (the most significant bit is always 1).<br/> This ensures proper bit length for cryptographic operations
+        /// such as RSA key generation where the modulus must have<br/> exactly <paramref name="n"/> bits.
+        /// </remarks>
+        public BigInteger(int n, RandomNumberGenerator rand)
         {
-            if (bits <= 0)
-                throw new ArgumentException("Number of bits must be greater than 0.");
+            if (n <= 0)
+                throw new ArgumentException(
+                    "The number of bits must" + 
+                    $" be positive. Specified: {n}.",
+                    nameof(n));
 
             if (rand == null)
-                throw new NullReferenceException("The generator cannot be null.");
+                throw new ArgumentNullException(
+                    nameof(rand), "The random number" + 
+                    " generator cannot be null.");
 
-            int bufLen = bits >> 5;
-            int remLen = bits & 0x1F;
+            int bufLen = n >> 5;
+            int remLen = n & 0x1F;
             int length = bufLen;
 
             if (remLen != 0)
@@ -215,7 +348,9 @@ namespace Eduard
 
         private void BuildDecimal(string digits)
         {
-            int sign = (digits[0] == '-' ? 1 : 0);
+            bool isNegative = (digits[0] == '-');
+            int startPos = isNegative ? 1 : 0;
+
             BigInteger res = 0, mult = 1;
             const int size = 9;
 
@@ -226,9 +361,9 @@ namespace Eduard
             for (int i = 1; i < size; i++)
                 table[i] = table[i - 1] * 10;
 
-            for (int i = len; i > sign; i -= size)
+            for (int i = len; i > startPos; i -= size)
             {
-                int startIndex = Math.Max(0, i - size);
+                int startIndex = Math.Max(startPos, i - size);
                 int length = i - startIndex;
 
                 string chunk = digits.Substring(startIndex, length);
@@ -238,37 +373,73 @@ namespace Eduard
                 mult *= table[length - 1];
             }
 
+            if (isNegative) 
+                res = -res;
             data = res.data;
+        }
+
+        private uint GetDigit(char hexDigit)
+        {
+            uint val = hexDigit;
+
+            if (val >= '0' && val <= '9')
+                val -= 48;
+            else
+                if (val >= 'A' && val <= 'F')
+                    val = (val - 'A') + 10;
+                else
+                    if (val >= 'a' && val <= 'f')
+                        val = (val - 'a') + 10;
+
+            return val;
         }
 
         private void BuildHexaDecimal(string digits)
         {
-            int limit = digits.Length & 7;
-            int bufLen = digits.Length >> 3;
+            bool isNegative = GetDigit(digits[0]) >= 8;
+            int trimCount = 0;
+            int i = 0, j, k;
+
+            while (i < digits.Length - 1)
+            {
+                uint currentDigit = GetDigit(digits[i]);
+                uint nextDigit = GetDigit(digits[i + 1]);
+
+                bool shouldTrim = isNegative ?
+                    currentDigit == 0xF && (nextDigit & 0x8) == 0x8
+                    : currentDigit == 0 && (nextDigit & 0x8) == 0;
+
+                if (!shouldTrim)
+                    break;
+
+                trimCount++;
+                i++;
+            }
+
+            int size = digits.Length - trimCount;
+            int limit = size & 7;
+
+            int bufLen = size >> 3;
             int length = bufLen;
 
             if (limit != 0)
                 length++;
 
-            data = new Data(length);
-            int i = 0;
+            data = new Data(length - 1);
             uint digit;
+            i = 0;
 
-            for (int j = digits.Length - 1; j >= limit; j -= 8)
+            for (j = digits.Length - 1; j >= trimCount; j -= 8)
             {
                 digit = 0;
+                uint val = 0;
 
-                for(int k = 0; k < 8; k++)
+                for (k = 0; k < 8; k++)
                 {
-                    uint val = digits[j - k];
-
-                    if (val >= '0' && val <= '9')
-                        val -= 48;
-                    else
-                        if (val >= 'A' && val <= 'F')
-                           val = (val - 'A') + 10;
-                    else
-                        throw new ArgumentOutOfRangeException();
+                    val = (j >= k) ?
+                        GetDigit(digits[j - k])
+                        : (uint)(isNegative ?
+                        0xF : 0x0);
 
                     digit |= (val << (4 * k));
                 }
@@ -276,37 +447,104 @@ namespace Eduard
                 data[i++] = digit;
             }
 
-            digit = 0;
-            int shift = 0;
-
-            for(int k = limit - 1; k >= 0; k--)
-            {
-                uint val = digits[k];
-
-                if (val >= '0' && val <= '9')
-                    val -= '0';
-                else
-                    if (val >= 'A' && val <= 'F')
-                    val = (val - 'A') + 10;
-                else
-                    throw new ArgumentOutOfRangeException();
-
-                digit |= (val << shift);
-                shift += 4;
-            }
-
-            if (limit != 0)
-                data[i] = digit;
-
             data.Update();
         }
 
         /// <summary>
-        /// Adds the values of two specified <seealso cref="BigInteger"/> objects.
+        /// Converts the string representation of a decimal number to its <see cref="BigInteger"/> equivalent.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="value">A string containing a decimal number to convert.</param>
+        /// <returns>A <see cref="BigInteger"/> equivalent to the number contained in <paramref name="value"/>.</returns>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="value"/> is null, empty, or contains characters that are
+        /// not valid decimal digits (0-9), or has an invalid format such as a misplaced minus sign.
+        /// </exception>
+        public static BigInteger Parse(string value)
+        {
+            return new BigInteger(value);
+        }
+
+        /// <summary>
+        /// Converts the string representation of a number in the specified radix to its <see cref="BigInteger"/> equivalent.
+        /// </summary>
+        /// <param name="value">A string containing a number to convert.</param>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <returns>A <see cref="BigInteger"/> equivalent to the number contained in <paramref name="value"/>.</returns>
+        /// <exception cref="FormatException">
+        /// Thrown when <paramref name="value"/> is null, empty, or 
+        /// contains characters invalid for the specified radix.
+        /// </exception>
+        public static BigInteger Parse(string value, Radix radix)
+        {
+            return new BigInteger(value, radix);
+        }
+
+        /// <summary>
+        /// Tries to convert the string representation of a decimal number to its <see cref="BigInteger"/> equivalent.
+        /// </summary>
+        /// <param name="value">A string containing a decimal number to convert.</param>
+        /// <param name="result">
+        /// When this method returns, contains the <see cref="BigInteger"/> equivalent if conversion succeeded,
+        /// or zero if the conversion failed.
+        /// </param>
+        /// <returns><c>true</c> if conversion succeeded; otherwise, <c>false</c>.</returns>
+        public static bool TryParse(string value, out BigInteger result)
+        {
+            result = 0;
+
+            if (string.IsNullOrEmpty(value)) 
+                return false;
+
+            try 
+            { 
+                result = Parse(value); 
+                return true; 
+            }
+            catch (FormatException) 
+            { 
+                return false; 
+            }
+        }
+
+        /// <summary>
+        /// Tries to convert the string representation of a number in the specified radix to its <see cref="BigInteger"/> equivalent.
+        /// </summary>
+        /// <param name="value">A string containing a number to convert.</param>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <param name="result">
+        /// When this method returns, contains the <see cref="BigInteger"/> equivalent if conversion succeeded,
+        /// or zero if the conversion failed.
+        /// </param>
+        /// <returns><c>true</c> if conversion succeeded; otherwise, <c>false</c>.</returns>
+        public static bool TryParse(string value, Radix radix, out BigInteger result)
+        {
+            result = 0;
+
+            if (string.IsNullOrEmpty(value)) 
+                return false;
+
+            try 
+            { 
+                result = Parse(value, radix); 
+                return true; 
+            }
+            catch (FormatException) 
+            { 
+                return false; 
+            }
+        }
+
+        /// <summary>
+        /// Adds two BigInteger values and returns the result.
+        /// </summary>
+        /// <param name="left">The first value to add.</param>
+        /// <param name="right">The second value to add.</param>
+        /// <returns>The sum of <paramref name="left"/> and <paramref name="right"/>.</returns>
+        /// <remarks>
+        /// The addition operation handles both positive and negative numbers correctly using two's <br/>
+        /// complement semantics. The result is automatically normalized to use the minimal number <br/>
+        /// of limbs required for representation.
+        /// </remarks>
         public static BigInteger operator +(BigInteger left, BigInteger right)
         {
             int length = Math.Max(left.data.Used, right.data.Used);
@@ -325,21 +563,21 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Increments a <seealso cref="BigInteger"/> value by 1.
+        /// Increments a BigInteger value by 1.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static BigInteger operator ++(BigInteger value)
+        /// <param name="val">The value to increment.</param>
+        /// <returns>The value of <paramref name="val"/> increased by 1.</returns>
+        public static BigInteger operator ++(BigInteger val)
         {
-            return (value + 1);
+            return (val + 1);
         }
 
         /// <summary>
-        /// Subtracts a <seealso cref="BigInteger"/> value from another <seealso cref="BigInteger"/> value.
+        /// Subtracts one BigInteger value from another.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The value to subtract from (the minuend).</param>
+        /// <param name="right">The value to subtract (the subtrahend).</param>
+        /// <returns>The result of subtracting <paramref name="right"/> from <paramref name="left"/>.</returns>
         public static BigInteger operator -(BigInteger left, BigInteger right)
         {
             int length = Math.Max(left.data.Used, right.data.Used) + 1;
@@ -358,13 +596,13 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Decrements a <seealso cref="BigInteger"/> value by 1.
+        /// Decrements a BigInteger value by 1.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static BigInteger operator --(BigInteger value)
+        /// <param name="val">The value to decrement.</param>
+        /// <returns>The value of <paramref name="val"/> decreased by 1.</returns>
+        public static BigInteger operator --(BigInteger val)
         {
-            return (value - 1);
+            return (val - 1);
         }
 
         private static BigInteger PlainMultiply(BigInteger left, BigInteger right)
@@ -577,11 +815,25 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Multiplies two specified <seealso cref="BigInteger"/> values.
+        /// Multiplies two BigInteger values using the optimal algorithm based on operand size.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first multiplicand.</param>
+        /// <param name="right">The second multiplicand.</param>
+        /// <returns>The product of <paramref name="left"/> and <paramref name="right"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This operator automatically selects the most efficient multiplication algorithm:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>Plain O(n^2) multiplication for small operands (below Karatsuba threshold)</description></item>
+        /// <item><description>Karatsuba O(n^1.585) for medium operands</description></item>
+        /// <item><description>FFT-based O(n*log n) for large operands (above FFT threshold)</description></item>
+        /// </list>
+        /// <para>
+        /// When both operands are equal, the squaring optimization is applied, <br/>
+        /// which is approximately twice as fast as general multiplication.
+        /// </para>
+        /// </remarks>
         public static BigInteger operator *(BigInteger left, BigInteger right)
         {
             if (left == right) return Square(left);
@@ -590,9 +842,6 @@ namespace Eduard
 
         private static void SingleDivide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
-            if (right.IsZero)
-                throw new DivideByZeroException();
-
             Data RemainderData = new Data(left.data);
             RemainderData.Update();
 
@@ -632,9 +881,6 @@ namespace Eduard
 
         private static void MultiDivide(BigInteger left, BigInteger right, out BigInteger quotient, out BigInteger remainder)
         {
-            if (right.IsZero)
-                throw new DivideByZeroException();
-
             uint val = right.data[right.data.Used - 1];
             int d = 0;
 
@@ -720,16 +966,25 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Divides a specified <seealso cref="BigInteger"/> value by another specified <seealso cref="BigInteger"/> value by using integer division.
+        /// Divides one BigInteger value by another using integer division.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <exception cref="DivideByZeroException"></exception>
-        /// <returns></returns>
+        /// <param name="left">The dividend.</param>
+        /// <param name="right">The divisor.</param>
+        /// <returns>The integer quotient of <paramref name="left"/> divided by <paramref name="right"/>.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when attempting to divide by zero. 
+        /// Division by zero is mathematically undefined and cryptographically invalid.
+        /// </exception>
+        /// <remarks>
+        /// Division is performed using the standard long division algorithm optimized for arbitrary precision. <br/>
+        /// For single-limb divisors, a specialized algorithm is used for better performance. The quotient is <br/>
+        /// truncated toward zero (same as C# integer division).
+        /// </remarks>
         public static BigInteger operator /(BigInteger left, BigInteger right)
         {
             if (right.IsZero)
-                throw new DivideByZeroException();
+                throw new DivideByZeroException(
+                    "Division by zero is not allowed." + 
+                    " The divisor cannot be zero.");
 
             bool Sign = (left.IsNegative != right.IsNegative);
 
@@ -749,16 +1004,25 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the remainder that results from division with two specified <seealso cref="BigInteger"/> values.
+        /// Returns the remainder from integer division of two BigInteger values.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <exception cref="DivideByZeroException"></exception>
-        /// <returns></returns>
+        /// <param name="left">The dividend.</param>
+        /// <param name="right">The divisor.</param>
+        /// <returns>The remainder after dividing <paramref name="left"/> by <paramref name="right"/>.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when <paramref name="right"/> is zero. 
+        /// Modulo operation is undefined when the divisor is zero.
+        /// </exception>
+        /// <remarks>
+        /// The remainder has the same sign as the dividend (consistent with <br/>
+        /// C# remainder operator). This operation is equivalent to: <br/> 
+        /// left - (left / right) * right.
+        /// </remarks>
         public static BigInteger operator %(BigInteger left, BigInteger right)
         {
             if (right.IsZero)
-                throw new DivideByZeroException();
+                throw new DivideByZeroException(
+                    "Modulo operation is undefined" + 
+                    " when the divisor is zero.");
 
             BigInteger Quotient, Remainder;
             bool Sign = left.IsNegative;
@@ -778,10 +1042,15 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Negates a specified <seealso cref="BigInteger"/> value.
+        /// Negates a BigInteger value (returns the additive inverse).
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to negate.</param>
+        /// <returns>The value of <paramref name="value"/> multiplied by -1.</returns>
+        /// <remarks>
+        /// For zero, this operator returns zero. For positive values, <br/>
+        /// returns the corresponding negative. For negative values, <br/>
+        /// returns the corresponding positive.
+        /// </remarks>
         public static BigInteger operator -(BigInteger value)
         {
             if (value.IsZero)
@@ -807,18 +1076,25 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Negates this <seealso cref="BigInteger"/> value.
+        /// Negates this BigInteger instance.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A new BigInteger representing the additive inverse of this instance.</returns>
+        /// <remarks>
+        /// This method does not modify the original instance; it returns a new instance.
+        /// </remarks>
         public BigInteger Negate()
         {
             return -this;
         }
 
         /// <summary>
-        /// Returns the absolute value of this.
+        /// Returns the absolute value of this BigInteger.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A new BigInteger representing the absolute value of this instance.</returns>
+        /// <remarks>
+        /// For positive numbers, this method returns the same value. <br/> For negative numbers,
+        /// it returns the corresponding positive <br/> value. For zero, returns zero.
+        /// </remarks>
         public BigInteger Abs()
         {
             if (IsNegative)
@@ -828,11 +1104,16 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Performs a bitwise And operation on two <seealso cref="BigInteger"/> values.
+        /// Performs a bitwise AND operation on two BigInteger values.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first operand.</param>
+        /// <param name="right">The second operand.</param>
+        /// <returns>The result of performing a bitwise AND on <paramref name="left"/> and <paramref name="right"/>.</returns>
+        /// <remarks>
+        /// The operation is performed on the two's complement representation of <br/>
+        /// the numbers. For negative numbers, this follows standard C# bitwise <br/> 
+        /// AND semantics.
+        /// </remarks>
         public static BigInteger operator &(BigInteger left, BigInteger right)
         {
             int length = Math.Max(left.data.Used, right.data.Used);
@@ -845,11 +1126,11 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Performs a bitwise Or operation on two <seealso cref="BigInteger"/> values.
+        /// Performs a bitwise OR operation on two BigInteger values.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first operand.</param>
+        /// <param name="right">The second operand.</param>
+        /// <returns>The result of performing a bitwise OR on <paramref name="left"/> and <paramref name="right"/>.</returns>
         public static BigInteger operator |(BigInteger left, BigInteger right)
         {
             int length = Math.Max(left.data.Used, right.data.Used);
@@ -862,11 +1143,11 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Performs a bitwise Xor operation on two <seealso cref="BigInteger"/> values.
+        /// Performs a bitwise exclusive OR (XOR) operation on two BigInteger values.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first operand.</param>
+        /// <param name="right">The second operand.</param>
+        /// <returns>The result of performing a bitwise XOR on <paramref name="left"/> and <paramref name="right"/>.</returns>
         public static BigInteger operator ^(BigInteger left, BigInteger right)
         {
             int length = Math.Max(left.data.Used, right.data.Used);
@@ -879,10 +1160,15 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the bitwise one's complement of a <seealso cref="BigInteger"/> value.
+        /// Returns the bitwise one's complement of a BigInteger value.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to complement.</param>
+        /// <returns>The bitwise complement of <paramref name="value"/>.</returns>
+        /// <remarks>
+        /// The one's complement flips all bits in the two's complement <br/>
+        /// representation. This is equivalent to -(value + 1) in integer <br/>
+        /// arithmetic.
+        /// </remarks>
         public static BigInteger operator ~(BigInteger value)
         {
             Data buffer = new Data(value.data.Length);
@@ -894,31 +1180,42 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Shifts a <seealso cref="BigInteger"/> value a specified number of bits to the left.
+        /// Shifts a BigInteger value left by a specified number of bits.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
-        public static BigInteger operator <<(BigInteger left, int right)
+        /// <param name="val">The value to shift.</param>
+        /// <param name="n">The number of bits to shift left (must be non-negative).</param>
+        /// <returns>The result of shifting <paramref name="val"/> left by <paramref name="n"/> bits.</returns>
+        /// <remarks>
+        /// Left shifting by n bits is equivalent to multiplying by 2^n. <br/>
+        /// This operation expands the internal array as needed to <br/>
+        /// accommodate the new bits.
+        /// </remarks>
+        public static BigInteger operator <<(BigInteger val, int n)
         {
-            Data buffer = new Data(left.data);
-            buffer.Used = buffer.ShiftLeftWithoutOverflow(right);
+            Data buffer = new Data(val.data);
+            buffer.Used = buffer.ShiftLeftWithoutOverflow(n);
 
             return new BigInteger(buffer);
         }
 
         /// <summary>
-        /// Shifts a <seealso cref="BigInteger"/> value a specified number of bits to the right.
+        /// Shifts a BigInteger value right by a specified number of bits.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
-        public static BigInteger operator >>(BigInteger left, int right)
+        /// <param name="val">The value to shift.</param>
+        /// <param name="n">The number of bits to shift right (must be non-negative).</param>
+        /// <returns>The result of shifting <paramref name="val"/> right by <paramref name="n"/> bits.</returns>
+        /// <remarks>
+        /// Right shifting by n bits is equivalent to integer division by 2^n <br/>
+        /// with truncation toward negative infinity for negative numbers <br/>
+        /// (arithmetic shift). This matches C#'s right shift behavior for <br/>
+        /// signed integers.
+        /// </remarks>
+        public static BigInteger operator >>(BigInteger val, int n)
         {
-            Data buffer = new Data(left.data);
-            buffer.Used = buffer.ShiftRight(right);
+            Data buffer = new Data(val.data);
+            buffer.Used = buffer.ShiftRight(n);
 
-            if(left.IsNegative)
+            if(val.IsNegative)
             {
                 for (int j = buffer.Length - 1; j >= buffer.Used; j--)
                     buffer[j] = 0xFFFFFFFF;
@@ -939,37 +1236,71 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Compares this instance to a second <seealso cref="BigInteger"/> and returns an integer that indicates whether the value of this instance is less than, equal to, or greater than the value of the specified object.
+        /// Compares this instance to a second BigInteger and returns an integer indicating the relationship.
         /// </summary>
-        /// <param name="other">The object to compare.</param>
-        /// <returns></returns>
+        /// <param name="other">The BigInteger to compare with this instance.</param>
+        /// <returns>
+        /// A negative value if this instance is less than <paramref name="other"/>,
+        /// zero if they are equal, or a positive value if this instance is greater.
+        /// </returns>
         public int CompareTo(BigInteger other)
         {
             return Compare(this, other);
         }
 
         /// <summary>
-        /// Compares two <seealso cref="BigInteger"/> values and returns an integer that indicates whether the first value is less than, equal to, or greater than the second value.
+        /// Compares two BigInteger values and returns an integer indicating their relationship.
         /// </summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
-        /// <returns></returns>
+        /// <returns>
+        /// -1 if <paramref name="left"/> is less than <paramref name="right"/>,
+        /// 0 if they are equal,
+        /// 1 if <paramref name="left"/> is greater than <paramref name="right"/>.
+        /// </returns>
         public static int Compare(BigInteger left, BigInteger right)
         {
-            if (left > right)
-                return 1;
+            if (left.IsNegative != right.IsNegative)
+                return left.IsNegative ? -1 : 1;
 
-            if (left == right)
-                return 0;
+            if (left.data.Used != right.data.Used)
+                return left.data.Used < right.data.Used ? -1 : 1;
 
-            return -1;
+            for (int k = left.data.Used - 1; k >= 0; k--)
+            {
+                if (left.data[k] != right.data[k])
+                    return left.data[k] < right.data[k] ? -1 : 1;
+            }
+
+            return 0;
         }
 
         /// <summary>
-        /// Determines whether a number is almost certainly prime.
+        /// Determines whether a number is almost certainly prime using a combination of Miller-Rabin and extra strong Lucas tests.
         /// </summary>
-        /// <param name="val"></param>
-        /// <returns></returns>
+        /// <param name="val">The value to test for primality.</param>
+        /// <returns>
+        /// <c>true</c> if the number passes the strong probable prime tests; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// This method implements a deterministic primality test for numbers less than <br/>
+        /// 2^64, and a probabilistic test for larger numbers. The algorithm combines:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>Small prime trial division (up to 256)</description></item>
+        /// <item><description>Miller-Rabin test with base 2</description></item>
+        /// <item><description>Extra strong Lucas test with Baillie-PSW parameters</description></item>
+        /// </list>
+        /// <para>
+        /// For numbers less than 2^64, this provides deterministic results. For larger numbers, <br/>
+        /// the test is probabilistic but no known composite has been found to pass this combination.
+        /// </para>
+        /// <para>
+        /// For cryptographic applications requiring specific security levels, consider using <br/>
+        /// <see cref="IsProbablePrime(RandomNumberGenerator, BigInteger, int)"/> with multiple trials.
+        /// </para>
+        /// </remarks>
         public static bool IsProbablePrime(BigInteger val)
         {
             if (val < 2) return false;
@@ -1092,12 +1423,28 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Determines whether a number is probable prime.
+        /// Determines whether a number is a strong probable prime using the Miller-Rabin test with multiple random bases.
         /// </summary>
-        /// <param name="rand"></param>
-        /// <param name="val"></param>
-        /// <param name="trials"></param>
-        /// <returns></returns>
+        /// <param name="rand">A cryptographically secure random number generator.</param>
+        /// <param name="val">The value to test for primality.</param>
+        /// <param name="trials">The number of Miller-Rabin test iterations to perform.</param>
+        /// <returns>
+        /// <c>true</c> if the number passes all Miller-Rabin tests; otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// The Miller-Rabin primality test provides a probabilistic guarantee. The probability <br/>of a
+        /// composite number being incorrectly identified as prime is at most (1/4)^<paramref name="trials"/>.
+        /// </para>
+        /// <para>
+        /// For cryptographic applications, 50 iterations is the standard number of trials, <br/>
+        /// yielding an error probability of less than 2^(-100). This is sufficient for most <br/>
+        /// RSA key generation and other cryptographic primitives.
+        /// </para>
+        /// <para>
+        /// This method automatically falls back to the deterministic test for numbers less than 2^64.
+        /// </para>
+        /// </remarks>
         public static bool IsProbablePrime(RandomNumberGenerator rand, BigInteger val, int trials)
         {
             if (!IsProbablePrime(val)) return false;
@@ -1143,21 +1490,32 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Generates a random positive <seealso cref="BigInteger"/> with the specified number of bits and is possibly prime.
+        /// Generates a random BigInteger of the specified bit length that is a strong probable prime.
         /// </summary>
-        /// <param name="rand"></param>
-        /// <param name="bits"></param>
-        /// <param name="trials"></param>
-        /// <returns></returns>
-        public static BigInteger GenProbablePrime(RandomNumberGenerator rand, int bits, int trials)
+        /// <param name="rand">A cryptographically secure random number generator.</param>
+        /// <param name="n">The number of bits for the generated prime.</param>
+        /// <param name="trials">The number of Miller-Rabin test iterations for primality verification.</param>
+        /// <returns>A random BigInteger of exactly <paramref name="n"/> bits that is a strong probable prime.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method generates odd numbers of the specified bit length (most significant bit set to 1) and <br/>
+        /// tests them for primality using the Miller-Rabin test. The process repeats until a prime
+        /// is found.
+        /// </para>
+        /// <para>
+        /// For cryptographic key generation, the number of trials should be sufficient to achieve the
+        /// desired <br/>security level. For RSA-2048, 40-50 trials are typically used.
+        /// </para>
+        /// </remarks>
+        public static BigInteger GenProbablePrime(RandomNumberGenerator rand, int n, int trials)
         {
-            BigInteger result = new BigInteger(bits, rand);
+            BigInteger result = new BigInteger(n, rand);
             result.data[result.data.Used - 1] |= 0x80000000;
             result |= 1;
             
             while(!IsProbablePrime(rand, result, trials))
             {
-                result = new BigInteger(bits, rand);
+                result = new BigInteger(n, rand);
                 result.data[result.data.Used - 1] |= 0x80000000;
                 result |= 1;
             }
@@ -1166,45 +1524,51 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the value of Jacobi Symbol for two specified <seealso cref="BigInteger"/> values.
+        /// Computes the Jacobi symbol (a/n) for two BigInteger values.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <returns></returns>
-        public static int Jacobi(BigInteger left, BigInteger right)
+        /// <param name="a">The numerator.</param>
+        /// <param name="n">The denominator, which must be odd and positive.</param>
+        /// <returns>The Jacobi symbol value: -1, 0, or 1.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="n"/> is even.</exception>
+        /// <remarks>
+        /// The Jacobi symbol is a generalization of the Legendre symbol and is used in primality testing <br/>
+        /// (particularly in the Lucas test) and in certain cryptographic algorithms like the Solovay-Strassen <br/>
+        /// primality test. The method uses the law of quadratic reciprocity for efficient computation <br/>
+        /// without requiring factorization.
+        /// </remarks>
+        public static int Jacobi(BigInteger a, BigInteger n)
         {
-            if ((right & 1) == 0)
+            if ((n & 1) == 0)
                 throw new ArgumentException("Jacobi defined only for odd integers.");
 
-            if (left >= right)
-                left %= right;
+            if (a >= n)
+                a %= n;
 
-            if (left == 0)
+            if (a == 0)
                 return 0;
 
-            if (left == 1)
+            if (a == 1)
                 return 1;
 
-            if(left < 0)
+            if(a < 0)
             {
-                if (((right - 1) & 2) == 0)
-                    return Jacobi(-left, right);
+                if (((n - 1) & 2) == 0)
+                    return Jacobi(-a, n);
                 else
-                    return -Jacobi(-left, right);
+                    return -Jacobi(-a, n);
             }
 
             int bits = 0;
 
-            for (int j = 0; j < left.data.Used; j++)
+            for (int j = 0; j < a.data.Used; j++)
             {
                 uint mask = 1;
 
                 for (int k = 1; k <= 32; k++)
                 {
-                    if ((left.data[j] & mask) != 0)
+                    if ((a.data[j] & mask) != 0)
                     {
-                        j = left.data.Used;
+                        j = a.data.Used;
                         break;
                     }
 
@@ -1214,25 +1578,31 @@ namespace Eduard
             }
 
             int sign = 1;
-            BigInteger temp = left >> bits;
+            BigInteger temp = a >> bits;
 
-            if ((bits & 1) != 0 && ((right & 7) == 3 || (right & 7) == 5))
+            if ((bits & 1) != 0 && ((n & 7) == 3 || (n & 7) == 5))
                 sign = -1;
 
-            if ((right & 3) == 3 && (temp & 3) == 3)
+            if ((n & 3) == 3 && (temp & 3) == 3)
                 sign = -sign;
 
             if (temp == 1)
                 return sign;
             else
-                return sign * Jacobi(right % temp, temp);
+                return sign * Jacobi(n % temp, temp);
         }
 
         /// <summary>
-        /// Returns the Barrett's constant required for fast modular reduction.
+        /// Computes the Barrett constant Cm = floor(2^(2k) / m) for a given modulus m, where k = limb count of m.
         /// </summary>
-        /// <param name="modulus"></param>
-        /// <returns></returns>
+        /// <param name="modulus">The modulus for which to compute the Barrett constant.</param>
+        /// <returns>The Barrett reduction constant Cm.</returns>
+        /// <remarks>
+        /// The Barrett constant enables fast modular reduction for repeated operations like modular
+        /// exponentiation.<br/> The constant is computed once per modulus and reused for all subsequent
+        /// reductions. This method is used<br/> internally by <see cref="BarrettReduction"/> and should not typically be
+        /// called <br/>directly by application code.
+        /// </remarks>
         public static BigInteger BarrettConstant(BigInteger modulus)
         {
             int k = modulus.data.Used << 1;
@@ -1245,12 +1615,26 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Fast calculation of modular reduction using Barrett's reduction.
+        /// Performs fast modular reduction using Barrett's algorithm.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="modulus"></param>
-        /// <param name="constant"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to reduce modulo the modulus.</param>
+        /// <param name="modulus">The modulus for reduction.</param>
+        /// <param name="constant">The Barrett constant (Cm) for the modulus, typically obtained from <see cref="BarrettConstant"/>.</param>
+        /// <returns>The result of (value % modulus).</returns>
+        /// <remarks>
+        /// <para>
+        /// Barrett reduction approximates the quotient q = floor(value / modulus) <br/>
+        /// using the precomputed constant Cm = 2^(2k)/modulus. This avoids <br/>
+        /// expensive division operations and is particularly efficient for repeated <br/> 
+        /// modular operations with the same modulus.
+        /// </para>
+        /// <para>
+        /// The algorithm works for modulus values up to approximately 2^k, <br/>
+        /// where k is the number of 32-bit limbs in the modulus representation. <br/>
+        /// This method is used extensively in modular exponentiation for <br/>
+        /// cryptographic operations like RSA and Diffie-Hellman.
+        /// </para>
+        /// </remarks>
         public static BigInteger BarrettReduction(BigInteger value, BigInteger modulus, BigInteger constant)
         {
             int k = modulus.data.Used,
@@ -1328,55 +1712,101 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Raises a <seealso cref="BigInteger"/> value to the power of a specified value.
+        /// Raises a BigInteger to the power of a specified integer exponent.
         /// </summary>
-        /// <param name="val">The number to raise to the exponent power.</param>
-        /// <param name="exponent">The exponent to raise value by.</param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        /// <exception cref="ArithmeticException"></exception>
-        /// <returns></returns>
+        /// <param name="val">The base value.</param>
+        /// <param name="exponent">The exponent, which must be non-negative.</param>
+        /// <returns>The result of <paramref name="val"/> raised to the power <paramref name="exponent"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="exponent"/> is negative. Negative exponents would 
+        /// produce fractional results, which are not supported by integer exponentiation.
+        /// </exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when both <paramref name="val"/> and <paramref name="exponent"/> are zero, as zero 
+        /// raised to the power of zero is mathematically undefined.
+        /// </exception>
+        /// <remarks>
+        /// This method uses binary exponentiation (exponentiation by squaring) <br/>
+        /// which performs O(log n) multiplications. For modular exponentiation, <br/>
+        /// use the overload with modulus parameter.
+        /// </remarks>
         public static BigInteger Pow(BigInteger val, int exponent)
         {
             if (exponent < 0)
-                throw new ArgumentOutOfRangeException("The exponent must be positive.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(exponent), "The exponent must " + 
+                    $"be non-negative. Specified: {exponent}.");
 
             if (val == 0 && exponent == 0)
-                throw new ArithmeticException("Arithmetic operation unsupported.");
+                throw new ArithmeticException(
+                    "Zero raised to the power " +
+                    "of zero is undefined.");
+
+            if (exponent == 0) return 1;
+            if (exponent == 1) return val;
 
             BigInteger result = 1;
+            int e = exponent;
 
-            while(exponent != 0)
+            while (e != 0)
             {
-                if ((exponent & 1) == 1)
+                if ((e & 1) == 1)
                     result = result * val;
 
                 val = val * val;
-                exponent >>= 1;
+                e >>= 1;
             }
 
             return result;
         }
 
         /// <summary>
-        /// Performs modulus division on a number raised to the power of another number.
+        /// Performs modular exponentiation, computing (base raised to exponent) modulo modulus.
         /// </summary>
-        /// <param name="val">The number to raise to the exponent power.</param>
-        /// <param name="exponent">The exponent to raise value by.</param>
-        /// <param name="modulus">The number by which to divide value raised to the exponent power.</param>
-        /// <exception cref="DivideByZeroException"></exception>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
-        /// <exception cref="ArithmeticException"></exception>
-        /// <returns></returns>
+        /// <param name="val">The base value.</param>
+        /// <param name="exponent">The exponent (must be non-negative).</param>
+        /// <param name="modulus">The modulus for the reduction.</param>
+        /// <returns>The result of <paramref name="val"/> raised to <paramref name="exponent"/> modulo <paramref name="modulus"/>.</returns>
+        /// <exception cref="DivideByZeroException">
+        /// Thrown when <paramref name="modulus"/> is zero. 
+        /// Modular arithmetic is undefined modulo zero.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="exponent"/> is negative. 
+        /// Negative exponents are not supported as they would 
+        /// require modular inversion.
+        /// </exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when both <paramref name="val"/> and <paramref name="exponent"/> 
+        /// are zero, as zero raised to the power of zero is mathematically undefined.
+        /// </exception>
+        /// <remarks>
+        /// This method implements optimized modular exponentiation using:
+        /// <list type="bullet">
+        /// <item><description>Binary method with Barrett reduction for smaller moduli</description></item>
+        /// <item><description>Dynamic sliding window (max size 5) with Barrett reduction <br/>
+        /// and precomputed odd powers table for larger moduli</description></item>
+        /// </list>
+        /// For RSA operations, this is used for both encryption (public exponent) <br/> 
+        /// and decryption (private exponent). For Diffie-Hellman key exchange, this <br/>computes the shared secret.
+        /// </remarks>
         public static BigInteger Pow(BigInteger val, BigInteger exponent, BigInteger modulus)
         {
             if (modulus.IsZero)
-                throw new DivideByZeroException("Attempted to divide by zero.");
+                throw new DivideByZeroException(
+                    "Modular exponentiation requires" + 
+                    " a non-zero modulus. Operation " + 
+                    "modulo zero is undefined.");
 
             if (val.IsZero && exponent.IsZero)
-                throw new ArithmeticException("Arithmetic operation unsupported.");
+                throw new ArithmeticException(
+                    "Zero raised to the power" + 
+                    " of zero is undefined.");
 
             if (exponent.IsNegative)
-                throw new ArgumentOutOfRangeException("The exponent must be positive.");
+                throw new ArgumentOutOfRangeException(
+                    nameof(exponent), "The exponent must be " + 
+                    $"non-negative. Specified exponent: {exponent}.");
 
             if (modulus.IsNegative)
                 modulus = -modulus;
@@ -1475,11 +1905,15 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Finds the greatest common divisor of two <seealso cref="BigInteger"/> values.
+        /// Computes the greatest common divisor (GCD) of two BigInteger values.
         /// </summary>
         /// <param name="left">The first value.</param>
         /// <param name="right">The second value.</param>
-        /// <returns></returns>
+        /// <returns>The GCD of <paramref name="left"/> and <paramref name="right"/>.</returns>
+        /// <remarks>
+        /// This implementation uses the Euclidean algorithm with modulo operations. <br/>
+        /// The result is always non-negative. If both inputs are zero, returns zero.
+        /// </remarks>
         public static BigInteger Gcd(BigInteger left, BigInteger right)
         {
             while(right != 0)
@@ -1493,15 +1927,48 @@ namespace Eduard
         }
 
         /// <summary>
-        ///  Returns the modulo inverse of this.
+        /// Computes the modular multiplicative inverse of this BigInteger modulo the specified modulus.
         /// </summary>
-        /// <param name="modulus"></param>
-        /// <exception cref="ArithmeticException"></exception>
-        /// <returns></returns>
+        /// <param name="modulus">The modulus for the inverse operation.</param>
+        /// <returns>The value x such that (this * x) % modulus = 1.</returns>
+        /// <exception cref="DivideByZeroException">
+        /// Thrown when <paramref name="modulus"/> is zero. 
+        /// Modular arithmetic is undefined modulo zero.
+        /// </exception>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when this and <paramref name="modulus"/> 
+        /// are not coprime (GCD != 1), or when this is zero.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// The modular inverse is a fundamental operation in public-key cryptography:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>RSA: Computing the private exponent d from e and phi(n)</description></item>
+        /// <item><description>Elliptic Curve Cryptography: Scalar multiplication using projective coordinates</description></item>
+        /// <item><description>Digital signatures: Computing signature components in schemes like ECDSA</description></item>
+        /// </list>
+        /// <para>
+        /// This implementation uses the extended Euclidean algorithm which runs in O(n^2) time. <br/>
+        /// The modulus must be positive and the result is returned in the range [1, modulus-1].
+        /// </para>
+        /// </remarks>
         public BigInteger Inverse(BigInteger modulus)
         {
+            if (modulus == 0)
+                throw new DivideByZeroException(
+                    "Modulus cannot be zero for " + 
+                    "modular inverse operation.");
+
+            if (this == 0)
+                throw new ArithmeticException(
+                    "Zero has no modular inverse.");
+
             if (Gcd(this, modulus) != 1)
-                throw new ArithmeticException("The numbers are not coprime.");
+                throw new ArithmeticException(
+                    "The modular inverse does not" + 
+                    " exist because the numbers are" + 
+                    " not coprime.");
 
             BigInteger b0 = modulus, t, q;
             BigInteger x0 = 0, x1 = 1;
@@ -1529,14 +1996,25 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the square root of this <seealso cref="BigInteger"/> value.
+        /// Computes the integer square root of this BigInteger.
         /// </summary>
-        /// <exception cref="ArithmeticException"></exception>
-        /// <returns></returns>
+        /// <returns>The floor of the square root of this value.</returns>
+        /// <exception cref="ArithmeticException">
+        /// Thrown when this value is negative. The square 
+        /// root is not defined for negative numbers in 
+        /// the real number system.
+        /// </exception>
+        /// <remarks>
+        /// This method uses a binary search algorithm that finds the <br/>
+        /// square root bit by bit, working from the most significant <br/> 
+        /// bit down to the least significant.
+        /// </remarks>
         public BigInteger Sqrt()
         {
             if (IsNegative)
-                throw new ArithmeticException("Cannot extract square root from negative values.");
+                throw new ArithmeticException(
+                    "The square root is undefined" + 
+                    " for negative numbers.");
 
             uint numBits = (uint)GetBits();
 
@@ -1582,24 +2060,33 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns the root of a specified order from this <seealso cref="BigInteger"/> value.
+        /// Computes the integer root of this BigInteger of the specified order.
         /// </summary>
-        /// <param name="order"></param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="ArithmeticException"></exception>
-        /// <returns></returns>
-        public BigInteger Root(int order)
+        /// <param name="n">The root order (must be greater than or equal to 2).</param>
+        /// <returns>The floor of the <paramref name="n"/>-th root of this value.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="n"/> is less than 2.</exception>
+        /// <exception cref="ArithmeticException">Thrown when extracting an even root (n is even) from a negative number, as the result would be imaginary.</exception>
+        /// <remarks>
+        /// This is a generalization of the square root method, using bit-by-bit construction. <br/>
+        /// This operation is rarely used directly in cryptography but appears in certain <br/>
+        /// number-theoretic algorithms and mathematical computations.
+        /// </remarks>
+        public BigInteger Root(int n)
         {
-            if (order < 2)
-                throw new ArgumentException("The order must be greater than or equal with 2.");
+            if (n < 2)
+                throw new ArgumentException(
+                    "The root order must be " + 
+                    "greater than or equal to 2.");
 
-            if ((order & 1) == 0 && IsNegative)
-                throw new ArithmeticException("Cannot extract root.");
+            if ((n & 1) == 0 && IsNegative)
+                throw new ArithmeticException(
+                    "Even roots are undefined " + 
+                    "for negative numbers.");
 
             BigInteger self = Abs();
             uint numBits = (uint)self.GetBits();
 
-            numBits = (numBits / (uint)order) + (numBits % (uint)order);
+            numBits = (numBits / (uint)n) + (numBits % (uint)n);
             uint bytePos = numBits >> 5;
             byte bitPos = (byte)(numBits & 0x1F);
 
@@ -1624,7 +2111,7 @@ namespace Eduard
                     result.data[i] ^= mask;
                     result.data.Update();
 
-                    if (Pow(result,order) > self)
+                    if (Pow(result,n) > self)
                         result.data[i] ^= mask;
 
                     mask >>= 1;
@@ -1637,99 +2124,96 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a value that indicates whether a <seealso cref="BigInteger"/> value is less than another <seealso cref="BigInteger"/> value.
+        /// Determines whether a BigInteger is less than another.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns><c>true</c> if <paramref name="left"/> is less than <paramref name="right"/>; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when either operand is null.</exception>
         public static bool operator <(BigInteger left, BigInteger right)
         {
             if (object.ReferenceEquals(left, null) || object.ReferenceEquals(right, null))
                 throw new ArgumentNullException();
 
-            if (left.IsNegative != right.IsNegative)
-                return left.IsNegative;
-
-            if (left.data.Used != right.data.Used)
-                return (left.data.Used < right.data.Used);
-
-            for (int k = left.data.Used - 1; k >= 0; k--)
-            {
-                if (left.data[k] != right.data[k])
-                    return (left.data[k] < right.data[k]);
-            }
-
-            return false;
+            return Compare(left, right) < 0;
         }
 
         /// <summary>
-        /// Returns a value that indicates whether a <seealso cref="BigInteger"/> value is greater than another <seealso cref="BigInteger"/> value.
+        /// Determines whether a BigInteger is greater than another.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns><c>true</c> if <paramref name="left"/> is greater than <paramref name="right"/>; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when either operand is null.</exception>
         public static bool operator >(BigInteger left, BigInteger right)
         {
             if (object.ReferenceEquals(left, null) || object.ReferenceEquals(right, null))
                 throw new ArgumentNullException();
 
-            if (left.IsNegative != right.IsNegative)
-                return right.IsNegative;
-
-            if (left.data.Used != right.data.Used)
-                return (left.data.Used > right.data.Used);
-
-            for (int k = left.data.Used - 1; k >= 0; k--)
-            {
-                if (left.data[k] != right.data[k])
-                    return (left.data[k] > right.data[k]);
-            }
-            return false;
+            return Compare(left, right) > 0;
         }
 
         /// <summary>
-        /// Returns a value that indicates whether a <seealso cref="BigInteger"/> value is greater than or equal to another <seealso cref="BigInteger"/> value.
+        /// Determines whether a BigInteger is greater than or equal to another.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns><c>true</c> if <paramref name="left"/> is greater than or equal to <paramref name="right"/>; otherwise, <c>false</c>.</returns>
         public static bool operator >=(BigInteger left, BigInteger right)
         {
-            return (Compare(left, right) >= 0);
+            return Compare(left, right) >= 0;
         }
 
         /// <summary>
-        /// Returns a value that indicates whether a <seealso cref="BigInteger"/> value is less than or equal to another <seealso cref="BigInteger"/> value.
+        /// Determines whether a BigInteger is less than or equal to another.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns><c>true</c> if <paramref name="left"/> is less than or equal to <paramref name="right"/>; otherwise, <c>false</c>.</returns>
         public static bool operator <=(BigInteger left, BigInteger right)
         {
-            return (Compare(left, right) <= 0);
+            return Compare(left, right) <= 0;
         }
 
         /// <summary>
-        /// Returns a value indicating whether this instance is equal to a specified object.
+        /// Determines whether this instance is equal to a specified object.
         /// </summary>
-        /// <param name="obj">An object to compare with this instance.</param>
-        /// <returns></returns>
+        /// <param name="obj">The object to compare with this instance.</param>
+        /// <returns><c>true</c> if <paramref name="obj"/> is a BigInteger and has the same value; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            if (object.ReferenceEquals(obj, null))
+            if (ReferenceEquals(obj, null))
                 return false;
 
-            if (object.ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, obj))
                 return true;
 
-            BigInteger Obj = (BigInteger)obj;
-
-            if (data.Used != Obj.data.Used)
+            if (!(obj is BigInteger))
                 return false;
 
-            for(int k = 0; k < data.Used; k++)
+            BigInteger other = (BigInteger)obj;
+            return Equals(other);
+        }
+
+        /// <summary>
+        /// Determines whether this instance is equal to another BigInteger.
+        /// </summary>
+        /// <param name="other">The BigInteger to compare with this instance.</param>
+        /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
+        public bool Equals(BigInteger other)
+        {
+            if (ReferenceEquals(other, null))
+                return false;
+
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (data.Used != other.data.Used)
+                return false;
+
+            for (int k = 0; k < data.Used; k++)
             {
-                if (data[k] != Obj.data[k])
+                if (data[k] != other.data[k])
                     return false;
             }
 
@@ -1737,22 +2221,25 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a value that indicates whether the values of two <seealso cref="BigInteger"/> objects are equal.
+        /// Determines whether two BigInteger values are equal.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
         public static bool operator ==(BigInteger left, BigInteger right)
         {
+            if (ReferenceEquals(left, null))
+                return ReferenceEquals(right, null);
+
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Returns a value that indicates whether two <seealso cref="BigInteger"/> objects have different values.
+        /// Determines whether two BigInteger values are not equal.
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns><c>true</c> if the values are not equal; otherwise, <c>false</c>.</returns>
         public static bool operator !=(BigInteger left, BigInteger right)
         {
             return !left.Equals(right);
@@ -1799,7 +2286,7 @@ namespace Eduard
         /// <param name="n">The zero-based index of the bit to test.</param>
         /// <returns><c>true</c> if the bit at position <paramref name="n"/> is set; otherwise, <c>false</c>.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when <paramref name="n"/> is negative or exceeds the internal buffer capacity.
+        /// Thrown when <paramref name="n"/> is negative.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -1822,19 +2309,70 @@ namespace Eduard
         public bool TestBit(int n)
         {
             if (n < 0)
-                throw new ArgumentOutOfRangeException(nameof(n), 
+                throw new ArgumentOutOfRangeException(nameof(n),
+                    "Bit index cannot be negative.");
+
+            int wordIndex = n >> 5;
+            int bitOffset = n & 0x1F;
+            uint mask = (uint)1 << bitOffset;
+
+            if (IsNegative)
+            {
+                if (wordIndex >= data.Used)
+                    return true;
+
+                return (data[wordIndex] & mask) != 0;
+            }
+
+            if (wordIndex >= data.Used)
+                return false;
+
+            return (data[wordIndex] & mask) != 0;
+        }
+        
+        /// <summary>
+        /// Sets the bit at the specified position to 1.
+        /// </summary>
+        /// <param name="n">The zero-based index of the bit to set.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="n"/> is negative or exceeds the integer's capacity.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Bit indexing follows little-endian convention where bit 0 corresponds to the least significant bit. <br/>
+        /// For negative numbers, this method sets bits in the two's complement representation.
+        /// </para>
+        /// <para>
+        /// This method requires the bit index to be within the current capacity. To set bits beyond <br/>
+        /// the current capacity, the integer must first be expanded using multiplication or shift operations.
+        /// </para>
+        /// <para>
+        /// Cryptographic considerations:
+        /// <list type="bullet">
+        /// <item><description>This method modifies the current instance</description></item>
+        /// <item><description>Does not provide constant-time guarantees; avoid with secret-dependent indices</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// Performance: O(1) when the bit is within the current limb array.
+        /// </para>
+        /// </remarks>
+        public void SetBit(int n)
+        {
+            if (n < 0)
+                throw new ArgumentOutOfRangeException(nameof(n),
                     "Bit index cannot be negative.");
 
             int wordIndex = n >> 5;
             int bitOffset = n & 0x1F;
 
-            if (wordIndex > data.Used)
+            if (wordIndex >= data.Used)
                 throw new ArgumentOutOfRangeException(nameof(n),
-                    $"Bit index {n} exceeds the integer's " + 
+                    $"Bit index {n} exceeds the integer's " +
                     $"capacity of {data.Used * 32} bits.");
 
             uint mask = (uint)1 << bitOffset;
-            return (data[wordIndex] & mask) != 0;
+            data[wordIndex] |= mask;
         }
 
         /// <summary>
@@ -1905,9 +2443,14 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a string representing the <seealso cref="BigInteger"/> in base 10.
+        /// Converts the BigInteger to its decimal string representation.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A string representing the value in base 10, with a leading minus sign for negative numbers.</returns>
+        /// <remarks>
+        /// This method uses chunked conversion (9 digits per iteration) for efficiency. <br/>
+        /// The implementation avoids costly division by large powers of 10 by using <br/>
+        /// division by 10^9 which fits in 32 bits.
+        /// </remarks>
         public override string ToString()
         {
             if (IsZero) return "0";
@@ -1952,48 +2495,140 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Returns a hex string showing the contains of the <seealso cref="BigInteger"/>.
+        /// Converts the BigInteger to its hexadecimal string representation.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A string representing the value in base 16, without a sign indicator.</returns>
+        /// <remarks>
+        /// For positive numbers, this returns the standard hexadecimal representation. <br/>
+        /// For negative numbers, this returns the two's complement representation. <br/>
+        /// This method is useful for debugging and for interoperating with systems that <br/>
+        /// use hexadecimal encoding of large integers (e.g., ASN.1 DER encoding).
+        /// </remarks>
         public string ToHexString()
         {
             if (IsZero) return "0";
             var sb = new StringBuilder();
-            int len = data.Used - 1;
 
-            for (int j = 0; j < len; j++)
-                sb.Append(data[j].ToString("X8"));
+            uint[] digits = new uint[(data.Used + 1) << 3];
+            int len = data.Used;
+            int i = 0, j, k;
 
-            sb.Append(string.Format("{0:X}", data[len]));
+            for (j = len; j >= 0; j--)
+            {
+                uint block = data[j];
+                k = 7;
+
+                while(k >= 0)
+                {
+                    digits[i] = (block >> (4 * k)) & 0xF;
+                    k--; i++;
+                }
+            }
+
+            int trimCount = 0;
+            k = 0;
+
+            while(k < i - 1)
+            {
+                uint currentDigit = digits[k];
+                uint nextDigit = digits[k + 1];
+
+                bool shouldTrim = IsNegative ?
+                    currentDigit == 0xF && (nextDigit & 0x8) == 0x8
+                    : currentDigit == 0 && (nextDigit & 0x8) == 0;
+
+                if (!shouldTrim)
+                    break;
+
+                trimCount++;
+                k++;
+            }
+
+            for(k = trimCount; k < i; k++)
+            {
+                if (digits[k] < 10)
+                    sb.Append((char)(digits[k] + 48));
+                else
+                    if (digits[k] >= 10 && digits[k] <= 15)
+                        sb.Append((char)(digits[k] + 55));
+            }
+
             return sb.ToString();
         }
 
         /// <summary>
-        /// Converts a <seealso cref="BigInteger"/> value to a byte array.
+        /// Converts the numeric value of this instance to its equivalent string representation in the specified radix.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
+        /// <returns>The string representation of the value in the specified radix.</returns>
+        /// <remarks>
+        /// For <see cref="Radix.Decimal"/>, this method delegates to <see cref="ToString"/> which performs <br/>
+        /// chunked conversion (9 digits per iteration). For <see cref="Radix.HexaDecimal"/>, this method <br/>
+        /// delegates to <see cref="ToHexString"/>.
+        /// </remarks>
+        public string ToString(Radix radix)
+        {
+            if (radix == Radix.Decimal)
+                return ToString();
+
+            return ToHexString();
+        }
+
+        /// <summary>
+        /// Converts the BigInteger to a byte array in big-endian format.
+        /// </summary>
+        /// <returns>A byte array representing the absolute value in big-endian order (most significant byte first).</returns>
+        /// <remarks>
+        /// <para>
+        /// This method returns the positive representation without <br/>
+        /// a sign byte. The resulting array is suitable for:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>Cryptographic parameter encoding (e.g., RSA modulus, ECC coordinates)</description></item>
+        /// <item><description>Network protocol serialization</description></item>
+        /// <item><description>Storage in binary formats</description></item>
+        /// <item><description>Interoperability with other BigInteger implementations</description></item>
+        /// </list>
+        /// Leading zero bytes are trimmed to produce the minimal <br/>
+        /// representation. For zero, an empty array is returned.
+        /// </remarks>
         public byte[] ToByteArray()
         {
-            byte[] buffer = new byte[4 * data.Used];
+            byte[] buffer = new byte[4 * (data.Used + 1)];
 
-            for(int k = 0; k < data.Used; k++)
+            for (int k = data.Used; k >= 0; k--)
             {
                 byte[] array = BitConverter.GetBytes(data[k]);
                 Array.Copy(array, 0, buffer, 4 * k, 4);
             }
 
-            int j = buffer.Length;
-            int remove = 0;
+            bool isNegative = IsNegative;
+            byte signByte = (byte)(isNegative ? 0xFF : 0x00);
+            const byte highBitMask = 0x80;
 
-            while(buffer[j - 1] == 0 && j > 1)
+            int trimCount = 0;
+            int lastIndex = buffer.Length;
+
+            while (lastIndex > 1)
             {
-                ++remove;
-                j--;
+                byte currentByte = buffer[lastIndex - 1];
+                byte nextByte = buffer[lastIndex - 2];
+
+                bool shouldTrim = isNegative
+                    ? currentByte == 0xFF && (nextByte & highBitMask) == highBitMask
+                    : currentByte == 0x00 && (nextByte & highBitMask) == 0x00;
+
+                if (!shouldTrim)
+                    break;
+
+                trimCount++;
+                lastIndex--;
             }
 
-            Array.Resize<byte>(ref buffer, buffer.Length - remove);
-            Array.Reverse(buffer);
+            if (trimCount > 0)
+                Array.Resize(ref buffer, buffer.Length - trimCount);
 
+            Array.Reverse(buffer);
             return buffer;
         }
 
@@ -2008,175 +2643,256 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 64-bit signed integer.
+        /// Implicitly converts a 64-bit signed integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 64-bit signed integer.</param>
+        /// <param name="value">The 64-bit signed integer to convert.</param>
         public static implicit operator BigInteger(long value)
         {
             return new BigInteger(value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 64-bit unsigned integer.
+        /// Implicitly converts a 64-bit unsigned integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 64-bit unsigned integer.</param>
+        /// <param name="value">The 64-bit unsigned integer to convert.</param>
         public static implicit operator BigInteger(ulong value)
         {
             return new BigInteger(value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 32-bit signed integer.
+        /// Implicitly converts a 32-bit signed integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 32-bit signed integer.</param>
+        /// <param name="value">The 32-bit signed integer to convert.</param>
         public static implicit operator BigInteger(int value)
         {
             return new BigInteger((long)value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 32-bit unsigned integer.
+        /// Implicitly converts a 32-bit unsigned integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 32-bit unsigned integer.</param>
+        /// <param name="value">The 32-bit unsigned integer to convert.</param>
         public static implicit operator BigInteger(uint value)
         {
             return new BigInteger((ulong)value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 16-bit signed integer.
+        /// Implicitly converts a 16-bit signed integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 16-bit signed integer.</param>
+        /// <param name="value">The 16-bit signed integer to convert.</param>
         public static implicit operator BigInteger(short value)
         {
             return new BigInteger((long)value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 16-bit unsigned integer.
+        /// Implicitly converts a 16-bit unsigned integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 16-bit unsigned integer.</param>
+        /// <param name="value">The 16-bit unsigned integer to convert.</param>
         public static implicit operator BigInteger(ushort value)
         {
             return new BigInteger((ulong)value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 8-bit signed integer.
+        /// Implicitly converts an 8-bit signed integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 8-bit signed integer.</param>
+        /// <param name="value">The 8-bit signed integer to convert.</param>
         public static implicit operator BigInteger(sbyte value)
         {
             return new BigInteger((long)value);
         }
 
         /// <summary>
-        /// Creates a <seealso cref="BigInteger"/> from a 8-bit unsigned integer.
+        /// Implicitly converts an 8-bit unsigned integer to a BigInteger.
         /// </summary>
-        /// <param name="value">A 8-bit unsigned integer.</param>
+        /// <param name="value">The 8-bit unsigned integer to convert.</param>
         public static implicit operator BigInteger(byte value)
         {
             return new BigInteger((ulong)value);
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 64-bit signed integer.
+        /// Explicitly converts a BigInteger to a 64-bit signed integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as a 64-bit signed integer.</returns>
+        /// <exception cref="OverflowException">
+        /// Thrown when the value is outside the range
+        /// of a 64-bit signed integer.
+        /// </exception>
         public static explicit operator long(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
-            long result = ((long)value.data[1] << 32) | value.data[0];
+            if (value > long.MaxValue || value < long.MinValue)
+                throw new OverflowException("Value cannot be " + 
+                    "represented as a 64-bit signed integer. " + 
+                    $"The value must be between {long.MinValue}" + 
+                    $" and {long.MaxValue}.");
 
+            long result = ((long)value.data[1] << 32) | value.data[0];
             return result;
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 64-bit unsigned integer.
+        /// Explicitly converts a BigInteger to a 64-bit unsigned integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as a 64-bit unsigned integer.</returns>
+        /// <exception cref="OverflowException">
+        /// Thrown when the value is negative or 
+        /// exceeds <see cref="ulong.MaxValue"/>.
+        /// </exception>
         public static explicit operator ulong(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
-            ulong result = ((ulong)value.data[1] << 32) | value.data[0];
+            if (value < 0 || value > ulong.MaxValue)
+                throw new OverflowException(
+                    "Value cannot be represented" + 
+                    " as a 64-bit unsigned integer." + 
+                    " The value must be between 0 and" + 
+                    $" {ulong.MaxValue}.");
 
+            ulong result = ((ulong)value.data[1] << 32) | value.data[0];
             return result;
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 32-bit signed integer.
+        /// Explicitly converts a BigInteger to a 32-bit signed integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as a 32-bit signed integer.</returns>
+        /// <exception cref="OverflowException">
+        /// Thrown when the value is outside the 
+        /// range of a 32-bit signed integer.
+        /// </exception>
         public static explicit operator int(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
-            int result = (int)value.data[0];
+            if (value > int.MaxValue || value < int.MinValue)
+                throw new OverflowException("Value cannot be" + 
+                    " represented as a 32-bit signed integer." + 
+                    $" The value must be between {int.MinValue}" 
+                    + $" and {int.MaxValue}.");
 
+            int result = (int)value.data[0];
             return result;
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 32-bit unsigned integer.
+        /// Explicitly converts a BigInteger to a 32-bit unsigned integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as a 32-bit unsigned integer.</returns>
+        /// <exception cref="OverflowException">Thrown when 
+        /// the value is negative or exceeds <see cref="uint.MaxValue"/>.
+        /// </exception>
         public static explicit operator uint(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
+            if (value < 0 || value > uint.MaxValue)
+                throw new OverflowException("Value" + 
+                    " cannot be represented as a 32-bit" + 
+                    " unsigned integer. The value must be" + 
+                    $" between 0 and {uint.MaxValue}.");
+
             return value.data[0];
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 16-bit signed integer.
+        /// Explicitly converts a BigInteger to a 16-bit signed integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as a 16-bit signed integer.</returns>
+        /// <exception cref="OverflowException">Thrown when the value 
+        /// is outside the range of a 16-bit signed integer.
+        /// </exception>
         public static explicit operator short(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
+            if (value > short.MaxValue || value < short.MinValue)
+                throw new OverflowException("Value cannot be " + 
+                    "represented as a 16-bit signed integer. " + 
+                    $"The value must be between {short.MinValue}" 
+                    + $" and {short.MaxValue}.");
+
             return (short)value.data[0];
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 16-bit unsigned integer.
+        /// Explicitly converts a BigInteger to a 16-bit unsigned integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as a 16-bit unsigned integer.</returns>
+        /// <exception cref="OverflowException">Thrown when the value 
+        /// is negative or exceeds <see cref="ushort.MaxValue"/>.
+        /// </exception>
         public static explicit operator ushort(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
+            if (value < 0 || value > ushort.MaxValue)
+                throw new OverflowException("Value cannot " + 
+                    "be represented as a 16-bit unsigned " + 
+                    "integer. The value must be between 0 " 
+                    + $"and {ushort.MaxValue}.");
+
             return (ushort)value.data[0];
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 8-bit signed integer.
+        /// Explicitly converts a BigInteger to an 8-bit signed integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as an 8-bit signed integer.</returns>
+        /// <exception cref="OverflowException">Thrown when the value
+        /// is outside the range of an 8-bit signed integer.
+        /// </exception>
         public static explicit operator sbyte(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
 
+            if (value > sbyte.MaxValue || value < sbyte.MinValue)
+                throw new OverflowException("Value cannot be " + 
+                    "represented as an 8-bit signed integer. " + 
+                    $"The value must be between {sbyte.MinValue}" 
+                    + $" and {sbyte.MaxValue}.");
+
             return (sbyte)value.data[0];
         }
 
         /// <summary>
-        /// Converts a specified <seealso cref="BigInteger"/> value to 8-bit unsigned integer.
+        /// Explicitly converts a BigInteger to an 8-bit unsigned integer.
         /// </summary>
-        /// <param name="value">A BigInteger.</param>
+        /// <param name="value">The BigInteger to convert.</param>
+        /// <returns>The value as an 8-bit unsigned integer.</returns>
+        /// <exception cref="OverflowException">Thrown when the value 
+        /// is negative or exceeds <see cref="byte.MaxValue"/>.
+        /// </exception>
         public static explicit operator byte(BigInteger value)
         {
             if (value.IsZero)
                 return 0;
+
+            if (value < 0 || value > byte.MaxValue)
+                throw new OverflowException("Value " + 
+                    "cannot be represented as an 8-bit" + 
+                    " unsigned integer. The value must " + 
+                    $"be between 0 and {byte.MaxValue}.");
 
             return (byte)value.data[0];
         }

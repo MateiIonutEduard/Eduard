@@ -515,6 +515,49 @@ namespace Eduard.Security
         }
 
         /// <summary>
+        /// Computes exponentiation of a polynomial raised to an integer exponent over the current finite field.
+        /// </summary>
+        /// <param name="val">The base polynomial.</param>
+        /// <param name="exponent">The exponent value.</param>
+        /// <returns>The base polynomial raised to the exponent.</returns>
+        /// <exception cref="ArithmeticException">Thrown when both base and exponent are zero (0^0 is undefined).</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when exponent is negative.</exception>
+        /// <remarks>
+        /// Implements binary exponentiation (square-and-multiply).<br/>
+        /// For modular exponentiation, use <see cref="Pow(Polynomial, BigInteger, Polynomial)"/>.
+        /// </remarks>
+        public static Polynomial Pow(Polynomial val, int exponent)
+        {
+            if (val == 0 && exponent == 0)
+                throw new ArithmeticException(
+                    "Cannot compute 0^0: zero " + 
+                    "polynomial raised to power" + 
+                    " zero is undefined.");
+
+            if (exponent < 0)
+                throw new ArgumentOutOfRangeException(
+                    "Exponent cannot be negative for " 
+                    + "polynomial exponentiation.");
+
+            if (exponent == 0) return 1;
+            if (exponent == 1) return val;
+
+            Polynomial res = 1;
+            int e = exponent;
+            
+            while(e != 0)
+            {
+                if ((e & 1) == 1)
+                    res *= val;
+
+                val = val * val;
+                e >>= 1;
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Computes modular exponentiation of a polynomial raised to a big integer exponent.
         /// </summary>
         /// <param name="val">The base polynomial.</param>
@@ -522,6 +565,8 @@ namespace Eduard.Security
         /// <param name="modulus">The modulus polynomial.</param>
         /// <returns>The base polynomial raised to the exponent modulo the modulus.</returns>
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when exponent is negative.</exception>
+        /// <exception cref="ArithmeticException">Thrown when both base and exponent are zero (0^0 is undefined).</exception>
         public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial modulus)
         {
             Polynomial nb = new Polynomial(val);
@@ -530,6 +575,21 @@ namespace Eduard.Security
             if(modulus.degree == 0 && modulus.coeffs[0] == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
+
+            if (val == 0 && exponent == 0)
+                throw new ArithmeticException(
+                    "Cannot compute 0^0: zero " + 
+                    "polynomial raised to power " 
+                    + "zero is undefined.");
+
+            if (exponent < 0)
+                throw new ArgumentOutOfRangeException(
+                    "Exponent cannot be negative for " + 
+                    "polynomial modular exponentiation.");
+
+            if (exponent == 0) return 1;
+            Polynomial b = nb % modulus;
+            if (exponent == 1) return b;
 
 #if !USE_BENCHMARKING
             int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
@@ -544,8 +604,8 @@ namespace Eduard.Security
                 SetPolyMod(modulus);
 
                 Polynomial[] table = new Polynomial[store];
-                table[0] = nb % modulus;
-                Polynomial b2 = MultMod(table[0], table[0], modulus);
+                table[0] = b;
+                Polynomial b2 = MultMod(b, b, modulus);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
@@ -579,17 +639,122 @@ namespace Eduard.Security
                 for(int k = 0; k < size; k++)
                 {
                     if (exponent.TestBit(k))
-                    {
-                        Polynomial temp = nb * result;
-                        result = temp % modulus;
-                    }
+                        result = (b * result) % modulus;
 
-                    nb = nb * nb;
-                    nb %= modulus;
+                    b = (b * b) % modulus;
                 }
             }
 
             return result;
+        }
+
+        private static Polynomial ScaleMod(BigInteger k, Polynomial poly)
+        {
+            Polynomial res = new Polynomial(poly.degree);
+            int j;
+
+            for (j = 0; j <= res.degree; j++)
+                res.coeffs[j] = BarrettReducer.MultMod(k, poly.coeffs[j]);
+
+            return res;
+        }
+
+        /// <summary>
+        /// Composes two polynomials, computing P(Q(x)) over the current finite field.
+        /// </summary>
+        /// <param name="left">The outer polynomial P(x).</param>
+        /// <param name="right">The inner polynomial Q(x).</param>
+        /// <returns>The composition polynomial P(Q(x)) reduced modulo the field.</returns>
+        /// <remarks>
+        /// Implements Horner's method for polynomial composition. The result degree is deg(P) * deg(Q). For <br/>
+        /// composition with modular reduction, use <see cref="Compose(Polynomial, Polynomial, Polynomial, bool)"/>.
+        /// </remarks>
+        public static Polynomial Compose(Polynomial left, Polynomial right)
+        {
+            Polynomial poly = left;
+            Polynomial res = 0;
+            Polynomial temp = 1;
+
+            for (int k = 0; k <= poly.degree; k++)
+            {
+                BigInteger kt = poly.coeffs[k];
+                Polynomial aux = ScaleMod(kt, temp);
+
+                temp *= right;
+                res += aux;
+            }
+
+            return res;
+        }
+
+        /// <summary>
+        /// Composes two polynomials modulo a third polynomial, computing P(Q(x)) mod M(x) over the current finite field.
+        /// </summary>
+        /// <param name="left">The outer polynomial P(x).</param>
+        /// <param name="right">The inner polynomial Q(x).</param>
+        /// <param name="modulus">The modulus polynomial M(x).</param>
+        /// <param name="prepareModulus">
+        /// If <c>true</c>, precomputes FFT parameters for the modulus using <see cref="SetPolyMod"/>.
+        /// Set to <c>false</c> when calling repeatedly with the same modulus.
+        /// </param>
+        /// <returns>The composition polynomial P(Q(x)) reduced modulo M(x) over the current field.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
+        /// <remarks>
+        /// <para>
+        /// Implements polynomial modular composition using a hybrid algorithm strategy:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>FFT-accelerated Horner's method for large-degree polynomials</description></item>
+        /// <item><description>Classical Horner's method for small-degree polynomials</description></item>
+        /// </list>
+        /// <para>
+        /// Critical for GLV/GLS endomorphisms, isogeny evaluation in CSIDH/SIKE, and Frobenius <br/>
+        /// endomorphisms in pairing-based cryptography. The result degree is bounded by deg(M) - 1.
+        /// </para>
+        /// </remarks>
+        public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus, bool prepareModulus = true)
+        {
+            if (modulus.degree == 0 && modulus.coeffs[0] == 0)
+                throw new DivideByZeroException(
+                    "Modulus polynomial cannot be zero.");
+
+#if !USE_BENCHMARKING
+            int POLY_MOD_COMPOSE_THRESHOLD = (int)Threshold.POLY_MOD_COMPOSE_THRESHOLD;
+#else
+            int POLY_MOD_COMPOSE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER);
+#endif
+
+            Polynomial poly = left;
+            Polynomial res = 0;
+            Polynomial temp = 1;
+
+            if (modulus.degree >= POLY_MOD_COMPOSE_THRESHOLD)
+            {
+                if (prepareModulus)
+                    SetPolyMod(modulus);
+
+                for (int k = 0; k <= poly.degree; k++)
+                {
+                    BigInteger kt = poly.coeffs[k];
+                    Polynomial aux = ScaleMod(kt, temp);
+
+                    temp = MultMod(temp, right, modulus);
+                    res += aux;
+                }
+            }
+            else
+            {
+                for (int k = 0; k <= poly.degree; k++)
+                {
+                    BigInteger kt = poly.coeffs[k];
+                    Polynomial aux = ScaleMod(kt, temp);
+
+                    temp = (temp * right) % modulus;
+                    res += aux;
+                }
+            }
+
+            return res;
         }
 
         /// <summary>
@@ -962,6 +1127,9 @@ namespace Eduard.Security
         /// </remarks>
         public override bool Equals(object obj)
         {
+            if (ReferenceEquals(obj, null))
+                return false;
+
             if (!(obj is Polynomial))
                 return false;
 

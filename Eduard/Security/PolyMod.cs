@@ -1,5 +1,6 @@
 ﻿using Eduard;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Eduard.Security
 {
@@ -178,20 +179,20 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Computes polynomial composition f(g(X)) modulo the ring modulus.
+        /// Composes two ring elements, computing f(g(X)) modulo the ring modulus.
         /// </summary>
-        /// <param name="left">The outer polynomial f.</param>
-        /// <param name="right">The inner polynomial g.</param>
-        /// <returns>f(g(X)) mod m(X).</returns>
+        /// <param name="left">The outer polynomial f(X).</param>
+        /// <param name="right">The inner polynomial g(X).</param>
+        /// <returns>The composition f(g(X)) reduced modulo the ring modulus m(X).</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the ring modulus has not been initialized.
+        /// Thrown when the ring modulus has not been initialized via <see cref="SetModulus"/>.
         /// </exception>
         /// <exception cref="DivideByZeroException">
-        /// Thrown when modulus polynomial is zero.
+        /// Thrown when the ring modulus is zero.
         /// </exception>
         /// <remarks>
-        /// Implements Horner's method for composition. Complexity O(n^2) where n is the degree.<br/>
-        /// Used in certain cryptographic transformations and homomorphic operations.
+        /// Implements Brent-Kung algorithm for polynomial modular composition.<br/>
+        /// Critical for isogeny evaluation in CSIDH/SIKE and Frobenius endomorphisms.
         /// </remarks>
         public static PolyMod Compose(PolyMod left, PolyMod right)
         {
@@ -200,19 +201,68 @@ namespace Eduard.Security
                     "Polynomial ring modulus not initialized."
                     + " Call SetModulus() first.");
 
-            Polynomial poly = left.poly;
-            Polynomial cpoly = 0;
-            Polynomial temp = 1;
+            Polynomial C = 0, T = 1;
+            int i, j, ik, L;
 
-            for(int k = 0; k <= poly.degree; k++)
+            int n = mod.degree;
+            int k = (int)Math.Sqrt(n + 1);
+
+            if (k * k < n + 1) k++;
+            Polynomial Q = 0;
+
+            Polynomial[] table = new Polynomial[k + 1];
+            Polynomial Lx = left.poly, Rx = right.poly;
+            table[0] = 1;
+
+            for (i = 1; i <= k; i++)
+                table[i] = Polynomial.MultMod(table[i - 1], Rx, mod);
+
+            BigInteger[] x = new BigInteger[k];
+            BigInteger[] y = new BigInteger[k];
+
+            for (i = 0; i < k; i++)
+                x[i] = y[i] = 0;
+
+            for (i = 0; i < k; i++)
             {
-                Polynomial aux = poly.coeffs[k] * temp;
-                temp = Polynomial.Reduce(temp * right.poly, mod);
-                cpoly += aux;
+                ik = i * k;
+                Q = new Polynomial(n);
+
+                for (L = 0; L <= n; L++)
+                {
+                    BigInteger t = 0;
+
+                    for (j = k - 1; j >= 0; j--)
+                    {
+                        x[j] = Lx.GetCoeff(ik + j);
+                        y[j] = table[j].GetCoeff(L);
+                    }
+
+                    t = DotMult(x, y);
+                    Q.coeffs[L] = t;
+                }
+
+                C += Polynomial.MultMod(Q, T, mod);
+
+                if (i < k - 1)
+                    T = Polynomial.MultMod(T, table[k], mod);
             }
 
-            PolyMod result = new PolyMod(cpoly);
-            return result;
+            return C;
+        }
+
+        private static BigInteger DotMult(BigInteger[] x, BigInteger[] y)
+        {
+            BigInteger res = 0;
+            int i, n = x.Length;
+
+            for (i = 0; i < n; i++)
+            {
+                BigInteger temp = BarrettReducer.MultMod(x[i], y[i]);
+                res = BarrettReducer.AddMod(res, temp);
+            }
+
+            return res;
         }
 
         /// <summary>

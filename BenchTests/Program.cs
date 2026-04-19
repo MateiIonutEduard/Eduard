@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Configs;
 using BenchTests.Core.Curves;
-using BenchmarkTests.Core.BigInt;
-using BenchmarkTests.Core.Poly;
+using BenchTests.Core.BigInt;
+using BenchTests.Core.Poly;
 #else
 using System;
 #endif
@@ -71,6 +71,7 @@ namespace BenchTests
             Console.WriteLine("    2 - Polynomial Reduction (Long Division vs FFT)");
             Console.WriteLine("    3 - Polynomial Multiplication (Plain vs FFT)");
             Console.WriteLine("    4 - Polynomial Power Modulo (General)");
+            Console.WriteLine("    5 - Polynomial Composition Modulo (Standard vs Improved Horner)");
             Console.WriteLine();
             Console.WriteLine("  Elliptic Curves:");
             Console.WriteLine("    1 - Twisted Edwards Curves (Edwards25519, Edwards448)");
@@ -134,24 +135,29 @@ namespace BenchTests
             var tests = new List<(int index, Action<IConfig> run)>
             {
                 (1, (cfg) => {
-                    Console.WriteLine("\n[1/4] Polynomial Power Modulo");
+                    Console.WriteLine("\n[1/5] Polynomial Power Modulo");
                     Console.WriteLine("       Binary exponentiation vs optimized algorithm");
                     BenchmarkRunner.Run<DegreePowBenchmark>(cfg);
                 }),
                 (2, (cfg) => {
-                    Console.WriteLine("\n[2/4] Polynomial Reduction");
+                    Console.WriteLine("\n[2/5] Polynomial Reduction");
                     Console.WriteLine("       Standard long division vs FFT-based reduction");
                     BenchmarkRunner.Run<ModBenchmark>(cfg);
                 }),
                 (3, (cfg) => {
-                    Console.WriteLine("\n[3/4] Polynomial Multiplication");
+                    Console.WriteLine("\n[3/5] Polynomial Multiplication");
                     Console.WriteLine("       Plain convolution vs FFT-based multiplication");
                     BenchmarkRunner.Run<MultiBenchmark>(cfg);
                 }),
                 (4, (cfg) => {
-                    Console.WriteLine("\n[4/4] Polynomial Power Modulo (General)");
+                    Console.WriteLine("\n[4/5] Polynomial Power Modulo (General)");
                     Console.WriteLine("       Exponentiation of polynomials in quotient rings");
                     BenchmarkRunner.Run<PowModBenchmark>(cfg);
+                }),
+                (5, (cfg) => {
+                    Console.WriteLine("\n[5/5] Polynomial Composition Modulo (Standard vs Improved Horner)");
+                    Console.WriteLine("       Modular composition of polynomials in quotient rings");
+                    BenchmarkRunner.Run<ComposeModBenchmark>(cfg);
                 })
             };
 
@@ -160,7 +166,7 @@ namespace BenchTests
             if (!selected.Any())
             {
                 Console.WriteLine("No valid test indices specified for Polynomial benchmarks.");
-                Console.WriteLine("Available indices: 1, 2, 3, 4");
+                Console.WriteLine("Available indices: 1, 2, 3, 4, 5");
                 return;
             }
 
@@ -225,7 +231,7 @@ namespace BenchTests
 
             Console.WriteLine("\nPhase 2: Polynomial Operations");
             Console.WriteLine("───────────────────────────────");
-            RunPolynomialBenchmarks(config, new HashSet<int> { 1, 2, 3, 4 });
+            RunPolynomialBenchmarks(config, new HashSet<int> { 1, 2, 3, 4, 5 });
 
             Console.WriteLine("\nPhase 3: Elliptic Curve Cryptography");
             Console.WriteLine("─────────────────────────────────────");
