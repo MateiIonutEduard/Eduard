@@ -232,11 +232,17 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="point">The point to set as generator.</param>
         /// <exception cref="ArgumentException">
-        /// Thrown when the point does not satisfy the curve equation, or when multiplied
-        /// by the cofactor it yields the point at infinity (indicating small-order subgroup).
+        /// Thrown when the point is at infinity, does not satisfy the twisted Edwards equation,
+        /// or when multiplied by the cofactor yields the point at infinity (indicating it lies in
+        /// a small-order subgroup).
         /// </exception>
         public void SetBasePoint(ECPoint point)
         {
+            if (point == ECPoint.POINT_INFINITY)
+                throw new ArgumentException(
+                    "Generator cannot be the point at infinity.",
+                    nameof(point));
+
             ECPoint tempPoint = point;
             var temp = Evaluate(tempPoint.GetAffineY());
 
