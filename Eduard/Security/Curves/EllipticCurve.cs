@@ -275,7 +275,8 @@ namespace Eduard.Security.Curves
         {
             if (point == ECPoint.POINT_INFINITY)
                 throw new ArgumentException(
-                    "Generator cannot be the point at infinity.",
+                    "The generator point cannot " 
+                    + "be the point at infinity.",
                     nameof(point));
 
             ECPoint tempPoint = point;
@@ -283,8 +284,9 @@ namespace Eduard.Security.Curves
 
             if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
                 throw new ArgumentException(
-                    "The generator point is not on " 
-                    + "the Weierstrass curve.");
+                    "The specified point does not" 
+                    + " lie on the Weierstrass curve.",
+                    nameof(point));
             else
             {
                 BigInteger y = tempPoint.GetAffineY();
@@ -292,8 +294,10 @@ namespace Eduard.Security.Curves
 
                 if (eval != Y2)
                     throw new ArgumentException(
-                        "Invalid generator point for " 
-                        + "Weierstrass curve.");
+                        "The specified point does " + 
+                        "not satisfy the Weierstrass" 
+                        + " curve equation.",
+                        nameof(point));
                 else
                 {
                     ECPoint testPoint = ECMath.Multiply(this, cofactor, 
@@ -303,8 +307,10 @@ namespace Eduard.Security.Curves
                         basePoint = tempPoint;
                     else
                         throw new ArgumentException(
-                            "Chosen generator point yields small-order" 
-                            + " subgroup on Weierstrass curve.");
+                            "The specified point lies in a " + 
+                            "small-order subgroup and cannot be " 
+                            + "used as a cryptographic generator.",
+                            nameof(point));
                 }
             }
         }

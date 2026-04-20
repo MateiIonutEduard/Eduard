@@ -119,9 +119,9 @@ namespace Eduard.Security.Curves
 
             string[] pointErrors = new string[]
             {
-                "Generator is not affine on the Weierstrass curve.",
-                "Generator maps to the quadratic twist (invalid subgroup).",
-                "Point has dangerously small subgroup order."
+                "The specified point does not lie on the Weierstrass curve.",
+                "The specified point maps to the quadratic twist and is not in the correct subgroup.",
+                "The specified point lies in a small-order subgroup and is unsafe for cryptographic operations."
             };
 
             if (securityCheck)
