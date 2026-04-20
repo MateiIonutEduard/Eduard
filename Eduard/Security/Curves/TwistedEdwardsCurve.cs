@@ -182,11 +182,17 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Gets or generates the curve's base point (generator).
+        /// Gets the curve's base point (generator), either from cache or by finding a new valid point.
         /// </summary>
-        /// <param name="isGenerated">If true, returns cached base point when available.</param>
-        /// <returns>A point in the prime-order subgroup.</returns>
-        public ECPoint GetBasePoint(bool isGenerated = false)
+        /// <param name="useCached">
+        /// If true, returns the cached base point when available. 
+        /// If false, always finds a new base point via random search on the twisted Edwards curve.
+        /// </param>
+        /// <returns>
+        /// A point in the prime-order subgroup suitable as a generator for twisted Edwards curve 
+        /// cryptographic operations.
+        /// </returns>
+        public ECPoint GetBasePoint(bool useCached = false)
         {
             bool done = false;
             BigInteger x = 0;
@@ -194,7 +200,7 @@ namespace Eduard.Security.Curves
             BigInteger y = 0;
             BigInteger temp = 0;
 
-            if (isGenerated && basePoint != ECPoint.POINT_INFINITY)
+            if (useCached && basePoint != ECPoint.POINT_INFINITY)
                 return basePoint;
 
             do
