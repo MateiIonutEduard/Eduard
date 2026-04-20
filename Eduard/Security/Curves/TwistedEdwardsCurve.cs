@@ -99,10 +99,10 @@ namespace Eduard.Security.Curves
             BigInteger t2 = BarrettReducer.MultMod(a, d);
             BigInteger t = BarrettReducer.MultMod(t1, t2);
 
-            if((cofactor & 0x3) != 0 || t == 0)
+            if ((cofactor & 0x3) != 0 || t == 0)
                 throw new InvalidOperationException(
-                    "The twisted Edwards curve is " 
-                    + "invalid or singular.");
+                    "The twisted Edwards curve is " +
+                    "singular or invalid.");
 
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
@@ -256,7 +256,8 @@ namespace Eduard.Security.Curves
         {
             if (point == ECPoint.POINT_INFINITY)
                 throw new ArgumentException(
-                    "Generator cannot be the point at infinity.",
+                    "The generator point cannot" + 
+                    " be the point at infinity.",
                     nameof(point));
 
             ECPoint tempPoint = point;
@@ -264,8 +265,9 @@ namespace Eduard.Security.Curves
 
             if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
                 throw new ArgumentException(
-                    "The generator point is not on the" 
-                    + " twisted Edwards curve.");
+                    "The specified point does not lie" + 
+                    " on the twisted Edwards curve.",
+                    nameof(point));
             else
             {
                 BigInteger x = tempPoint.GetAffineX();
@@ -273,8 +275,9 @@ namespace Eduard.Security.Curves
 
                 if (eval != temp)
                     throw new ArgumentException(
-                        "Invalid generator point for the" 
-                        + " twisted Edwards curve.");
+                        "The specified point does not satisfy" + 
+                        " the twisted Edwards curve equation.",
+                        nameof(point));
                 else
                 {
                     ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, 
@@ -284,9 +287,10 @@ namespace Eduard.Security.Curves
                         basePoint = tempPoint;
                     else
                         throw new ArgumentException(
-                            "Chosen generator point yields a"
-                            + " small-order subgroup on the " 
-                            + "twisted Edwards curve.");
+                            "The specified point lies in a " + 
+                            "small-order subgroup and cannot " + 
+                            "be used as a cryptographic generator.",
+                            nameof(point));
                 }
             }
         }

@@ -75,9 +75,9 @@ namespace Eduard.Security.Curves
 
             string[] pointErrors = new string[]
             {
-                "Generator is not affine on the Twisted Edwards curve.",
-                "Generator maps to the quadratic twist (invalid cofactor).",
-                "Point has dangerously small subgroup order."
+                "The specified point does not lie on the twisted Edwards curve.",
+                "The specified point maps to the quadratic twist and is not in the correct subgroup.",
+                "The specified point lies in a small-order subgroup and is unsafe for cryptographic operations."
             };
 
             if (securityCheck)
@@ -122,8 +122,8 @@ namespace Eduard.Security.Curves
             }
             else if (opMode == ECMode.EC_SECURE)
                 throw new NotImplementedException(
-                    "EC_SECURE mode (Montgomery ladder) is not yet implemented for twisted Edwards curves. " +
-                    "Use EC_STANDARD_AFFINE, EC_STANDARD_PROJECTIVE or EC_FASTEST modes instead.");
+                    "EC_SECURE mode is not available for twisted Edwards curves. " +
+                    "Use EC_STANDARD_AFFINE, EC_STANDARD_PROJECTIVE, or EC_FASTEST instead.");
             else
             {
                 int i, j, win;
