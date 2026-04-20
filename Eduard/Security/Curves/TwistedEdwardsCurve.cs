@@ -185,14 +185,18 @@ namespace Eduard.Security.Curves
         /// Gets the curve's base point (generator), either from cache or by finding a new valid point.
         /// </summary>
         /// <param name="useCached">
-        /// If true, returns the cached base point when available. 
-        /// If false, always finds a new base point via random search on the twisted Edwards curve.
+        /// If <c>true</c>, returns the cached base point when available.
+        /// If <c>false</c>, always finds a new base point via random search.
+        /// </param>
+        /// <param name="skipValidation">
+        /// If <c>true</c>, bypasses subgroup validation. Use only for number theory applications.
+        /// Default is <c>false</c>.
         /// </param>
         /// <returns>
-        /// A point in the prime-order subgroup suitable as a generator for twisted Edwards curve 
-        /// cryptographic operations.
+        /// A point suitable as a generator. When <paramref name="skipValidation"/> is <c>false</c>,
+        /// the point is guaranteed to lie in the prime-order subgroup.
         /// </returns>
-        public ECPoint GetBasePoint(bool useCached = false)
+        public ECPoint GetBasePoint(bool useCached = false, bool skipValidation = false)
         {
             bool done = false;
             BigInteger x = 0;
@@ -222,9 +226,15 @@ namespace Eduard.Security.Curves
                     if (done)
                     {
                         ECPoint tempPoint = new ECPoint(x, y);
-                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, 
-                            tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                        done = (basePoint != ECPoint.POINT_INFINITY);
+
+                        if (skipValidation)
+                            basePoint = tempPoint;
+                        else
+                        {
+                            basePoint = TwistedEdwardsMath.Multiply(this, cofactor,
+                                tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                            done = (basePoint != ECPoint.POINT_INFINITY);
+                        }
                     }
                 }
             }

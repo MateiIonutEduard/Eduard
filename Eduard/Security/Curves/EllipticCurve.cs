@@ -212,7 +212,7 @@ namespace Eduard.Security.Curves
         /// Default is <c>false</c>.
         /// </param>
         /// <returns>
-        /// A point suitable as a generator. When <paramref name="skipValidation"/> is false,
+        /// A point suitable as a generator. When <paramref name="skipValidation"/> is <c>false</c>,
         /// the point is guaranteed to lie in the prime-order subgroup.
         /// </returns>
         public ECPoint GetBasePoint(bool useCached = false, bool skipValidation = false)
