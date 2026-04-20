@@ -204,7 +204,7 @@ namespace Eduard.Security.Curves
             BigInteger y = 0;
             BigInteger temp = 0;
 
-            if (useCached && basePoint != ECPoint.POINT_INFINITY)
+            if (useCached && !skipValidation && basePoint != ECPoint.POINT_INFINITY)
                 return basePoint;
 
             do
@@ -228,7 +228,7 @@ namespace Eduard.Security.Curves
                         ECPoint tempPoint = new ECPoint(x, y);
 
                         if (skipValidation)
-                            basePoint = tempPoint;
+                            return tempPoint;
                         else
                         {
                             basePoint = TwistedEdwardsMath.Multiply(this, cofactor,
