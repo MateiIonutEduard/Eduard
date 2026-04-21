@@ -1,6 +1,7 @@
 ﻿using Eduard;
 using Eduard.Security;
 using Eduard.Security.Curves;
+using Eduard.Security.Extensions;
 using Eduard.Security.Primitives;
 
 namespace Eduard.Tests.Curves
@@ -69,6 +70,71 @@ namespace Eduard.Tests.Curves
 
             R = ECMath.Add(curve, P, Q);
             Assert.True(P == R);
+        }
+
+        [Fact]
+        public void Negate_Jacobian()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint basePoint = curve.GetBasePoint();
+            ECPoint3w P = curve.ToJacobian(basePoint);
+
+            ECPoint3w Q = Wei3Math.Negate(curve, P);
+            Assert.Equal(P.x, Q.x);
+
+            BigInteger p = curve.field;
+            Assert.Equal(P.y, p - Q.y);
+
+            Assert.True(P.z == Q.z);
+            P = ECPoint3w.POINT_INFINITY;
+
+            Q = Wei3Math.Negate(curve, P);
+            Assert.Equal(P, Q);
+        }
+
+        [Fact]
+        public void Double_Jacobian()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint basePoint = curve.GetBasePoint();
+            ECPoint3w P = curve.ToJacobian(basePoint);
+
+            ECPoint3w Q = Wei3Math.Doubling(curve, P);
+            ECPoint Aq = curve.ToAffine(Q);
+
+            ECPoint R = ECMath.Add(curve, basePoint, basePoint);
+            Assert.Equal(Aq, R);
+
+            P = ECPoint3w.POINT_INFINITY;
+            Q = Wei3Math.Doubling(curve, P);
+            Assert.True(Q == ECPoint3w.POINT_INFINITY);
+        }
+
+        [Fact]
+        public void Add_Jacobian()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint P1 = curve.GetBasePoint();
+            ECPoint P2 = curve.GetBasePoint();
+
+            ECPoint3w P = curve.ToJacobian(P1);
+            ECPoint3w Q = curve.ToJacobian(P2);
+
+            ECPoint3w R = Wei3Math.Add(curve, P, Q);
+            ECPoint P3 = ECMath.Add(curve, P1, P2);
+
+            ECPoint Rp = curve.ToAffine(R);
+            Assert.Equal(P3, Rp);
+
+            P = ECPoint3w.POINT_INFINITY;
+            R = Wei3Math.Add(curve, P, Q);
+            Assert.Equal(Q, R);
+
+            P = curve.ToJacobian(P1);
+            Q = ECPoint3w.POINT_INFINITY;
+
+            R = Wei3Math.Add(curve, P, Q);
+            Assert.Equal(P, R);
         }
     }
 }
