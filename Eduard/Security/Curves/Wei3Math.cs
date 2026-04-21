@@ -40,6 +40,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3w Add(EllipticCurve curve, ECPoint3w left, ECPoint3w right)
         {
+            if (left == right) return Doubling(curve, left);
             if (left == ECPoint3w.POINT_INFINITY) return right;
             if (right == ECPoint3w.POINT_INFINITY) return left;
 

@@ -135,6 +135,12 @@ namespace Eduard.Tests.Curves
 
             R = Wei3Math.Add(curve, P, Q);
             Assert.Equal(P, R);
+
+            R = Wei3Math.Add(curve, P, P);
+            P3 = ECMath.Add(curve, P1, P1);
+
+            Rp = curve.ToAffine(R);
+            Assert.Equal(Rp, P3);
         }
     }
 }
