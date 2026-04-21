@@ -32,9 +32,6 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Add(EllipticCurve curve, ECPoint left, ECPoint right)
         {
-            if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
-                return ECPoint.POINT_INFINITY;
-
             if (left == ECPoint.POINT_INFINITY)
                 return right;
 
