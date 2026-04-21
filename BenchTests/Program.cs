@@ -71,7 +71,7 @@ namespace BenchTests
             Console.WriteLine("    2 - Polynomial Reduction (Long Division vs FFT)");
             Console.WriteLine("    3 - Polynomial Multiplication (Plain vs FFT)");
             Console.WriteLine("    4 - Polynomial Power Modulo (General)");
-            Console.WriteLine("    5 - Polynomial Composition Modulo (Standard vs Improved Horner)");
+            Console.WriteLine("    5 - Polynomial Composition Modulo (Standard, FFT-Horner, FFT-BrentKung)");
             Console.WriteLine();
             Console.WriteLine("  Elliptic Curves:");
             Console.WriteLine("    1 - Twisted Edwards Curves (Edwards25519, Edwards448)");
@@ -155,7 +155,7 @@ namespace BenchTests
                     BenchmarkRunner.Run<PowModBenchmark>(cfg);
                 }),
                 (5, (cfg) => {
-                    Console.WriteLine("\n[5/5] Polynomial Composition Modulo (Standard vs Improved Horner)");
+                    Console.WriteLine("\n[5/5] Polynomial Composition Modulo (Standard, FFT-Horner, FFT-BrentKung)");
                     Console.WriteLine("       Modular composition of polynomials in quotient rings");
                     BenchmarkRunner.Run<ComposeModBenchmark>(cfg);
                 })

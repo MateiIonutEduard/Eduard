@@ -31,6 +31,7 @@ namespace Eduard.BenchTests.Poly
                 mod.coeffs[i] = SecureRandom.Range(1, field - 1);
 
             XP = Polynomial.Pow(X, field, mod);
+            PolyMod.SetModulus(mod);
         }
 
         [Benchmark(Description = "Horner (standard)")]
@@ -45,6 +46,12 @@ namespace Eduard.BenchTests.Poly
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree);
             Polynomial XPP = Polynomial.Compose(XP, XP, mod, false);
+        }
+
+        [Benchmark(Description = "Brent-Kung (FFT-accelerated)")]
+        public void BrentKung_FFT()
+        {
+            PolyMod XPP = PolyMod.Compose(XP, XP);
         }
     }
 }
