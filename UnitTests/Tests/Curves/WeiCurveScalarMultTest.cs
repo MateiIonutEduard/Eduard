@@ -213,5 +213,76 @@ namespace Eduard.Tests.Curves
             Rp = curve.ToAffine(R);
             Assert.Equal(Rp, P3);
         }
+
+        [Fact]
+        public void Negate_JacobianChudnovsky() 
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint basePoint = curve.GetBasePoint();
+            ECPoint5w P = curve.ToJacobianChudnovsky(basePoint);
+
+            ECPoint5w Q = Wei5Math.Negate(curve, P);
+            Assert.Equal(P.x, Q.x);
+
+            BigInteger p = curve.field;
+            Assert.Equal(P.y, p - Q.y);
+
+            Assert.True(P.z == Q.z);
+            P = ECPoint5w.POINT_INFINITY;
+
+            Q = Wei5Math.Negate(curve, P);
+            Assert.Equal(P, Q);
+        }
+
+        [Fact]
+        public void Double_JacobianChudnovsky()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint basePoint = curve.GetBasePoint();
+            ECPoint5w P = curve.ToJacobianChudnovsky(basePoint);
+
+            ECPoint5w Q = Wei5Math.Doubling(curve, P);
+            ECPoint Aq = curve.ToAffine(Q);
+
+            ECPoint R = ECMath.Add(curve, basePoint, basePoint);
+            Assert.Equal(Aq, R);
+
+            P = ECPoint5w.POINT_INFINITY;
+            Q = Wei5Math.Doubling(curve, P);
+            Assert.True(Q == ECPoint5w.POINT_INFINITY);
+        }
+
+        [Fact]
+        public void Add_JacobianChudnovsky() 
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint P1 = curve.GetBasePoint();
+            ECPoint P2 = curve.GetBasePoint();
+
+            ECPoint5w P = curve.ToJacobianChudnovsky(P1);
+            ECPoint5w Q = curve.ToJacobianChudnovsky(P2);
+
+            ECPoint5w R = Wei5Math.Add(curve, P, Q);
+            ECPoint P3 = ECMath.Add(curve, P1, P2);
+
+            ECPoint Rp = curve.ToAffine(R);
+            Assert.Equal(P3, Rp);
+
+            P = ECPoint5w.POINT_INFINITY;
+            R = Wei5Math.Add(curve, P, Q);
+            Assert.Equal(Q, R);
+
+            P = curve.ToJacobianChudnovsky(P1);
+            Q = ECPoint5w.POINT_INFINITY;
+
+            R = Wei5Math.Add(curve, P, Q);
+            Assert.Equal(P, R);
+
+            R = Wei5Math.Add(curve, P, P);
+            P3 = ECMath.Add(curve, P1, P1);
+
+            Rp = curve.ToAffine(R);
+            Assert.Equal(Rp, P3);
+        }
     }
 }

@@ -46,9 +46,9 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint5w Add(EllipticCurve curve, ECPoint5w left, ECPoint5w right)
         {
+            if (left == right) return Doubling(curve, right);
             if (left == ECPoint5w.POINT_INFINITY) return right;
             if (right == ECPoint5w.POINT_INFINITY) return left;
-            BigInteger p = curve.field;
 
             BigInteger A1 = BarrettReducer.MultMod(left.x, right.z2);
             BigInteger A2 = BarrettReducer.MultMod(right.x, left.z2);
