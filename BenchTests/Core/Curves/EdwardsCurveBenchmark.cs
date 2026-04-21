@@ -7,7 +7,7 @@ using Eduard.Security.Primitives;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Curves
+namespace Eduard.BenchTests.Curves
 {
     public class EdwardsCurveBenchmark
     {
@@ -25,21 +25,21 @@ namespace BenchTests.Core.Curves
             G = curve.GetBasePoint();
         }
 
-        [Benchmark]
-        public void BinaryScalarMultiplication()
+        [Benchmark(Description = "Binary (affine)")]
+        public void Binary_Affine()
         {
             ECPoint kG = TwistedEdwardsMath.Multiply(curve, curve.order, G);
         }
 
-        [Benchmark]
-        public void MixedBinaryScalarMultiplication()
+        [Benchmark(Description = "Binary (standard projective)")]
+        public void Binary_Projective()
         {
             ECPoint kG = TwistedEdwardsMath.Multiply(curve, curve.order,
                 G, ECMode.EC_STANDARD_PROJECTIVE);
         }
 
-        [Benchmark]
-        public void FastestScalarMultiplication()
+        [Benchmark(Description = "Double-base chain (Hisil)")]
+        public void DoubleBaseChain()
         {
             ECPoint kG = TwistedEdwardsMath.Multiply(curve, curve.order,
                 G, ECMode.EC_FASTEST);

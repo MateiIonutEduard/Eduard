@@ -4,7 +4,7 @@ using Eduard.Security;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Poly
+namespace Eduard.BenchTests.Poly
 {
     public class ComposeModBenchmark
     {
@@ -33,15 +33,15 @@ namespace BenchTests.Core.Poly
             XP = Polynomial.Pow(X, field, mod);
         }
 
-        [Benchmark]
-        public void StandardHorner()
+        [Benchmark(Description = "Horner (standard)")]
+        public void Horner_Standard()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree << 1);
             Polynomial XPP = Polynomial.Compose(XP, XP, mod, false);
         }
 
-        [Benchmark]
-        public void ImprovedHorner()
+        [Benchmark(Description = "Horner (FFT-accelerated)")]
+        public void Horner_FFT()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER, degree);
             Polynomial XPP = Polynomial.Compose(XP, XP, mod, false);

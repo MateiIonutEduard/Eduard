@@ -4,7 +4,7 @@ using Eduard.Security;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Poly
+namespace Eduard.BenchTests.Poly
 {
     public class MultiBenchmark
     {
@@ -34,29 +34,33 @@ namespace BenchTests.Core.Poly
                 right.coeffs[i] = SecureRandom.Range(1, field - 1);
         }
 
-        [Benchmark]
-        public void PlainPolyMultiply()
+        [BenchmarkCategory("Multiplication")]
+        [Benchmark(Description = "Multiply (standard)")]
+        public void Multiply_Standard()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MULT, degree << 1);
             Polynomial res = left * right;
         }
 
-        [Benchmark]
-        public void FFTPolyMultiply()
+        [BenchmarkCategory("Multiplication")]
+        [Benchmark(Description = "Multiply (FFT)")]
+        public void Multiply_FFT()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MULT, degree);
             Polynomial res = left * right;
         }
 
-        [Benchmark]
-        public void PlainPolySquaring()
+        [BenchmarkCategory("Squaring")]
+        [Benchmark(Description = "Square (standard)")]
+        public void Square_Standard()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MULT, degree << 1);
             Polynomial res = right * right;
         }
 
-        [Benchmark]
-        public void FFTPolySquaring()
+        [BenchmarkCategory("Squaring")]
+        [Benchmark(Description = "Square (FFT)")]
+        public void Square_FFT()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MULT, degree);
             Polynomial res = right * right;

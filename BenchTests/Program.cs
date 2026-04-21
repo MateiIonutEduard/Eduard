@@ -4,9 +4,9 @@ using System.Linq;
 using System.Collections.Generic;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Configs;
-using BenchTests.Core.Curves;
-using BenchTests.Core.BigInt;
-using BenchTests.Core.Poly;
+using Eduard.BenchTests.Curves;
+using Eduard.BenchTests.BigInt;
+using Eduard.BenchTests.Poly;
 #else
 using System;
 #endif

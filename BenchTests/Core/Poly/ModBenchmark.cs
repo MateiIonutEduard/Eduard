@@ -4,7 +4,7 @@ using Eduard.Security;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Poly
+namespace Eduard.BenchTests.Poly
 {
     public class ModBenchmark
     {
@@ -37,15 +37,15 @@ namespace BenchTests.Core.Poly
             Polynomial.SetPolyMod(mod);
         }
 
-        [Benchmark]
-        public void PolyModStandard()
+        [Benchmark(Description = "Standard reduction")]
+        public void Standard()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MOD, degree << 1);
             Polynomial rem = Polynomial.Reduce(left, mod);
         }
 
-        [Benchmark]
-        public void FastPolyMod()
+        [Benchmark(Description = "FFT-based reduction")]
+        public void FFT()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MOD, degree);
             Polynomial remainder = Polynomial.Reduce(left, mod);

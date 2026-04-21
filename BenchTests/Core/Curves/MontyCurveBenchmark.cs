@@ -8,7 +8,7 @@ using BenchmarkDotNet.Attributes;
 using Eduard.Security.Extensions;
 #pragma warning disable
 
-namespace BenchTests.Core.Curves
+namespace Eduard.BenchTests.Curves
 {
     public class MontyCurveBenchmark
     {
@@ -30,8 +30,8 @@ namespace BenchTests.Core.Curves
             G = edwardsCurve.ToMontgomeryPoint(edwardsPoint);
         }
 
-        [Benchmark]
-        public void BinaryScalarMultiplication()
+        [Benchmark(Description = "Binary (affine)")]
+        public void Binary_Affine()
         {
             ECPoint kG = MontyMath.Multiply(curve, curve.order, G);
         }
