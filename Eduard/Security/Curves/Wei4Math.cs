@@ -45,6 +45,7 @@ namespace Eduard.Security.Curves
         /// <returns>The sum of the two points in modified Jacobian coordinates.</returns>
         public static ECPoint4w Add(EllipticCurve curve, ECPoint4w left, ECPoint4w right)
         {
+            if (left == right) return Doubling(curve, right);
             if (left == ECPoint4w.POINT_INFINITY) return right;
             if (right == ECPoint4w.POINT_INFINITY) return left;
 

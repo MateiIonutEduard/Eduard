@@ -142,5 +142,76 @@ namespace Eduard.Tests.Curves
             Rp = curve.ToAffine(R);
             Assert.Equal(Rp, P3);
         }
+
+        [Fact]
+        public void Negate_ModifiedJacobian() 
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint basePoint = curve.GetBasePoint();
+            ECPoint4w P = curve.ToModifiedJacobian(basePoint);
+
+            ECPoint4w Q = Wei4Math.Negate(curve, P);
+            Assert.Equal(P.x, Q.x);
+
+            BigInteger p = curve.field;
+            Assert.Equal(P.y, p - Q.y);
+
+            Assert.True(P.z == Q.z);
+            P = ECPoint4w.POINT_INFINITY;
+
+            Q = Wei4Math.Negate(curve, P);
+            Assert.Equal(P, Q);
+        }
+
+        [Fact]
+        public void Double_ModifiedJacobian()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint basePoint = curve.GetBasePoint();
+            ECPoint4w P = curve.ToModifiedJacobian(basePoint);
+
+            ECPoint4w Q = Wei4Math.Doubling(curve, P);
+            ECPoint Aq = curve.ToAffine(Q);
+
+            ECPoint R = ECMath.Add(curve, basePoint, basePoint);
+            Assert.Equal(Aq, R);
+
+            P = ECPoint4w.POINT_INFINITY;
+            Q = Wei4Math.Doubling(curve, P);
+            Assert.True(Q == ECPoint4w.POINT_INFINITY);
+        }
+
+        [Fact]
+        public void Add_ModifiedJacobian()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            ECPoint P1 = curve.GetBasePoint();
+            ECPoint P2 = curve.GetBasePoint();
+
+            ECPoint4w P = curve.ToModifiedJacobian(P1);
+            ECPoint4w Q = curve.ToModifiedJacobian(P2);
+
+            ECPoint4w R = Wei4Math.Add(curve, P, Q);
+            ECPoint P3 = ECMath.Add(curve, P1, P2);
+
+            ECPoint Rp = curve.ToAffine(R);
+            Assert.Equal(P3, Rp);
+
+            P = ECPoint4w.POINT_INFINITY;
+            R = Wei4Math.Add(curve, P, Q);
+            Assert.Equal(Q, R);
+
+            P = curve.ToModifiedJacobian(P1);
+            Q = ECPoint4w.POINT_INFINITY;
+
+            R = Wei4Math.Add(curve, P, Q);
+            Assert.Equal(P, R);
+
+            R = Wei4Math.Add(curve, P, P);
+            P3 = ECMath.Add(curve, P1, P1);
+
+            Rp = curve.ToAffine(R);
+            Assert.Equal(Rp, P3);
+        }
     }
 }
