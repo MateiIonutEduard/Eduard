@@ -6,6 +6,7 @@ using Eduard.Security.Primitives;
 
 namespace Eduard.Tests.Curves
 {
+    [Collection("Sequential")]
     public class WeiMathTests
     {
         #region Point Negation Tests — All Coordinate Systems

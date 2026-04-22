@@ -152,11 +152,11 @@ namespace Eduard.Security.Curves
         /// <returns>Point encoding the message, or POINT_INFINITY if encoding fails.</returns>
         public ECPoint GetPoint(BigInteger m, int r=30)
         {
-            BigInteger test = (r + 1) * m;
-            BigInteger xs = BarrettReducer.MultMod(m, r);
-
             /* if the product exceeds the value of the prime field, the algorithm fails */
-            if (test >= field) return ECPoint.POINT_INFINITY;
+            if (m * r >= field - r + 1) 
+                return ECPoint.POINT_INFINITY;
+
+            BigInteger xs = BarrettReducer.MultMod(m, r);
             BigInteger ys = 1;
 
             int ks = 0;
