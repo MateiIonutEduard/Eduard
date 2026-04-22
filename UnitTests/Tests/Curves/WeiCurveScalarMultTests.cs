@@ -347,7 +347,7 @@ namespace Eduard.Tests.Curves
             {
                 var curve = EllipticCurve.GetNamedCurve(curveTypes[i]);
 
-                /* Point not on curve */
+                /* point not on curve */
                 var invalidPoint = new ECPoint(123, 456);
                 var scalar = new BigInteger(2);
 
@@ -423,19 +423,19 @@ namespace Eduard.Tests.Curves
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
             var G = curve.GetBasePoint();
 
-            /* Test vector 1: k = 2 */
+            /* test vector 1: k = 2 */
             var k1 = new BigInteger(2);
             var expected1 = ECMath.Add(curve, G, G);
             var result1 = ECMath.Multiply(curve, k1, G, ECMode.EC_FASTEST);
             Assert.Equal(expected1, result1);
 
-            /* Test vector 2: k = 3 */
+            /* test vector 2: k = 3 */
             var k2 = new BigInteger(3);
             var expected2 = ECMath.Add(curve, expected1, G);
             var result2 = ECMath.Multiply(curve, k2, G, ECMode.EC_FASTEST);
             Assert.Equal(expected2, result2);
 
-            /* Test vector 3: k = order - 1 */
+            /* test vector 3: k = order - 1 */
             var k3 = curve.order - 1;
             var expected3 = ECMath.Negate(curve, G);
             var result3 = ECMath.Multiply(curve, k3, G, ECMode.EC_FASTEST);

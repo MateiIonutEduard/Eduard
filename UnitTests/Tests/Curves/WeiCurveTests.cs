@@ -121,7 +121,7 @@ namespace Eduard.Tests.Curves
             Assert.Equal(192, curve.order.GetBits());
             Assert.Equal(1, curve.cofactor);
 
-            /* Verify base point exists */
+            /* verify base point exists */
             var G = curve.GetBasePoint();
             Assert.NotEqual(ECPoint.POINT_INFINITY, G);
         }
@@ -135,7 +135,7 @@ namespace Eduard.Tests.Curves
             Assert.Equal(224, curve.order.GetBits());
             Assert.Equal(1, curve.cofactor);
 
-            /* Verify base point exists */
+            /* verify base point exists */
             var G = curve.GetBasePoint();
             Assert.NotEqual(ECPoint.POINT_INFINITY, G);
         }
@@ -149,7 +149,7 @@ namespace Eduard.Tests.Curves
             Assert.Equal(256, curve.order.GetBits());
             Assert.Equal(1, curve.cofactor);
 
-            /* Verify base point exists */
+            /* verify base point exists */
             var G = curve.GetBasePoint();
             Assert.NotEqual(ECPoint.POINT_INFINITY, G);
         }
@@ -192,7 +192,7 @@ namespace Eduard.Tests.Curves
             var G = curve.GetBasePoint();
             Assert.NotEqual(ECPoint.POINT_INFINITY, G);
 
-            /* Verify that cofactor * G is still on curve */
+            /* verify that cofactor * G is still on curve */
             var cofactorG = ECMath.Multiply(curve, curve.cofactor, G);
             Assert.NotEqual(ECPoint.POINT_INFINITY, cofactorG);
         }
@@ -353,12 +353,12 @@ namespace Eduard.Tests.Curves
         [Fact]
         public void GetPoint_EncodingFailure_ThrowsInvalidOperationException()
         {
-            /* Use a small curve where encoding may fail */
+            /* use a small curve where encoding may fail */
             var curve = new EllipticCurve(32);
             BigInteger message = 0;
             var r = 1;
 
-            /* On very small curves, the loop may exhaust without finding a valid point */
+            /* on very small curves, the loop may exhaust without finding a valid point */
             var exception = Record.Exception(() => curve.GetPoint(message, r));
 
             if (exception != null)
@@ -391,7 +391,7 @@ namespace Eduard.Tests.Curves
 
             var encodedPoint = curve.GetPoint(message, r);
 
-            /* Verify point satisfies curve equation */
+            /* verify point satisfies curve equation */
             var ySquared = curve.Evaluate(encodedPoint.GetAffineX());
             BigInteger field = curve.field;
             BigInteger My = encodedPoint.GetAffineY();
