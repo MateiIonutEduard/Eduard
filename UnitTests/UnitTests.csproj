@@ -15,9 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Eduard">
-      <HintPath>..\Eduard\bin\Release\net10.0\Eduard.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Eduard\Eduard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
