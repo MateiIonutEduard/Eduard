@@ -360,12 +360,44 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void GetMessage_OnInfinity_ReturnsNegativeOne()
+        public void GetMessage_OnInfinity_ThrowsArgumentException()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
-            var result = curve.GetMessage(ECPoint.POINT_INFINITY);
 
-            Assert.Equal(-1, result);
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetMessage(ECPoint.POINT_INFINITY));
+        }
+
+        [Fact]
+        public void GetMessage_WithCoordinatesOutsideField_ThrowsArgumentException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+
+            var invalidPoint = new ECPoint(-1, 0);
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetMessage(invalidPoint));
+
+            invalidPoint = new ECPoint(curve.field, 0);
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetMessage(invalidPoint));
+
+            invalidPoint = new ECPoint(0, -1);
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetMessage(invalidPoint));
+
+            invalidPoint = new ECPoint(0, curve.field);
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetMessage(invalidPoint));
+        }
+
+        [Fact]
+        public void GetMessage_PointNotOnCurve_ThrowsArgumentException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var invalidPoint = new ECPoint(123, 456);
+
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetMessage(invalidPoint));
         }
 
         [Fact]
