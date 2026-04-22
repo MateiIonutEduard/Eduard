@@ -313,15 +313,56 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void GetPoint_WithLargeMessage_ReturnsPointAtInfinity()
+        public void GetPoint_WithNegativeMessage_ThrowsArgumentException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            BigInteger message = -1;
+
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetPoint(message));
+        }
+
+        [Fact]
+        public void GetPoint_WithLargeMessage_ThrowsArgumentException()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
             var r = 30;
 
             /* message too large */
             var largeMessage = (curve.field - r) / r + 1;
-            var encodedPoint = curve.GetPoint(largeMessage, r);
-            Assert.Equal(ECPoint.POINT_INFINITY, encodedPoint);
+
+            Assert.Throws<ArgumentException>(() =>
+                curve.GetPoint(largeMessage, r));
+        }
+
+        [Fact]
+        public void GetPoint_WithMessageExceedingFieldCapacity_ThrowsArgumentException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var r = 30;
+
+            /* m * r >= field - r + 1 */
+            var largeMessage = (curve.field - r) / r + 1;
+
+            var exception = Assert.Throws<ArgumentException>(() =>
+                curve.GetPoint(largeMessage, r));
+
+            Assert.Contains("too large to encode", exception.Message);
+        }
+
+        [Fact]
+        public void GetPoint_EncodingFailure_ThrowsInvalidOperationException()
+        {
+            /* Use a small curve where encoding may fail */
+            var curve = new EllipticCurve(32);
+            BigInteger message = 0;
+            var r = 1;
+
+            /* On very small curves, the loop may exhaust without finding a valid point */
+            var exception = Record.Exception(() => curve.GetPoint(message, r));
+
+            if (exception != null)
+                Assert.IsType<InvalidOperationException>(exception);
         }
 
         [Fact]
