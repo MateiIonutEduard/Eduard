@@ -7,7 +7,7 @@ using Eduard.Security.Primitives;
 namespace Eduard.Tests.Curves
 {
     [Collection("Sequential")]
-    public class TwistedEdwardsMathTest
+    public class TwistedEdwardsMathTests
     {
         #region Point Negation Tests — All Coordinate Systems
         [Fact]
