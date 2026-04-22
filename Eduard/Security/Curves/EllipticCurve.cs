@@ -156,12 +156,27 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="m">Represents a binary message as a large integer.</param>
         /// <param name="r">Iterations (default: 30).</param>
-        /// <returns>Point encoding the message, or POINT_INFINITY if encoding fails.</returns>
-        public ECPoint GetPoint(BigInteger m, int r=30)
+        /// <returns>Point encoding the message.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the message is negative or exceeds the maximum encodable value for this field.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the algorithm fails to find a suitable curve point within the specified iterations.
+        /// </exception>
+        public ECPoint GetPoint(BigInteger m, int r = 30)
         {
+            if (m < 0)
+                throw new ArgumentException(
+                    "The message to encode "
+                    + "cannot be negative.",
+                    nameof(m));
+
             /* if the product exceeds the value of the prime field, the algorithm fails */
-            if (m * r >= field - r + 1) 
-                return ECPoint.POINT_INFINITY;
+            if (m * r >= field - r + 1)
+                throw new ArgumentException(
+                    "The message is too large to encode within"
+                    + " the specified number of iterations.",
+                    nameof(m));
 
             BigInteger xs = BarrettReducer.MultMod(m, r);
             BigInteger ys = 1;
@@ -172,24 +187,26 @@ namespace Eduard.Security.Curves
             if (xs >= field)
                 xs -= field;
 
-            while(ks < r)
+            while (ks < r)
             {
                 BigInteger t = Evaluate(xs);
 
                 if (BigInteger.Jacobi(t, field) == 1)
                 {
                     ys = ModSqrtUtil.Sqrt(t, true);
-                    break;
+                    return new ECPoint(xs, ys);
                 }
 
-                xs++; 
+                xs++;
                 ks++;
 
-                if(xs >= field) 
+                if (xs >= field)
                     xs -= field;
             }
 
-            return new ECPoint(xs, ys);
+            throw new InvalidOperationException(
+                "Failed to encode the message: no suitable "
+                + "curve point found within the iteration limit.");
         }
 
         /// <summary>
