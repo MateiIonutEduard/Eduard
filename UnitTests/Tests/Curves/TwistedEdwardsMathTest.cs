@@ -246,5 +246,171 @@ namespace Eduard.Tests.Curves
             Assert.Equal(expectedDoubleR, affineDoubleR);
         }
         #endregion
+
+        #region #region Point Addition — All Coordinate Systems
+        [Fact]
+        public void Add_Affine()
+        {
+            TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
+            var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
+
+            /* base point addition: P + Q should equal Q + P */
+            var P = curve.GetBasePoint();
+            var Q = curve.GetBasePoint();
+
+            var R = TwistedEdwardsMath.Add(curve, P, Q);
+            var R_commutative = TwistedEdwardsMath.Add(curve, Q, P);
+            Assert.Equal(R, R_commutative);
+
+            /* algebraic identity: (P + Q) - Q = P */
+            var negQ = TwistedEdwardsMath.Negate(curve, Q);
+            var T = TwistedEdwardsMath.Add(curve, R, negQ);
+            Assert.Equal(P, T);
+
+            /* identity element: P + O = P */
+            var inf = ECPoint.POINT_INFINITY;
+            var P_plus_inf = TwistedEdwardsMath.Add(curve, P, inf);
+            Assert.Equal(P, P_plus_inf);
+
+            /* identity element: O + Q = Q */
+            var inf_plus_Q = TwistedEdwardsMath.Add(curve, inf, Q);
+            Assert.Equal(Q, inf_plus_Q);
+
+            /* P + (-P) = O */
+            var negP = TwistedEdwardsMath.Negate(curve, P);
+            var P_plus_negP = TwistedEdwardsMath.Add(curve, P, negP);
+            Assert.Equal(inf, P_plus_negP);
+
+            /* random points commutative property */
+            var randomA = curve.GetBasePoint();
+            var randomB = curve.GetBasePoint();
+
+            var sumAB = TwistedEdwardsMath.Add(curve, randomA, randomB);
+            var sumBA = TwistedEdwardsMath.Add(curve, randomB, randomA);
+            Assert.Equal(sumAB, sumBA);
+        }
+
+        [Fact]
+        public void Add_Projective()
+        {
+            TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
+            var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
+
+            /* base point addition: P + Q = R */
+            var G = curve.GetBasePoint();
+
+            var P = curve.ToProjective(G);
+            var Q = curve.ToProjective(G);
+
+            var R = Ed3Math.UnifiedAdd(curve, P, Q);
+            var affineR = curve.ToAffine(R);
+
+            var expectedR = TwistedEdwardsMath.Add(curve, G, G);
+            Assert.Equal(expectedR, affineR);
+
+            /* identity element: P + O = P */
+            var inf = ECPoint3.POINT_INFINITY;
+            var P_plus_inf = Ed3Math.UnifiedAdd(curve, P, inf);
+            Assert.Equal(P, P_plus_inf);
+
+            /* identity element: O + Q = Q */
+            var inf_plus_Q = Ed3Math.UnifiedAdd(curve, inf, Q);
+            Assert.Equal(Q, inf_plus_Q);
+
+            /* P + (-P) = O */
+            var negP = Ed3Math.Negate(curve, P);
+            var P_plus_negP = Ed3Math.UnifiedAdd(curve, P, negP);
+
+            var PPn = curve.ToAffine(P_plus_negP);
+            Assert.Equal(ECPoint.POINT_INFINITY, PPn);
+
+            /* commutative property in projective coordinates */
+            var randomPoint = curve.GetBasePoint();
+            var R1 = curve.ToProjective(randomPoint);
+
+            var R2 = curve.ToProjective(curve.GetBasePoint());
+            var sum12 = Ed3Math.UnifiedAdd(curve, R1, R2);
+
+            var sum21 = Ed3Math.UnifiedAdd(curve, R2, R1);
+            var affineSum12 = curve.ToAffine(sum12);
+
+            var affineSum21 = curve.ToAffine(sum21);
+            Assert.Equal(affineSum12, affineSum21);
+
+            /* random point addition consistency with affine */
+            var randomA = curve.GetBasePoint();
+            var randomB = curve.GetBasePoint();
+
+            var projA = curve.ToProjective(randomA);
+            var projB = curve.ToProjective(randomB);
+
+            var projSum = Ed3Math.UnifiedAdd(curve, projA, projB);
+            var affineProjSum = curve.ToAffine(projSum);
+
+            var expectedAffineSum = TwistedEdwardsMath.Add(curve, randomA, randomB);
+            Assert.Equal(expectedAffineSum, affineProjSum);
+        }
+
+        [Fact]
+        public void Add_Extended_Projective()
+        {
+            TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
+            var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
+
+            /* base point addition: P + Q = R */
+            var G = curve.GetBasePoint();
+
+            var P = curve.ToExtendedProjective(G);
+            var Q = curve.ToExtendedProjective(G);
+
+            var R = Ed4Math.Add(curve, P, Q);
+            var affineR = curve.ToAffine(R);
+
+            var expectedR = TwistedEdwardsMath.Add(curve, G, G);
+            Assert.Equal(expectedR, affineR);
+
+            /* identity element: P + O = P */
+            var inf = ECPoint4.POINT_INFINITY;
+            var P_plus_inf = Ed4Math.Add(curve, P, inf);
+            Assert.Equal(P, P_plus_inf);
+
+            /* identity element: O + Q = Q */
+            var inf_plus_Q = Ed4Math.Add(curve, inf, Q);
+            Assert.Equal(Q, inf_plus_Q);
+
+            /* P + (-P) = O */
+            var negP = Ed4Math.Negate(curve, P);
+            var P_plus_negP = Ed4Math.Add(curve, P, negP);
+
+            var PPn = curve.ToAffine(P_plus_negP);
+            Assert.Equal(ECPoint.POINT_INFINITY, PPn);
+
+            /* commutative property in extended projective coordinates */
+            var randomPoint = curve.GetBasePoint();
+            var R1 = curve.ToExtendedProjective(randomPoint);
+
+            var R2 = curve.ToExtendedProjective(curve.GetBasePoint());
+            var sum12 = Ed4Math.Add(curve, R1, R2);
+
+            var sum21 = Ed4Math.Add(curve, R2, R1);
+            var affineSum12 = curve.ToAffine(sum12);
+
+            var affineSum21 = curve.ToAffine(sum21);
+            Assert.Equal(affineSum12, affineSum21);
+
+            /* random point addition consistency with affine */
+            var randomA = curve.GetBasePoint();
+            var randomB = curve.GetBasePoint();
+
+            var eprojA = curve.ToExtendedProjective(randomA);
+            var eprojB = curve.ToExtendedProjective(randomB);
+
+            var eprojSum = Ed4Math.Add(curve, eprojA, eprojB);
+            var affineEProjSum = curve.ToAffine(eprojSum);
+
+            var expectedAffineSum = TwistedEdwardsMath.Add(curve, randomA, randomB);
+            Assert.Equal(expectedAffineSum, affineEProjSum);
+        }
+        #endregion
     }
 }
