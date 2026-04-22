@@ -197,13 +197,40 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="point">The encoded point.</param>
         /// <param name="r">Iterations used during encoding (default: 30).</param>
-        /// <returns>The original message m, or -1 if invalid.</returns>
+        /// <returns>The original message m.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the point is at infinity or does not lie on the Weierstrass curve.
+        /// </exception>
         public BigInteger GetMessage(ECPoint point, int r=30)
         {
-            if (point == ECPoint.POINT_INFINITY) return -1;
-            BigInteger steps = r;
+            if (point == ECPoint.POINT_INFINITY)
+                throw new ArgumentException(
+                    "The encoded point cannot "
+                    + "be the point at infinity.",
+                    nameof(point));
 
-            BigInteger m = point.GetAffineX() - 1;
+            BigInteger x = point.GetAffineX();
+            BigInteger y = point.GetAffineY();
+
+            if (x < 0 || x >= field || y < 0 || y >= field)
+                throw new ArgumentException(
+                    "The specified point contains coordinates "
+                    + "outside the field range [0, p-1].",
+                    nameof(point));
+
+            BigInteger Y2 = BarrettReducer.MultMod(y, y);
+            BigInteger eval = Evaluate(x);
+
+            if (eval != Y2)
+                throw new ArgumentException(
+                    "The specified point does "
+                    + "not satisfy the Weierstrass "
+                    + "curve equation.",
+                    nameof(point));
+
+            BigInteger steps = r;
+            BigInteger m = x - 1;
+
             return m / steps;
         }
 
