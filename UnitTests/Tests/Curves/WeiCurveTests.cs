@@ -228,6 +228,31 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
+        public void Evaluate_ForBoundaryValidX_ReturnsResult()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            BigInteger x = curve.field - 1;
+
+            var exception = Record.Exception(() => curve.Evaluate(x));
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void Evaluate_ForOutOfRangeX_ThrowsArgumentOutOfRangeException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            BigInteger x = -1;
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                curve.Evaluate(x));
+
+            x = curve.field;
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                curve.Evaluate(x));
+        }
+
+        [Fact]
         public void Evaluate_ForRandomX_ReturnsConsistentResult()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);

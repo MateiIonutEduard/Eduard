@@ -132,8 +132,15 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="x">The x-coordinate to evaluate.</param>
         /// <returns>y^2 = x^3 + ax + b (mod p).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when x is negative or exceeds or equals field modulus.
+        /// </exception>
         public BigInteger Evaluate(BigInteger x)
         {
+            if (x < 0 || x >= field)
+                throw new ArgumentOutOfRangeException(nameof(x),
+                    "Coordinate must be in the range [0, p-1].");
+
             BigInteger result = BarrettReducer.MultMod(x, x);
             result = BarrettReducer.MultMod(result, x);
 
