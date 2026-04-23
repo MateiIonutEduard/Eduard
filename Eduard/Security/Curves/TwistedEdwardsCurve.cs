@@ -168,8 +168,15 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="y">The y-coordinate to evaluate.</param>
         /// <returns>The value x^2 = (1 - y^2) / (a - d*(y^2)) mod p.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when y is negative or exceeds or equals field modulus.
+        /// </exception>
         public BigInteger Evaluate(BigInteger y)
         {
+            if (y < 0 || y >= field)
+                throw new ArgumentOutOfRangeException(nameof(y),
+                    "Coordinate must be in the range [0, p-1].");
+
             BigInteger A1 = BarrettReducer.MultMod(y, y);
             BigInteger A2 = BarrettReducer.MultMod(d, A1);
 
