@@ -471,5 +471,71 @@ namespace Eduard.Tests.Curves
         }
 
         #endregion
+
+        #region Security and Validation
+
+        [Fact]
+        public void Multiply_SecurityCheck_RejectsInvalidPoints_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(TwistedEdwardsCurveType.Edwards25519);
+
+            /* point not on curve */
+            var invalidPoint = new ECPoint(123, 456);
+            var scalar = new BigInteger(2);
+
+            Assert.Throws<ArgumentException>(() =>
+                TwistedEdwardsMath.Multiply(curve, 
+                scalar, invalidPoint, ECMode.EC_FASTEST, 
+                true));
+        }
+
+        [Fact]
+        public void Multiply_SecurityCheck_RejectsInvalidPoints_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+
+            var invalidPoint = new ECPoint(123, 456);
+            var scalar = new BigInteger(2);
+
+            Assert.Throws<ArgumentException>(() =>
+                TwistedEdwardsMath.Multiply(
+                curve, scalar, invalidPoint, 
+                ECMode.EC_FASTEST, true));
+        }
+
+        [Fact]
+        public void Multiply_SecurityCheck_AcceptsValidPoints_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            var G = curve.GetBasePoint();
+            var scalar = new BigInteger(2);
+
+            var exception = Record.Exception(() =>
+                TwistedEdwardsMath.Multiply(curve, 
+                scalar, G, ECMode.EC_FASTEST, true));
+
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void Multiply_SecurityCheck_AcceptsValidPoints_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+
+            var G = curve.GetBasePoint();
+            var scalar = new BigInteger(2);
+
+            var exception = Record.Exception(() =>
+                TwistedEdwardsMath.Multiply(curve, 
+                scalar, G, ECMode.EC_FASTEST, true));
+
+            Assert.Null(exception);
+        }
+
+        #endregion
     }
 }
