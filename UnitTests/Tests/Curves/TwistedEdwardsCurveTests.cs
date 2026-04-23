@@ -187,6 +187,85 @@ namespace Eduard.Tests.Curves
         }
         #endregion
 
+        #region GetBasePoint Tests
+
+        [Fact]
+        public void GetBasePoint_Default_ReturnsValidGenerator()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            Assert.NotEqual(ECPoint.POINT_INFINITY, G);
+            BigInteger p = curve.field;
+
+            /* verify point lies on curve */
+            var xSquared = curve.Evaluate(G.GetAffineY());
+            BigInteger Gx = G.GetAffineX();
+
+            var actualXSquared = (Gx * Gx) % p;
+            Assert.Equal(xSquared, actualXSquared);
+        }
+
+
+        [Fact]
+        public void GetBasePoint_UseCached_ReturnsSamePoint()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            var firstPoint = curve.GetBasePoint(false);
+            var cachedPoint = curve.GetBasePoint(true);
+            Assert.Equal(firstPoint, cachedPoint);
+        }
+
+        [Fact]
+        public void GetBasePoint_SkipValidation_ReturnsPointOnCurve()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint(useCached: false, 
+                skipValidation: true);
+
+            /* point should still satisfy curve equation */
+            var xSquared = curve.Evaluate(G.GetAffineY());
+            var p = curve.field;
+
+            var actualXSquared = (G.GetAffineX() * G.GetAffineX()) % p;
+            Assert.Equal(xSquared, actualXSquared);
+        }
+
+        [Fact]
+        public void GetBasePoint_WithCofactor_GeneratesPrimeOrderPoint()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            /* cofactor * G should not be infinity */
+            var cofactorG = TwistedEdwardsMath.Multiply(curve, 
+                curve.cofactor, G, ECMode.EC_FASTEST);
+            Assert.NotEqual(ECPoint.POINT_INFINITY, cofactorG);
+
+            /* order * G should be infinity */
+            var orderG = TwistedEdwardsMath.Multiply(curve, 
+                curve.order, G, ECMode.EC_FASTEST);
+            Assert.Equal(ECPoint.POINT_INFINITY, orderG);
+        }
+
+        [Fact]
+        public void GetBasePoint_OnRandomCurve_ReturnsNonInfinityPoint()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            Assert.NotEqual(
+                ECPoint.POINT_INFINITY,
+                G);
+        }
+        #endregion
+
         #region SetBasePoint Tests
 
         [Fact]
