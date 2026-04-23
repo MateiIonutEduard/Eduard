@@ -186,5 +186,107 @@ namespace Eduard.Tests.Curves
             }
         }
         #endregion
+
+        #region SetBasePoint Tests
+
+        [Fact]
+        public void SetBasePoint_ValidPoint_SetsGenerator()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var originalG = curve.GetBasePoint();
+
+            /* set same point again */
+            curve.SetBasePoint(originalG);
+
+            var newG = curve.GetBasePoint(true);
+            Assert.Equal(originalG, newG);
+        }
+
+        [Fact]
+        public void SetBasePoint_DifferentValidPoint_SetsNewGenerator()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var originalG = curve.GetBasePoint();
+
+            /* find another valid point (2G) */
+            var twoG = TwistedEdwardsMath.Add(curve, 
+                originalG, originalG);
+
+            curve.SetBasePoint(twoG);
+            var newG = curve.GetBasePoint(true);
+
+            Assert.Equal(twoG, newG);
+            Assert.NotEqual(originalG, newG);
+        }
+
+        [Fact]
+        public void SetBasePoint_PointAtInfinity_ThrowsArgumentException()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            Assert.Throws<ArgumentException>(() =>
+                curve.SetBasePoint(ECPoint.POINT_INFINITY));
+        }
+
+        [Fact]
+        public void SetBasePoint_PointNotOnCurve_ThrowsArgumentException()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var invalidPoint = new ECPoint(7123, 1456);
+
+            Assert.Throws<ArgumentException>(() =>
+                curve.SetBasePoint(invalidPoint));
+        }
+
+        [Fact]
+        public void SetBasePoint_SmallOrderPoint_ThrowsArgumentException()
+        {
+            /* Edwards25519 has cofactor 8, so small-order subgroup points exist */
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            ECPoint Q = ECPoint.POINT_INFINITY;
+            ECPoint G = ECPoint.POINT_INFINITY;
+            bool done = false;
+
+            while (!done)
+            {
+                G = curve.GetBasePoint(false, true);
+
+                Q = TwistedEdwardsMath.Multiply(
+                    curve, curve.order, G,
+                    ECMode.EC_FASTEST);
+
+                /* exceptional points for twisted Edwards curves */
+                bool isSpecial = Q.GetAffineX() == 0
+                    || Q.GetAffineY() == 0;
+
+                if (!isSpecial && Q != ECPoint.POINT_INFINITY)
+                        done = true;
+            }
+
+            Assert.Throws<ArgumentException>(() =>
+                curve.SetBasePoint(Q));
+        }
+
+        [Fact]
+        public void SetBasePoint_ThenGetBasePoint_ReturnsSetPoint()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var originalG = curve.GetBasePoint();
+
+            /* set a different valid point */
+            var newBasePoint = TwistedEdwardsMath.Multiply(curve, 2, originalG);
+            curve.SetBasePoint(newBasePoint);
+
+            var retrievedPoint = curve.GetBasePoint(true);
+            Assert.Equal(newBasePoint, retrievedPoint);
+        }
+        #endregion
     }
 }
