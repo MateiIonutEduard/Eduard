@@ -537,5 +537,91 @@ namespace Eduard.Tests.Curves
         }
 
         #endregion
+
+        #region Scalar Multiplication — Random Validation
+
+        [Fact]
+        public void Multiply_RandomScalars_ConsistentWithRepeatedAddition_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            int[] scalars = new int[] { 5, 10, 17, 42, 99 };
+            var G = curve.GetBasePoint();
+
+            for (int i = 0; i < scalars.Length; i++)
+            {
+                var k = new BigInteger(scalars[i]);
+                var multResult = TwistedEdwardsMath.Multiply(
+                    curve, k, G, ECMode.EC_FASTEST);
+
+                /* compute via repeated addition */
+                var addResult = ECPoint.POINT_INFINITY;
+
+                for (int j = 0; j < scalars[i]; j++)
+                    addResult = TwistedEdwardsMath.Add(curve, addResult, G);
+
+                Assert.Equal(multResult, addResult);
+            }
+        }
+
+        [Fact]
+        public void Multiply_RandomScalars_ConsistentWithRepeatedAddition_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+
+            int[] scalars = new int[] { 5, 10, 17, 42, 99 };
+            var G = curve.GetBasePoint();
+
+            for (int i = 0; i < scalars.Length; i++)
+            {
+                var k = new BigInteger(scalars[i]);
+                var multResult = TwistedEdwardsMath.Multiply(
+                    curve, k, G, ECMode.EC_FASTEST);
+
+                var addResult = ECPoint.POINT_INFINITY;
+
+                for (int j = 0; j < scalars[i]; j++)
+                    addResult = TwistedEdwardsMath.Add(curve, addResult, G);
+
+                Assert.Equal(multResult, addResult);
+            }
+        }
+
+        [Fact]
+        public void Multiply_ScalarAndNegatedScalar_AreInverses_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var k = new BigInteger(1234567);
+            var negK = curve.order - k;
+
+            var kG = TwistedEdwardsMath.Multiply(curve, k, G, ECMode.EC_FASTEST);
+            var negKG = TwistedEdwardsMath.Multiply(curve, negK, G, ECMode.EC_FASTEST);
+
+            var sum = TwistedEdwardsMath.Add(curve, kG, negKG);
+            Assert.Equal(ECPoint.POINT_INFINITY, sum);
+        }
+
+        [Fact]
+        public void Multiply_ScalarAndNegatedScalar_AreInverses_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+            var G = curve.GetBasePoint();
+
+            var k = new BigInteger(1234567);
+            var negK = curve.order - k;
+
+            var kG = TwistedEdwardsMath.Multiply(curve, k, G, ECMode.EC_FASTEST);
+            var negKG = TwistedEdwardsMath.Multiply(curve, negK, G, ECMode.EC_FASTEST);
+
+            var sum = TwistedEdwardsMath.Add(curve, kG, negKG);
+            Assert.Equal(ECPoint.POINT_INFINITY, sum);
+        }
+
+        #endregion
     }
 }
