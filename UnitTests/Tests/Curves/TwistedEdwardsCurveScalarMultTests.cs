@@ -623,5 +623,62 @@ namespace Eduard.Tests.Curves
         }
 
         #endregion
+
+        #region Vector Validation (Known Answer Tests)
+
+        [Fact]
+        public void Multiply_Edwards25519_KnownVector_Scalar2()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            /* 2G should equal G + G */
+            var result = TwistedEdwardsMath.Multiply(curve, 2, G, ECMode.EC_FASTEST);
+            var expected = TwistedEdwardsMath.Add(curve, G, G);
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void Multiply_Edwards448_KnownVector_Scalar2()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+            var G = curve.GetBasePoint();
+
+            var result = TwistedEdwardsMath.Multiply(
+                curve, 2, G, ECMode.EC_FASTEST);
+
+            var expected = TwistedEdwardsMath.Add(curve, G, G);
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void Multiply_Edwards25519_KnownVector_ScalarBasePointMultiplication()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            /* verify that 1 * G = G */
+            var result = TwistedEdwardsMath.Multiply(
+                curve, 1, G, ECMode.EC_FASTEST);
+            Assert.Equal(G, result);
+
+            /* verify that (order - 1) * G = -G */
+            var orderMinusOne = curve.order - 1;
+
+            var result2 = TwistedEdwardsMath.Multiply(
+                curve, orderMinusOne, G, ECMode.EC_FASTEST);
+            var negG = TwistedEdwardsMath.Negate(curve, G);
+            Assert.Equal(negG, result2);
+
+            /* verify that order * G = point at infinity */
+            var result3 = TwistedEdwardsMath.Multiply(
+                curve, curve.order, G, ECMode.EC_FASTEST);
+            Assert.Equal(ECPoint.POINT_INFINITY, result3);
+        }
+
+        #endregion
     }
 }

@@ -340,7 +340,7 @@ namespace Eduard.Tests.Curves
                     curve, curve.order, G,
                     ECMode.EC_FASTEST);
 
-                /* exceptional points for twisted Edwards curves */
+                /* avoid exceptional points for twisted Edwards curves */
                 bool isSpecial = Q.GetAffineX() == 0
                     || Q.GetAffineY() == 0;
 
