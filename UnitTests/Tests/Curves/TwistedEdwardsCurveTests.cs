@@ -102,5 +102,89 @@ namespace Eduard.Tests.Curves
             Assert.NotEqual(ECPoint.POINT_INFINITY, G);
         }
         #endregion
+
+        #region Evaluate Tests
+        [Fact]
+        public void Evaluate_ForPointOnCurve_ReturnsSquare()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var xSquared = curve.Evaluate(G.GetAffineY());
+            BigInteger Gx = G.GetAffineX();
+            BigInteger field = curve.field;
+
+            var expectedXSquared = (Gx * Gx) % field;
+            Assert.Equal(expectedXSquared, xSquared);
+        }
+
+        [Fact]
+        public void Evaluate_ForBoundaryValidY_ReturnsResult()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            BigInteger y = curve.field - 1;
+
+            var exception = Record.Exception(() => curve.Evaluate(y));
+            Assert.Null(exception);
+        }
+
+        [Fact]
+        public void Evaluate_ForOutOfRangeY_ThrowsArgumentOutOfRangeException()
+        {
+            /* edge cases: y < 0 or y >= p */
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            BigInteger y = -1;
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                curve.Evaluate(y));
+
+            y = curve.field;
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                curve.Evaluate(y));
+        }
+
+        [Fact]
+        public void Evaluate_ForRandomY_ReturnsConsistentResult()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            for (int i = 0; i < 50; i++)
+            {
+                var Py = SecureRandom.Range(0, curve.field - 1);
+                var result1 = curve.Evaluate(Py);
+                var result2 = curve.Evaluate(Py);
+                Assert.Equal(result1, result2);
+            }
+        }
+
+        [Fact]
+        public void Evaluate_MatchesTwistedEdwardsEquation()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            BigInteger p = curve.field;
+
+            for (int i = 0; i < 50; i++)
+            {
+                var Py = SecureRandom.Range(0, curve.field - 1);
+                var xSquared = curve.Evaluate(Py);
+
+                /* compute it manually */
+                BigInteger A1 = (Py * Py) % p;
+                BigInteger A2 = (curve.d * A1) % p;
+                BigInteger A3 = (p + 1 - A1) % p;
+                BigInteger A4 = (p + curve.a - A2) % p;
+
+                BigInteger A4i = A4.Inverse(p);
+                BigInteger X2 = (A3 *  A4i) % p;
+                Assert.Equal(X2, xSquared);
+            }
+        }
+        #endregion
     }
 }
