@@ -368,5 +368,108 @@ namespace Eduard.Tests.Curves
         }
 
         #endregion
+
+        #region Scalar Multiplication — Edge Cases
+
+        [Fact]
+        public void Multiply_ScalarTwo_ReturnsDoubleBasePoint()
+        {
+            TwistedEdwardsCurveType[] curveTypes = new TwistedEdwardsCurveType[]
+            {
+                TwistedEdwardsCurveType.Edwards25519,
+                TwistedEdwardsCurveType.Edwards448
+            };
+
+            for (int i = 0; i < curveTypes.Length; i++)
+            {
+                var curve = TwistedEdwardsCurve.GetNamedCurve(curveTypes[i]);
+                var G = curve.GetBasePoint();
+
+                var result = TwistedEdwardsMath.Multiply(
+                    curve, 2, G, ECMode.EC_FASTEST);
+                var expected = TwistedEdwardsMath.Add(curve, G, G);
+
+                Assert.Equal(expected, result);
+            }
+        }
+
+        [Fact]
+        public void Multiply_ScalarThree_ReturnsTripleBasePoint()
+        {
+            TwistedEdwardsCurveType[] curveTypes = new TwistedEdwardsCurveType[]
+            {
+                TwistedEdwardsCurveType.Edwards25519,
+                TwistedEdwardsCurveType.Edwards448
+            };
+
+            for (int i = 0; i < curveTypes.Length; i++)
+            {
+                var curve = TwistedEdwardsCurve.GetNamedCurve(curveTypes[i]);
+                var G = curve.GetBasePoint();
+
+                var result = TwistedEdwardsMath.Multiply(
+                    curve, 3, G, ECMode.EC_FASTEST);
+                var doubleG = TwistedEdwardsMath.Add(curve, G, G);
+
+                var expected = TwistedEdwardsMath.Add(curve, doubleG, G);
+                Assert.Equal(expected, result);
+            }
+        }
+
+        [Fact]
+        public void Multiply_MaxScalar_HandlesOrderMinusOne()
+        {
+            TwistedEdwardsCurveType[] curveTypes = new TwistedEdwardsCurveType[]
+            {
+                TwistedEdwardsCurveType.Edwards25519,
+                TwistedEdwardsCurveType.Edwards448
+            };
+
+            ECMode[] modes = new ECMode[]
+            {
+                ECMode.EC_STANDARD_AFFINE,
+                ECMode.EC_STANDARD_PROJECTIVE,
+                ECMode.EC_FASTEST
+            };
+
+            for (int i = 0; i < curveTypes.Length; i++)
+            {
+                var curve = TwistedEdwardsCurve.GetNamedCurve(curveTypes[i]);
+                var G = curve.GetBasePoint();
+                var orderMinusOne = curve.order - 1;
+
+                for (int j = 0; j < modes.Length; j++)
+                {
+                    var result = TwistedEdwardsMath.Multiply(
+                        curve, orderMinusOne, G, modes[j]);
+
+                    var negG = TwistedEdwardsMath.Negate(curve, G);
+                    Assert.Equal(negG, result);
+                }
+            }
+        }
+
+        [Fact]
+        public void Multiply_ScalarCofactor_ReturnsPointInPrimeSubgroup()
+        {
+            TwistedEdwardsCurveType[] curveTypes = new TwistedEdwardsCurveType[]
+            {
+                TwistedEdwardsCurveType.Edwards25519,
+                TwistedEdwardsCurveType.Edwards448
+            };
+
+            for (int i = 0; i < curveTypes.Length; i++)
+            {
+                var curve = TwistedEdwardsCurve.GetNamedCurve(curveTypes[i]);
+                var G = curve.GetBasePoint();
+                var cofactor = curve.cofactor;
+
+                var result = TwistedEdwardsMath.Multiply(
+                    curve, cofactor, G, ECMode.EC_FASTEST);
+                Assert.NotEqual(ECPoint.POINT_INFINITY, result);
+            }
+        }
+
+        #endregion
     }
 }
