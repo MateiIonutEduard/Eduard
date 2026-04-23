@@ -6,6 +6,7 @@ using Eduard.Security.Primitives;
 
 namespace Eduard.Tests.Curves
 {
+    [Collection("Sequential")]
     public class TwistedEdwardsCurveScalarMultTests
     {
         #region Scalar Multiplication — Core Properties
@@ -231,6 +232,139 @@ namespace Eduard.Tests.Curves
 
             var negG = TwistedEdwardsMath.Negate(curve, G);
             Assert.Equal(negG, affineOrderResult);
+        }
+
+        #endregion
+
+        #region Scalar Multiplication — Algebraic Properties
+
+        [Fact]
+        public void Multiply_DistributiveProperty_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            var G = curve.GetBasePoint();
+            var a = new BigInteger(12345);
+            var b = new BigInteger(67890);
+            var sum = (a + b) % curve.order;
+
+            var left = TwistedEdwardsMath.Multiply(curve, 
+                sum, G, ECMode.EC_FASTEST);
+            var rightA = TwistedEdwardsMath.Multiply(curve, 
+                a, G, ECMode.EC_FASTEST);
+            var rightB = TwistedEdwardsMath.Multiply(curve, 
+                b, G, ECMode.EC_FASTEST);
+
+            var right = TwistedEdwardsMath.Add(curve, rightA, rightB);
+            Assert.Equal(left, right);
+        }
+
+        [Fact]
+        public void Multiply_DistributiveProperty_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+
+            var G = curve.GetBasePoint();
+            var a = new BigInteger(12345);
+            var b = new BigInteger(67890);
+            var sum = (a + b) % curve.order;
+
+            var left = TwistedEdwardsMath.Multiply(curve, 
+                sum, G, ECMode.EC_FASTEST);
+            var rightA = TwistedEdwardsMath.Multiply(curve, 
+                a, G, ECMode.EC_FASTEST);
+            var rightB = TwistedEdwardsMath.Multiply(curve, 
+                b, G, ECMode.EC_FASTEST);
+
+            var right = TwistedEdwardsMath.Add(curve, rightA, rightB);
+            Assert.Equal(left, right);
+        }
+
+        [Fact]
+        public void Multiply_CommutativeWithNegation_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var k = new BigInteger(1234567);
+            var negK = curve.order - k;
+
+            var kG = TwistedEdwardsMath.Multiply(curve, 
+                k, G, ECMode.EC_FASTEST);
+            var negKG = TwistedEdwardsMath.Multiply(curve, 
+                negK, G, ECMode.EC_FASTEST);
+
+            var negated = TwistedEdwardsMath.Negate(curve, kG);
+            Assert.Equal(negated, negKG);
+        }
+
+        [Fact]
+        public void Multiply_CommutativeWithNegation_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+            var G = curve.GetBasePoint();
+
+            var k = new BigInteger(1234567);
+            var negK = curve.order - k;
+
+            var kG = TwistedEdwardsMath.Multiply(curve, 
+                k, G, ECMode.EC_FASTEST);
+            var negKG = TwistedEdwardsMath.Multiply(curve, 
+                negK, G, ECMode.EC_FASTEST);
+
+            var negated = TwistedEdwardsMath.Negate(curve, kG);
+            Assert.Equal(negated, negKG);
+        }
+
+        [Fact]
+        public void Multiply_ScalarMultiplicationIsAssociative_Edwards25519()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            var G = curve.GetBasePoint();
+            var a = new BigInteger(123);
+
+            var b = new BigInteger(456);
+            var product = (a * b) % curve.order;
+
+            var left = TwistedEdwardsMath.Multiply(curve, 
+                product, G, ECMode.EC_FASTEST);
+
+            var aG = TwistedEdwardsMath.Multiply(curve, 
+                a, G, ECMode.EC_FASTEST);
+
+            var right = TwistedEdwardsMath.Multiply(curve, 
+                b, aG, ECMode.EC_FASTEST);
+
+            Assert.Equal(left, right);
+        }
+
+        [Fact]
+        public void Multiply_ScalarMultiplicationIsAssociative_Edwards448()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards448);
+
+            var G = curve.GetBasePoint();
+            var a = new BigInteger(123);
+
+            var b = new BigInteger(456);
+            var product = (a * b) % curve.order;
+
+            var left = TwistedEdwardsMath.Multiply(curve, 
+                product, G, ECMode.EC_FASTEST);
+
+            var aG = TwistedEdwardsMath.Multiply(curve, 
+                a, G, ECMode.EC_FASTEST);
+
+            var right = TwistedEdwardsMath.Multiply(curve, 
+                b, aG, ECMode.EC_FASTEST);
+            Assert.Equal(left, right);
         }
 
         #endregion
