@@ -55,23 +55,27 @@ namespace Eduard.Security.Primitives
         /// <param name="y">The projective Y-coordinate.</param>
         /// <param name="t">The projective T-coordinate (must be 0 for point at infinity).</param>
         /// <param name="z">The projective Z-coordinate (zero indicates point at infinity).</param>
-        /// <exception cref="NullReferenceException">Thrown when any coordinate is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when any coordinate is null.</exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when point at infinity has non-zero T (Z=0 but T != 0).
         /// </exception>
         public ECPoint4(BigInteger x, BigInteger y, BigInteger t, BigInteger z)
         {
             if (ReferenceEquals(x, null))
-                throw new NullReferenceException("The projective X-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(x),
+                    "The projective X-coordinate cannot be null.");
 
             if (ReferenceEquals(null, y))
-                throw new NullReferenceException("The projective Y-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(y),
+                    "The projective Y-coordinate cannot be null.");
 
             if (ReferenceEquals(t, null))
-                throw new NullReferenceException("The projective T-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(t),
+                    "The projective T-coordinate cannot be null.");
 
             if (ReferenceEquals(z, null))
-                throw new NullReferenceException("The projective Z-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(z),
+                    "The projective Z-coordinate cannot be null.");
 
             /* validate point at infinity invariant */
             if (z == 0 && t != 0)
