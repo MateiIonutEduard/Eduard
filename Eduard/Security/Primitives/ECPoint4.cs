@@ -192,6 +192,7 @@ namespace Eduard.Security.Primitives
 
             return x == other.x && 
                 y == other.y && 
+                t == other.t &&
                 z == other.z;
         }
 
