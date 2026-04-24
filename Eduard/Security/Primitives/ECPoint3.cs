@@ -44,17 +44,20 @@ namespace Eduard.Security.Primitives
         /// <param name="x">The projective X-coordinate.</param>
         /// <param name="y">The projective Y-coordinate.</param>
         /// <param name="z">The projective Z-coordinate (zero indicates point at infinity).</param>
-        /// <exception cref="NullReferenceException">Thrown when any coordinate is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when any coordinate is null.</exception>
         public ECPoint3(BigInteger x, BigInteger y, BigInteger z)
         {
             if (ReferenceEquals(x, null))
-                throw new NullReferenceException("The projective X-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(x),
+                    "The projective X-coordinate cannot be null.");
 
             if (ReferenceEquals(null, y))
-                throw new NullReferenceException("The projective Y-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(y),
+                    "The projective Y-coordinate cannot be null.");
 
             if (ReferenceEquals(z, null))
-                throw new NullReferenceException("The projective Z-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(z),
+                    "The projective Z-coordinate cannot be null.");
 
             this.x = x;
             this.y = y;
