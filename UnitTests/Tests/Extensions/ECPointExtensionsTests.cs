@@ -336,5 +336,458 @@ namespace Eduard.Tests.Extensions
         }
 
         #endregion
+
+        #region Twisted Edwards Curve — Affine to Projective Conversions
+
+        [Fact]
+        public void ToProjective_FromAffine_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+            var projPoint = curve.ToProjective(G);
+
+            Assert.NotEqual(ECPoint3.POINT_INFINITY, projPoint);
+            Assert.Equal(G.GetAffineX(), projPoint.x);
+
+            Assert.Equal(G.GetAffineY(), projPoint.y);
+            Assert.Equal(1, projPoint.z);
+        }
+
+        [Fact]
+        public void ToProjective_FromAffineInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint.POINT_INFINITY;
+            var projPoint = curve.ToProjective(inf);
+            Assert.Equal(ECPoint3.POINT_INFINITY, projPoint);
+        }
+
+        [Fact]
+        public void ToProjective_FromAffineIdentity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var identity = new ECPoint(0, 1);
+            var projPoint = curve.ToProjective(identity);
+            Assert.Equal(ECPoint3.POINT_INFINITY, projPoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromProjective_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var projPoint = curve.ToProjective(G);
+            var affinePoint = curve.ToAffine(projPoint);
+            Assert.Equal(G, affinePoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromProjectiveInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint3.POINT_INFINITY;
+            var affinePoint = curve.ToAffine(inf);
+            Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromProjectiveWithZeroZ_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+            var projPoint = curve.ToProjective(G);
+
+            var invalidPoint = new ECPoint3(projPoint.x, projPoint.y, 0);
+            var affinePoint = curve.ToAffine(invalidPoint);
+            Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
+        }
+
+        #endregion
+
+        #region Twisted Edwards Curve — Affine to Extended Projective Conversions
+
+        [Fact]
+        public void ToExtendedProjective_FromAffine_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var extPoint = curve.ToExtendedProjective(G);
+            BigInteger p = curve.field;
+
+            Assert.NotEqual(ECPoint4.POINT_INFINITY, extPoint);
+            Assert.Equal(G.GetAffineX(), extPoint.x);
+
+            Assert.Equal(G.GetAffineY(), extPoint.y);
+            Assert.Equal(1, extPoint.z);
+
+            var expectedT = (G.GetAffineX() * G.GetAffineY()) % p;
+            Assert.Equal(expectedT, extPoint.t);
+        }
+
+        [Fact]
+        public void ToExtendedProjective_FromAffineInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint.POINT_INFINITY;
+            var extPoint = curve.ToExtendedProjective(inf);
+            Assert.Equal(ECPoint4.POINT_INFINITY, extPoint);
+        }
+
+        [Fact]
+        public void ToExtendedProjective_FromAffineIdentity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var identity = new ECPoint(0, 1);
+            var extPoint = curve.ToExtendedProjective(identity);
+            Assert.Equal(ECPoint4.POINT_INFINITY, extPoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromExtendedProjective_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var extPoint = curve.ToExtendedProjective(G);
+            var affinePoint = curve.ToAffine(extPoint);
+            Assert.Equal(G, affinePoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromExtendedProjectiveInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint4.POINT_INFINITY;
+            var affinePoint = curve.ToAffine(inf);
+            Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromExtendedProjectiveWithZeroZ_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+            var extPoint = curve.ToExtendedProjective(G);
+
+            /* test invalid point init via constructor */
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var invalidPoint = new ECPoint4(extPoint.x, 
+                    extPoint.y, extPoint.t, 0);
+            });
+
+            var invalidPoint = new ECPoint4(extPoint.x, 
+                extPoint.y, extPoint.t, extPoint.z);
+
+            /* mutate z coordinate externally */
+            invalidPoint.z = 0;
+
+            Assert.Throws<InvalidOperationException>(() => 
+                curve.ToAffine(invalidPoint));
+
+            var infinity = new ECPoint4(extPoint.x,
+                extPoint.y, 0, 0);
+
+            /* right representation for point at infinity */
+            var affinePoint = curve.ToAffine(infinity);
+            Assert.Equal(affinePoint, ECPoint.POINT_INFINITY);
+        }
+
+        #endregion
+
+        #region Twisted Edwards Curve — Cross Coordinate System Conversions
+
+        [Fact]
+        public void ToExtendedProjective_FromProjective_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var projPoint = curve.ToProjective(G);
+            BigInteger p = curve.field;
+
+            var extPoint = curve.ToExtendedProjective(projPoint);
+            Assert.NotEqual(ECPoint4.POINT_INFINITY, extPoint);
+
+            /* extended coordinates should be (XZ, YZ, XY, Z^2) */
+            var expectedX = (projPoint.x * projPoint.z) % p;
+            var expectedY = (projPoint.y * projPoint.z) % p;
+            var expectedT = (projPoint.x * projPoint.y) % p;
+            var expectedZ = (projPoint.z * projPoint.z) % p;
+
+            Assert.Equal(expectedX, extPoint.x);
+            Assert.Equal(expectedY, extPoint.y);
+            Assert.Equal(expectedT, extPoint.t);
+            Assert.Equal(expectedZ, extPoint.z);
+        }
+
+        [Fact]
+        public void ToExtendedProjective_FromProjectiveInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint3.POINT_INFINITY;
+            var extPoint = curve.ToExtendedProjective(inf);
+            Assert.Equal(ECPoint4.POINT_INFINITY, extPoint);
+        }
+
+        [Fact]
+        public void GetPointCopy_FromProjective_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var projPoint = curve.ToProjective(G);
+            var copyPoint = curve.GetPointCopy(projPoint);
+            Assert.NotEqual(ECPoint4.POINT_INFINITY, copyPoint);
+
+            Assert.Equal(projPoint.x, copyPoint.x);
+            Assert.Equal(projPoint.y, copyPoint.y);
+            Assert.Equal(projPoint.z, copyPoint.z);
+            Assert.Equal(0, copyPoint.t);
+        }
+
+        [Fact]
+        public void GetPointCopy_FromProjectiveInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint3.POINT_INFINITY;
+            var copyPoint = curve.GetPointCopy(inf);
+            Assert.Equal(ECPoint4.POINT_INFINITY, copyPoint);
+        }
+
+        [Fact]
+        public void ToProjective_FromExtendedProjective_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var extPoint = curve.ToExtendedProjective(G);
+            var projPoint = curve.ToProjective(extPoint);
+            Assert.NotEqual(ECPoint3.POINT_INFINITY, projPoint);
+
+            Assert.Equal(extPoint.x, projPoint.x);
+            Assert.Equal(extPoint.y, projPoint.y);
+            Assert.Equal(extPoint.z, projPoint.z);
+        }
+
+        [Fact]
+        public void ToProjective_FromExtendedProjectiveInfinity_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var inf = ECPoint4.POINT_INFINITY;
+            var projPoint = curve.ToProjective(inf);
+            Assert.Equal(ECPoint3.POINT_INFINITY, projPoint);
+        }
+
+        #endregion
+
+        #region Round-Trip Conversion Tests (Weierstrass)
+
+        [Fact]
+        public void RoundTrip_AffineToJacobianToAffine_PreservesPoint()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+
+            var jacPoint = curve.ToJacobian(G);
+            var recoveredPoint = curve.ToAffine(jacPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void RoundTrip_AffineToModifiedJacobianToAffine_PreservesPoint()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+
+            var modJacPoint = curve.ToModifiedJacobian(G);
+            var recoveredPoint = curve.ToAffine(modJacPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void RoundTrip_AffineToJacobianChudnovskyToAffine_PreservesPoint()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+
+            var jcPoint = curve.ToJacobianChudnovsky(G);
+            var recoveredPoint = curve.ToAffine(jcPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void RoundTrip_JacobianToModifiedJacobianToJacobian_PreservesCoordinates()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+            var jacPoint = curve.ToJacobian(G);
+
+            var modJacPoint = curve.ToModifiedJacobian(jacPoint);
+            var recoveredJacPoint = curve.ToJacobian(modJacPoint);
+
+            Assert.Equal(jacPoint.x, recoveredJacPoint.x);
+            Assert.Equal(jacPoint.y, recoveredJacPoint.y);
+            Assert.Equal(jacPoint.z, recoveredJacPoint.z);
+        }
+
+        [Fact]
+        public void RoundTrip_JacobianChudnovskyToModifiedJacobianToAffine_PreservesPoint()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+            var jcPoint = curve.ToJacobianChudnovsky(G);
+
+            var modJacPoint = curve.ToModifiedJacobian(jcPoint);
+            var recoveredPoint = curve.ToAffine(modJacPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        #endregion
+
+        #region Round-Trip Conversion Tests (Twisted Edwards)
+
+        [Fact]
+        public void RoundTrip_AffineToProjectiveToAffine_PreservesPoint()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var projPoint = curve.ToProjective(G);
+            var recoveredPoint = curve.ToAffine(projPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void RoundTrip_AffineToExtendedProjectiveToAffine_PreservesPoint()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            var extPoint = curve.ToExtendedProjective(G);
+            var recoveredPoint = curve.ToAffine(extPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void RoundTrip_ProjectiveToExtendedProjectiveToProjective_PreservesCoordinates()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+            var projPoint = curve.ToProjective(G);
+
+            var extPoint = curve.ToExtendedProjective(projPoint);
+            var recoveredProjPoint = curve.ToProjective(extPoint);
+
+            Assert.Equal(projPoint.x, recoveredProjPoint.x);
+            Assert.Equal(projPoint.y, recoveredProjPoint.y);
+            Assert.Equal(projPoint.z, recoveredProjPoint.z);
+        }
+
+        #endregion
+
+        #region Edge Cases and Validation
+
+        [Fact]
+        public void ToAffine_FromExtendedProjective_IdentityPoint_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            /* identity in extended coordinates: (0, 1, 0, 1) */
+            var identityExt = new ECPoint4(0, 1, 0, 1);
+            var affinePoint = curve.ToAffine(identityExt);
+            Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
+        }
+
+        [Fact]
+        public void ToAffine_FromProjective_IdentityPoint_ReturnsInfinity()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+
+            /* identity in projective coordinates: (0, 1, 1) */
+            var identityProj = new ECPoint3(0, 1, 1);
+            var affinePoint = curve.ToAffine(identityProj);
+            Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
+        }
+
+        [Fact]
+        public void ToExtendedProjective_FromProjective_WithScaledCoordinates_ConvertsCorrectly()
+        {
+            var curve = TwistedEdwardsCurve.GetNamedCurve(
+                TwistedEdwardsCurveType.Edwards25519);
+            var G = curve.GetBasePoint();
+
+            BigInteger p = curve.field;
+            BigInteger lambda = 42;
+
+            /* scale projective coordinates by lambda */
+            var projPoint = curve.ToProjective(G);
+            var scaledProjPoint = new ECPoint3(
+                (projPoint.x * lambda) % p,
+                (projPoint.y * lambda) % p,
+                (projPoint.z * lambda) % p
+            );
+
+            var extPoint = curve.ToExtendedProjective(scaledProjPoint);
+            var recoveredAffine = curve.ToAffine(extPoint);
+
+            /* scaled coordinates should represent the same affine point */
+            Assert.Equal(G, recoveredAffine);
+        }
+
+        [Fact]
+        public void ToJacobian_FromModifiedJacobian_WithScaledCoordinates_ConvertsCorrectly()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+
+            var modJacPoint = curve.ToModifiedJacobian(G);
+            BigInteger p = curve.field, lambda = 7; 
+
+            /* scale modified Jacobian coordinates by lambda */
+            var lambda2 = (lambda * lambda) % p;
+            var lambda3 = (lambda2 * lambda) % p;
+            var lambda4 = (lambda2 * lambda2) % p;
+
+            var scaledPoint = new ECPoint4w(
+                (modJacPoint.x * lambda2) % p,
+                (modJacPoint.y * lambda3) % p,
+                (modJacPoint.z * lambda) % p,
+                (modJacPoint.aZ4 * lambda4) % p
+            );
+
+            var jacPoint = curve.ToJacobian(scaledPoint);
+            var recoveredAffine = curve.ToAffine(jacPoint);
+
+            /* scaled coordinates should represent the same affine point */
+            Assert.Equal(G, recoveredAffine);
+        }
+
+        #endregion
     }
 }
