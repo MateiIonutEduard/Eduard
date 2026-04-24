@@ -77,26 +77,36 @@ namespace Eduard.Security.Primitives
         /// <param name="z">The projective Z-coordinate (zero indicates point at infinity).</param>
         /// <param name="z2">The pre-computed value Z^2 (must be zero for point at infinity).</param>
         /// <param name="z3">The pre-computed value Z^3 (must be zero for point at infinity).</param>
-        /// <exception cref="NullReferenceException">Thrown when any coordinate is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when any coordinate is null.</exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when point at infinity has non-zero Z^2 or Z^3, or when consistency checks fail.
         /// </exception>
         public ECPoint5w(BigInteger x, BigInteger y, BigInteger z, BigInteger z2, BigInteger z3)
         {
             if (ReferenceEquals(x, null))
-                throw new NullReferenceException("The projective X-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(x),
+                    "The projective X-coordinate cannot be null.");
 
             if (ReferenceEquals(y, null))
-                throw new NullReferenceException("The projective Y-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(y),
+                    "The projective Y-coordinate cannot be null.");
 
             if (ReferenceEquals(z, null))
-                throw new NullReferenceException("The projective Z-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(z),
+                    "The projective Z-coordinate cannot be null.");
 
             if (ReferenceEquals(z2, null))
-                throw new NullReferenceException("The projective Z^2-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(z2),
+                    "The projective Z^2-coordinate cannot be null.");
 
             if (ReferenceEquals(z3, null))
-                throw new NullReferenceException("The projective Z^3-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(z3),
+                    "The projective Z^3-coordinate cannot be null.");
+
+            /* validate point at infinity invariant */
+            if (z == 0 && (z2 != 0 || z3 != 0))
+                throw new InvalidOperationException(
+                    "Point at infinity must have Z^2 = 0 and Z^3 = 0.");
 
             this.x = x;
             this.y = y;

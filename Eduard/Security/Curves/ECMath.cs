@@ -32,9 +32,6 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Add(EllipticCurve curve, ECPoint left, ECPoint right)
         {
-            if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
-                return ECPoint.POINT_INFINITY;
-
             if (left == ECPoint.POINT_INFINITY)
                 return right;
 
@@ -117,11 +114,23 @@ namespace Eduard.Security.Curves
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
-            if (!curve.ValidatePoint(point) && securityCheck)
-                throw new ArgumentException(
-                    "Point validation failed: the point does not lie on the Weierstrass curve. " +
-                    "This may indicate a small-subgroup attack or invalid curve parameters.",
-                    nameof(point));
+            string[] pointErrors = new string[]
+            {
+                "The specified point does not lie on the Weierstrass curve.",
+                "The specified point maps to the quadratic twist and is not in the correct subgroup.",
+                "The specified point lies in a small-order subgroup and is unsafe for cryptographic operations."
+            };
+
+            if (securityCheck)
+            {
+                PointCheck checkResult = curve.ValidatePoint(point);
+                int index = (int)checkResult;
+
+                if(index < 1)
+                    throw new ArgumentException(
+                        pointErrors[index + 2],
+                        nameof(point));
+            }
 
             ECPoint temp = point;
             ECPoint result = ECPoint.POINT_INFINITY;

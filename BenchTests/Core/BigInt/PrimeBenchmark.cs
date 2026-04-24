@@ -4,15 +4,15 @@ using Eduard;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.BigInt
+namespace Eduard.BenchTests.BigInt
 {
     public class PrimeBenchmark
     {
         [Params(256, 320, 384, 512, 768, 1024)]
         public int bits;
 
-        [Benchmark]
-        public void GenProbablePrime()
+        [Benchmark(Description = "Miller-Rabin (50 rounds)")]
+        public void ProbablePrime()
         {
             BigInteger field = SecureRandom.GenProbablePrime(bits);
         }

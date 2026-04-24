@@ -4,7 +4,7 @@ using Eduard.Security;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Poly
+namespace Eduard.BenchTests.Poly
 {
     public class DegreePowBenchmark
     {
@@ -28,7 +28,7 @@ namespace BenchTests.Core.Poly
                 mod.coeffs[i] = SecureRandom.Range(1, field - 1);
         }
 
-        [Benchmark]
+        [Benchmark(Description = "Binary exponentiation")]
         public void BinaryPolyPowMod()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_POW_MOD, degree << 1);
@@ -36,7 +36,7 @@ namespace BenchTests.Core.Poly
             Polynomial XP = Polynomial.Pow(X, field, mod);
         }
 
-        [Benchmark]
+        [Benchmark(Description = "Sliding window")]
         public void ImprovedPolyPowMod()
         {
             PerfTuner.SetThreshold(PerfEntry.POLY_DEGREE_POW_MOD, degree);

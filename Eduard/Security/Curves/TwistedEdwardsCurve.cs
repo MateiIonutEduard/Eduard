@@ -99,10 +99,10 @@ namespace Eduard.Security.Curves
             BigInteger t2 = BarrettReducer.MultMod(a, d);
             BigInteger t = BarrettReducer.MultMod(t1, t2);
 
-            if((cofactor & 0x3) != 0 || t == 0)
+            if ((cofactor & 0x3) != 0 || t == 0)
                 throw new InvalidOperationException(
-                    "The twisted Edwards curve is " 
-                    + "invalid or singular.");
+                    "The twisted Edwards curve is " +
+                    "singular or invalid.");
 
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
@@ -168,8 +168,15 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="y">The y-coordinate to evaluate.</param>
         /// <returns>The value x^2 = (1 - y^2) / (a - d*(y^2)) mod p.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when y is negative or exceeds or equals field modulus.
+        /// </exception>
         public BigInteger Evaluate(BigInteger y)
         {
+            if (y < 0 || y >= field)
+                throw new ArgumentOutOfRangeException(nameof(y),
+                    "Coordinate must be in the range [0, p-1].");
+
             BigInteger A1 = BarrettReducer.MultMod(y, y);
             BigInteger A2 = BarrettReducer.MultMod(d, A1);
 
@@ -182,11 +189,21 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Gets or generates the curve's base point (generator).
+        /// Gets the curve's base point (generator), either from cache or by finding a new valid point.
         /// </summary>
-        /// <param name="isGenerated">If true, returns cached base point when available.</param>
-        /// <returns>A point in the prime-order subgroup.</returns>
-        public ECPoint GetBasePoint(bool isGenerated = false)
+        /// <param name="useCached">
+        /// If <c>true</c>, returns the cached base point when available.
+        /// If <c>false</c>, always finds a new base point via random search.
+        /// </param>
+        /// <param name="skipValidation">
+        /// If <c>true</c>, bypasses subgroup validation. Use only for number theory applications.
+        /// Default is <c>false</c>.
+        /// </param>
+        /// <returns>
+        /// A point suitable as a generator. When <paramref name="skipValidation"/> is <c>false</c>,
+        /// the point is guaranteed to lie in the prime-order subgroup.
+        /// </returns>
+        public ECPoint GetBasePoint(bool useCached = false, bool skipValidation = false)
         {
             bool done = false;
             BigInteger x = 0;
@@ -194,7 +211,7 @@ namespace Eduard.Security.Curves
             BigInteger y = 0;
             BigInteger temp = 0;
 
-            if (isGenerated && basePoint != ECPoint.POINT_INFINITY)
+            if (useCached && !skipValidation && basePoint != ECPoint.POINT_INFINITY)
                 return basePoint;
 
             do
@@ -216,9 +233,15 @@ namespace Eduard.Security.Curves
                     if (done)
                     {
                         ECPoint tempPoint = new ECPoint(x, y);
-                        basePoint = TwistedEdwardsMath.Multiply(this, cofactor, 
-                            tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                        done = (basePoint != ECPoint.POINT_INFINITY);
+
+                        if (skipValidation)
+                            return tempPoint;
+                        else
+                        {
+                            basePoint = TwistedEdwardsMath.Multiply(this, cofactor,
+                                tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                            done = (basePoint != ECPoint.POINT_INFINITY);
+                        }
                     }
                 }
             }
@@ -231,28 +254,37 @@ namespace Eduard.Security.Curves
         /// Sets a specific point as the curve's base point with validation.
         /// </summary>
         /// <param name="point">The point to set as generator.</param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the point does not satisfy the curve equation, or when multiplied
-        /// by the cofactor it yields the point at infinity (indicating small-order subgroup).
+        /// <exception cref="ArgumentException">
+        /// Thrown when the point is at infinity, does not satisfy the twisted Edwards equation,
+        /// or when multiplied by the cofactor yields the point at infinity (indicating it lies in
+        /// a small-order subgroup).
         /// </exception>
         public void SetBasePoint(ECPoint point)
         {
+            if (point == ECPoint.POINT_INFINITY)
+                throw new ArgumentException(
+                    "The generator point cannot" + 
+                    " be the point at infinity.",
+                    nameof(point));
+
             ECPoint tempPoint = point;
             var temp = Evaluate(tempPoint.GetAffineY());
 
             if (BigInteger.Jacobi(temp, field) != 1 && temp > 0)
-                throw new InvalidOperationException(
-                    "The generator point is not on the" 
-                    + " twisted Edwards curve.");
+                throw new ArgumentException(
+                    "The specified point does not lie" + 
+                    " on the twisted Edwards curve.",
+                    nameof(point));
             else
             {
                 BigInteger x = tempPoint.GetAffineX();
                 BigInteger eval = BarrettReducer.MultMod(x, x);
 
                 if (eval != temp)
-                    throw new InvalidOperationException(
-                        "Invalid generator point for the" 
-                        + " twisted Edwards curve.");
+                    throw new ArgumentException(
+                        "The specified point does not satisfy" + 
+                        " the twisted Edwards curve equation.",
+                        nameof(point));
                 else
                 {
                     ECPoint testPoint = TwistedEdwardsMath.Multiply(this, cofactor, 
@@ -261,10 +293,11 @@ namespace Eduard.Security.Curves
                     if (testPoint != ECPoint.POINT_INFINITY) 
                         basePoint = tempPoint;
                     else
-                        throw new InvalidOperationException(
-                            "Chosen generator point yields a"
-                            + " small-order subgroup on the " 
-                            + "twisted Edwards curve.");
+                        throw new ArgumentException(
+                            "The specified point lies in a " + 
+                            "small-order subgroup and cannot " + 
+                            "be used as a cryptographic generator.",
+                            nameof(point));
                 }
             }
         }

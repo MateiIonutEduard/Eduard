@@ -4,7 +4,7 @@ using Eduard;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.BigInt
+namespace Eduard.BenchTests.BigInt
 {
     public class ReduceBenchmark
     {
@@ -23,14 +23,14 @@ namespace BenchTests.Core.BigInt
             square = val * val;
         }
 
-        [Benchmark]
-        public void BarrettReduction()
+        [Benchmark(Description = "Barrett reduction")]
+        public void Barrett()
         {
             BigInteger res = BigInteger.BarrettReduction(square, field, constant);
         }
 
-        [Benchmark]
-        public void StandardReduction()
+        [Benchmark(Description = "Division remainder")]
+        public void Division()
         {
             BigInteger res = square % field;
         }

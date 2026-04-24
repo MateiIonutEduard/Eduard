@@ -7,7 +7,7 @@ using Eduard.Security.Primitives;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Curves
+namespace Eduard.BenchTests.Curves
 {
     public class WeiCurveBenchmark
     {
@@ -25,28 +25,28 @@ namespace BenchTests.Core.Curves
             G = curve.GetBasePoint();
         }
 
-        [Benchmark]
-        public void BinaryScalarMultiplication()
+        [Benchmark(Description = "Binary (affine)")]
+        public void Binary_Affine()
         {
             ECPoint kG = ECMath.Multiply(curve, curve.order, G);
         }
 
-        [Benchmark]
-        public void MixedBinaryScalarMultiplication()
+        [Benchmark(Description = "Binary (projective)")]
+        public void Binary_Projective()
         {
             ECPoint kG = ECMath.Multiply(curve, curve.order, 
                 G, ECMode.EC_STANDARD_PROJECTIVE);
         }
 
-        [Benchmark]
-        public void MontgomeryLadderMultiplication()
+        [Benchmark(Description = "Montgomery ladder")]
+        public void MontgomeryLadder()
         {
             ECPoint kG = ECMath.Multiply(curve, curve.order,
                 G, ECMode.EC_SECURE);
         }
 
-        [Benchmark]
-        public void FastestScalarMultiplication()
+        [Benchmark(Description = "wNAF sliding window")]
+        public void SlidingWindow()
         {
             ECPoint kG = ECMath.Multiply(curve, curve.order,
                 G, ECMode.EC_FASTEST);

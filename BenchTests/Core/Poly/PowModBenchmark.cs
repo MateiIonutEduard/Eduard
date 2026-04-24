@@ -4,7 +4,7 @@ using Eduard.Security;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.Poly
+namespace Eduard.BenchTests.Poly
 {
     public class PowModBenchmark
     {
@@ -28,7 +28,7 @@ namespace BenchTests.Core.Poly
                 mod.coeffs[i] = SecureRandom.Range(1, field - 1);
         }
 
-        [Benchmark]
+        [Benchmark(Description = "X^p mod f(X)")]
         public void PolyPowMod()
         {
             Polynomial X = new Polynomial(1, 0);

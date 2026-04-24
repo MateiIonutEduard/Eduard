@@ -4,7 +4,7 @@ using Eduard;
 using BenchmarkDotNet.Attributes;
 #pragma warning disable
 
-namespace BenchTests.Core.BigInt
+namespace Eduard.BenchTests.BigInt
 {
     public class ExpoBenchmark
     {
@@ -21,15 +21,15 @@ namespace BenchTests.Core.BigInt
             val = SecureRandom.Range(1, field - 1);
         }
 
-        [Benchmark]
-        public void BinaryExponentiation()
+        [Benchmark(Description = "Binary (square-and-multiply)")]
+        public void Binary()
         {
             PerfTuner.SetThreshold(PerfEntry.BIGINT_WORDS_THRESHOLD, bits >> 4);
             BigInteger res = BigInteger.Pow(val, (field - 1) >> 1, field);
         }
 
-        [Benchmark]
-        public void SlidingWindowExponentiation()
+        [Benchmark(Description = "Sliding window")]
+        public void SlidingWindow()
         {
             PerfTuner.SetThreshold(PerfEntry.BIGINT_WORDS_THRESHOLD, bits >> 5);
             BigInteger res = BigInteger.Pow(val, (field - 1) >> 1, field);

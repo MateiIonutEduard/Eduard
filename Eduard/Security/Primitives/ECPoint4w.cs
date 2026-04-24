@@ -65,21 +65,27 @@ namespace Eduard.Security.Primitives
         /// <param name="y">The projective Y-coordinate.</param>
         /// <param name="z">The projective Z-coordinate (zero indicates point at infinity).</param>
         /// <param name="aZ4">The pre-computed value aZ^4 (must be zero for point at infinity).</param>
-        /// <exception cref="NullReferenceException">Thrown when any coordinate is null.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when point at infinity has non-zero aZ⁴.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when any coordinate is null.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero aZ^4.
+        /// </exception>
         public ECPoint4w(BigInteger x, BigInteger y, BigInteger z, BigInteger aZ4)
         {
             if (ReferenceEquals(x, null))
-                throw new NullReferenceException("The projective X-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(x),
+                    "The projective X-coordinate cannot be null.");
 
             if (ReferenceEquals(y, null))
-                throw new NullReferenceException("The projective Y-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(y), 
+                    "The projective Y-coordinate cannot be null.");
 
             if (ReferenceEquals(z, null))
-                throw new NullReferenceException("The projective Z-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(z), 
+                    "The projective Z-coordinate cannot be null.");
 
             if (ReferenceEquals(aZ4, null))
-                throw new NullReferenceException("The projective aZ^4-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(aZ4),
+                    "The projective aZ^4-coordinate cannot be null.");
 
             /* validate point at infinity invariant */
             if (z == 0 && aZ4 != 0)

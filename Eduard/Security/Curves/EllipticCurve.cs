@@ -132,8 +132,15 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="x">The x-coordinate to evaluate.</param>
         /// <returns>y^2 = x^3 + ax + b (mod p).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when x is negative or exceeds or equals field modulus.
+        /// </exception>
         public BigInteger Evaluate(BigInteger x)
         {
+            if (x < 0 || x >= field)
+                throw new ArgumentOutOfRangeException(nameof(x),
+                    "Coordinate must be in the range [0, p-1].");
+
             BigInteger result = BarrettReducer.MultMod(x, x);
             result = BarrettReducer.MultMod(result, x);
 
@@ -149,14 +156,29 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="m">Represents a binary message as a large integer.</param>
         /// <param name="r">Iterations (default: 30).</param>
-        /// <returns>Point encoding the message, or POINT_INFINITY if encoding fails.</returns>
-        public ECPoint GetPoint(BigInteger m, int r=30)
+        /// <returns>Point encoding the message.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the message is negative or exceeds the maximum encodable value for this field.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the algorithm fails to find a suitable curve point within the specified iterations.
+        /// </exception>
+        public ECPoint GetPoint(BigInteger m, int r = 30)
         {
-            BigInteger test = (r + 1) * m;
-            BigInteger xs = BarrettReducer.MultMod(m, r);
+            if (m < 0)
+                throw new ArgumentException(
+                    "The message to encode "
+                    + "cannot be negative.",
+                    nameof(m));
 
             /* if the product exceeds the value of the prime field, the algorithm fails */
-            if (test >= field) return ECPoint.POINT_INFINITY;
+            if (m * r >= field - r + 1)
+                throw new ArgumentException(
+                    "The message is too large to encode within"
+                    + " the specified number of iterations.",
+                    nameof(m));
+
+            BigInteger xs = BarrettReducer.MultMod(m, r);
             BigInteger ys = 1;
 
             int ks = 0;
@@ -165,24 +187,26 @@ namespace Eduard.Security.Curves
             if (xs >= field)
                 xs -= field;
 
-            while(ks < r)
+            while (ks < r)
             {
                 BigInteger t = Evaluate(xs);
 
                 if (BigInteger.Jacobi(t, field) == 1)
                 {
                     ys = ModSqrtUtil.Sqrt(t, true);
-                    break;
+                    return new ECPoint(xs, ys);
                 }
 
-                xs++; 
+                xs++;
                 ks++;
 
-                if(xs >= field) 
+                if (xs >= field)
                     xs -= field;
             }
 
-            return new ECPoint(xs, ys);
+            throw new InvalidOperationException(
+                "Failed to encode the message: no suitable "
+                + "curve point found within the iteration limit.");
         }
 
         /// <summary>
@@ -190,22 +214,59 @@ namespace Eduard.Security.Curves
         /// </summary>
         /// <param name="point">The encoded point.</param>
         /// <param name="r">Iterations used during encoding (default: 30).</param>
-        /// <returns>The original message m, or -1 if invalid.</returns>
+        /// <returns>The original message m.</returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the point is at infinity or does not lie on the Weierstrass curve.
+        /// </exception>
         public BigInteger GetMessage(ECPoint point, int r=30)
         {
-            if (point == ECPoint.POINT_INFINITY) return -1;
-            BigInteger steps = r;
+            if (point == ECPoint.POINT_INFINITY)
+                throw new ArgumentException(
+                    "The encoded point cannot "
+                    + "be the point at infinity.",
+                    nameof(point));
 
-            BigInteger m = point.GetAffineX() - 1;
+            BigInteger x = point.GetAffineX();
+            BigInteger y = point.GetAffineY();
+
+            if (x < 0 || x >= field || y < 0 || y >= field)
+                throw new ArgumentException(
+                    "The specified point contains coordinates "
+                    + "outside the field range [0, p-1].",
+                    nameof(point));
+
+            BigInteger Y2 = BarrettReducer.MultMod(y, y);
+            BigInteger eval = Evaluate(x);
+
+            if (eval != Y2)
+                throw new ArgumentException(
+                    "The specified point does "
+                    + "not satisfy the Weierstrass "
+                    + "curve equation.",
+                    nameof(point));
+
+            BigInteger steps = r;
+            BigInteger m = x - 1;
+
             return m / steps;
         }
 
         /// <summary>
-        /// Gets or generates the curve's base point (generator).
+        /// Gets the curve's base point (generator), either from cache or by finding a new valid point.
         /// </summary>
-        /// <param name="isGenerated">If true, returns cached base point when available.</param>
-        /// <returns>A point in the prime-order subgroup.</returns>
-        public ECPoint GetBasePoint(bool isGenerated = false)
+        /// <param name="useCached">
+        /// If <c>true</c>, returns the cached base point when available.
+        /// If <c>false</c>, always finds a new base point via random search.
+        /// </param>
+        /// <param name="skipValidation">
+        /// If <c>true</c>, bypasses subgroup validation. Use only for number theory applications.
+        /// Default is <c>false</c>.
+        /// </param>
+        /// <returns>
+        /// A point suitable as a generator. When <paramref name="skipValidation"/> is <c>false</c>,
+        /// the point is guaranteed to lie in the prime-order subgroup.
+        /// </returns>
+        public ECPoint GetBasePoint(bool useCached = false, bool skipValidation = false)
         {
             bool done = false;
             BigInteger x = 0;
@@ -213,7 +274,7 @@ namespace Eduard.Security.Curves
             BigInteger y = 0;
             BigInteger temp = 0;
 
-            if(isGenerated && basePoint != ECPoint.POINT_INFINITY)
+            if (useCached && !skipValidation && basePoint != ECPoint.POINT_INFINITY)
                 return basePoint;
 
             do
@@ -235,9 +296,15 @@ namespace Eduard.Security.Curves
                     if (done)
                     {
                         ECPoint tempPoint = new ECPoint(x, y);
-                        basePoint = ECMath.Multiply(this, cofactor, 
-                            tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
-                        done = (basePoint != ECPoint.POINT_INFINITY);
+
+                        if (skipValidation)
+                            return tempPoint;
+                        else
+                        {
+                            basePoint = ECMath.Multiply(this, cofactor,
+                                tempPoint, ECMode.EC_STANDARD_PROJECTIVE);
+                            done = (basePoint != ECPoint.POINT_INFINITY);
+                        }
                     }
                 }
             }
@@ -250,29 +317,38 @@ namespace Eduard.Security.Curves
         /// Sets a specific point as the curve's base point with validation.
         /// </summary>
         /// <param name="point">The point to set as generator.</param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the point does not lie on the curve, the y-coordinate does not satisfy
-        /// the curve equation, or when multiplied by the cofactor it yields the point at infinity
+        /// <exception cref="ArgumentException">
+        /// Thrown when the point is at infinity, does not lie on the Weierstrass curve, maps to the
+        /// quadratic twist, or when multiplied by the cofactor yields the point at infinity
         /// (indicating it lies in a small-order subgroup).
         /// </exception>
         public void SetBasePoint(ECPoint point)
         {
+            if (point == ECPoint.POINT_INFINITY)
+                throw new ArgumentException(
+                    "The generator point cannot " 
+                    + "be the point at infinity.",
+                    nameof(point));
+
             ECPoint tempPoint = point;
             var Y2 = Evaluate(tempPoint.GetAffineX());
 
             if (BigInteger.Jacobi(Y2, field) != 1 && Y2 > 0)
-                throw new InvalidOperationException(
-                    "The generator point is not on " 
-                    + "the Weierstrass curve.");
+                throw new ArgumentException(
+                    "The specified point does not" 
+                    + " lie on the Weierstrass curve.",
+                    nameof(point));
             else
             {
                 BigInteger y = tempPoint.GetAffineY();
                 BigInteger eval = BarrettReducer.MultMod(y, y);
 
                 if (eval != Y2)
-                    throw new InvalidOperationException(
-                        "Invalid generator point for " 
-                        + "Weierstrass curve.");
+                    throw new ArgumentException(
+                        "The specified point does " + 
+                        "not satisfy the Weierstrass" 
+                        + " curve equation.",
+                        nameof(point));
                 else
                 {
                     ECPoint testPoint = ECMath.Multiply(this, cofactor, 
@@ -281,9 +357,11 @@ namespace Eduard.Security.Curves
                     if (testPoint != ECPoint.POINT_INFINITY) 
                         basePoint = tempPoint;
                     else
-                        throw new InvalidOperationException(
-                            "Chosen generator point yields small-order" 
-                            + " subgroup on Weierstrass curve.");
+                        throw new ArgumentException(
+                            "The specified point lies in a " + 
+                            "small-order subgroup and cannot be " 
+                            + "used as a cryptographic generator.",
+                            nameof(point));
                 }
             }
         }

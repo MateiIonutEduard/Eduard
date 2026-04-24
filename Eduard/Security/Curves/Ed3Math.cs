@@ -138,6 +138,9 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3 Negate(TwistedEdwardsCurve curve, ECPoint3 point)
         {
+            if(point == ECPoint3.POINT_INFINITY) 
+                return ECPoint3.POINT_INFINITY;
+
             BigInteger x = curve.field - point.x;
             return new ECPoint3(x, point.y, point.z);
         }

@@ -45,9 +45,6 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 Add(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ECPoint4.POINT_INFINITY && right == ECPoint4.POINT_INFINITY)
-                return ECPoint4.POINT_INFINITY;
-
             if (left == ECPoint4.POINT_INFINITY) return right;
             if (right == ECPoint4.POINT_INFINITY) return left;
 
@@ -306,6 +303,9 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 Negate(TwistedEdwardsCurve curve, ECPoint4 point)
         {
+            if(point == ECPoint4.POINT_INFINITY) 
+                return ECPoint4.POINT_INFINITY;
+
             BigInteger Xp = curve.field - point.x;
             BigInteger Tp = curve.field - point.t;
             return new ECPoint4(Xp, point.y, Tp, point.z);

@@ -27,7 +27,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="x">The affine x-coordinate (must satisfy the curve equation).</param>
         /// <param name="y">The affine y-coordinate (must satisfy the curve equation).</param>
-        /// <exception cref="NullReferenceException">Thrown when x or y is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when x or y is null.</exception>
         public ECPoint(BigInteger x, BigInteger y) : this(x, y, false)
         { }
 
@@ -37,7 +37,7 @@ namespace Eduard.Security.Primitives
         /// <param name="x">The affine x-coordinate.</param>
         /// <param name="y">The affine y-coordinate.</param>
         /// <param name="isInfinity">Indicates whether this point represents the point at infinity.</param>
-        /// <exception cref="NullReferenceException">Thrown when x or y is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when x or y is null.</exception>
         /// <remarks>
         /// For the point at infinity, the coordinates are conventionally set to (0,1) with the <br/>
         /// infinity flag set to true. The curve equation is not enforced for the point at infinity.
@@ -45,10 +45,12 @@ namespace Eduard.Security.Primitives
         public ECPoint(BigInteger x, BigInteger y, bool isInfinity)
         {
             if (ReferenceEquals(x, null))
-                throw new NullReferenceException("The affine x-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(x), 
+                    "The affine x-coordinate cannot be null.");
 
             if (ReferenceEquals(null, y))
-                throw new NullReferenceException("The affine y-coordinate cannot be null.");
+                throw new ArgumentNullException(nameof(y), 
+                    "The affine y-coordinate cannot be null.");
 
             this.isInfinity = isInfinity;
             this.x = x; this.y = y;
