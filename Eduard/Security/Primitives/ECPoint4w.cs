@@ -66,7 +66,9 @@ namespace Eduard.Security.Primitives
         /// <param name="z">The projective Z-coordinate (zero indicates point at infinity).</param>
         /// <param name="aZ4">The pre-computed value aZ^4 (must be zero for point at infinity).</param>
         /// <exception cref="ArgumentNullException">Thrown when any coordinate is null.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when point at infinity has non-zero aZ⁴.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero aZ^4.
+        /// </exception>
         public ECPoint4w(BigInteger x, BigInteger y, BigInteger z, BigInteger aZ4)
         {
             if (ReferenceEquals(x, null))

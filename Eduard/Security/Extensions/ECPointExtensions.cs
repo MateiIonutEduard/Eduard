@@ -207,9 +207,16 @@ namespace Eduard.Security.Extensions
         /// <remarks>
         /// Discards the cached aZ^4 value when switching to coordinate systems that don't support it.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero aZ^4.
+        /// </exception>
         public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint4w point)
         {
-            if (point == ECPoint4w.POINT_INFINITY) 
+            if (point.z == 0 && point.aZ4 != 0)
+                throw new InvalidOperationException(
+                    "Point at infinity must have aZ^4 = 0.");
+
+            if (point == ECPoint4w.POINT_INFINITY || point.z == 0) 
                 return ECPoint3w.POINT_INFINITY;
 
             ECPoint3w jacobianPoint = new ECPoint3w(point.x,
@@ -227,9 +234,17 @@ namespace Eduard.Security.Extensions
         /// <remarks>
         /// Discards the precomputed Z^2 and Z^3 powers when converting to simpler representations.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero Z^2 or Z^3, or when consistency checks fail.
+        /// </exception>
         public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == ECPoint5w.POINT_INFINITY)
+            if (point.z == 0 && (point.z2 != 0 || point.z3 != 0))
+                throw new InvalidOperationException(
+                    "Point at infinity must have "
+                    + "Z^2 = 0 and Z^3 = 0.");
+
+            if (point == ECPoint5w.POINT_INFINITY || point.z == 0)
                 return ECPoint3w.POINT_INFINITY;
 
             ECPoint3w jacobianPoint = new ECPoint3w(point.x,
@@ -248,8 +263,16 @@ namespace Eduard.Security.Extensions
         /// Uses the precomputed Z^2 and Z^3 values to avoid recomputing powers during conversion, <br/>
         /// improving efficiency when converting from window method accumulator points.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero Z^2 or Z^3, or when consistency checks fail.
+        /// </exception>
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint5w point)
         {
+            if (point.z == 0 && (point.z2 != 0 || point.z3 != 0))
+                throw new InvalidOperationException(
+                    "Point at infinity must have " 
+                    + "Z^2 = 0 and Z^3 = 0.");
+            
             if (point == ECPoint5w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
@@ -295,8 +318,16 @@ namespace Eduard.Security.Extensions
         /// Recovers affine coordinates as x = X/Z^2, y = Y/Z^3 using a single modular <br/>
         /// inversion. The cached aZ^4 value is discarded during affine recovery.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero aZ^4.
+        /// </exception>
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint4w point)
         {
+            /* invalid point at infinity */
+            if (point.z == 0 && point.aZ4 != 0)
+                throw new InvalidOperationException(
+                    "Point at infinity must have aZ^4 = 0.");
+
             if (point == ECPoint4w.POINT_INFINITY || point.z == 0) 
                 return ECPoint.POINT_INFINITY;
 
@@ -341,9 +372,18 @@ namespace Eduard.Security.Extensions
         /// Computes aZ^4 from the precomputed Z^2 value, avoiding redundant squaring operations. <br/>
         /// Used when transitioning from window precomputation to modified Jacobian doubling.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when point at infinity has non-zero Z^2 or Z^3, or when consistency checks fail.
+        /// </exception>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint5w point)
         {
-            if (point == ECPoint5w.POINT_INFINITY) 
+            /* invalid point at infinity */
+            if (point.z == 0 && (point.z2 != 0 || point.z3 != 0))
+                throw new InvalidOperationException(
+                    "Point at infinity must have "
+                    + "Z^2 = 0 and Z^3 = 0.");
+
+            if (point == ECPoint5w.POINT_INFINITY || point.z == 0) 
                 return ECPoint4w.POINT_INFINITY;
 
             BigInteger Z4 = BarrettReducer.MultMod(point.z2, point.z2);
@@ -367,7 +407,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint3w point)
         {
-            if (point == ECPoint3w.POINT_INFINITY) 
+            if (point == ECPoint3w.POINT_INFINITY || point.z == 0) 
                 return ECPoint4w.POINT_INFINITY;
 
             BigInteger Z2 = BarrettReducer.MultMod(point.z, point.z);
