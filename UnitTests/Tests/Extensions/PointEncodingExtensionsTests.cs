@@ -102,7 +102,10 @@ namespace Eduard.Tests.Extensions
 
             Assert.Equal(G.GetAffineX(), decompressed.GetAffineX());
             Assert.Equal(G.GetAffineY(), decompressed.GetAffineY());
-            Assert.False(decompressed.GetAffineY().TestBit(0));
+
+            bool decompressedParityBit = decompressed.GetAffineY().TestBit(0);
+            bool originalParityBit = G.GetAffineY().TestBit(0);
+            Assert.True(originalParityBit == decompressedParityBit);
         }
 
         [Fact]

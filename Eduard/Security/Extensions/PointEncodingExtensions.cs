@@ -54,8 +54,9 @@ namespace Eduard.Security.Extensions
                 int n = curve.field.ToByteArray().Length;
 
                 byte[] result = new byte[n + 1];
-                Array.Copy(bytes, 0, result, 0, bytes.Length);
+                int startIndex = n - bytes.Length;
 
+                Array.Copy(bytes, 0, result, startIndex, bytes.Length);
                 int sign = point.GetAffineY().TestBit(0) ? 1 : 0;
                 int lastIndex = result.Length - 1;
 
@@ -71,8 +72,11 @@ namespace Eduard.Security.Extensions
                 byte[] xbuffer = point.GetAffineX().ToByteArray();
                 byte[] ybuffer = point.GetAffineY().ToByteArray();
 
-                Array.Copy(xbuffer, 0, buffer, 0, xbuffer.Length);
-                Array.Copy(ybuffer, 0, buffer, xbuffer.Length, ybuffer.Length);
+                int startXIndex = n - xbuffer.Length;
+                int startYIndex = n - ybuffer.Length;
+
+                Array.Copy(xbuffer, 0, buffer, startXIndex, xbuffer.Length);
+                Array.Copy(ybuffer, 0, buffer, n + startYIndex, ybuffer.Length);
 
                 buffer[2 * n] = 4;
                 return buffer;
