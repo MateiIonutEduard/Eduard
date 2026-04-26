@@ -250,7 +250,10 @@ namespace Eduard.Tests.Extensions
 
             Assert.Equal(originalX, decompressed.GetAffineX());
             Assert.Equal(G.GetAffineY(), decompressed.GetAffineY());
-            Assert.False(decompressed.GetAffineX().TestBit(0));
+            bool originalParityBit = G.GetAffineX().TestBit(0);
+
+            bool decompressedParityBit = decompressed.GetAffineX().TestBit(0);
+            Assert.True(originalParityBit == decompressedParityBit);
         }
 
         [Fact]
@@ -325,7 +328,7 @@ namespace Eduard.Tests.Extensions
             for (int i = 0; i < 10; i++)
             {
                 var k = SecureRandom.Range(1, curve.order - 1);
-                var point = ECMath.Multiply(curve, k, curve.GetBasePoint());
+                var point = ECMath.Multiply(curve, k, curve.GetBasePoint(), ECMode.EC_FASTEST);
 
                 var compressed = curve.CompressPoint(point, CompressionMode.EC_POINT_COMPRESSED);
                 var decompressed = curve.DecompressPoint(compressed);
@@ -342,7 +345,7 @@ namespace Eduard.Tests.Extensions
             for (int i = 0; i < 10; i++)
             {
                 var k = SecureRandom.Range(1, curve.order - 1);
-                var point = TwistedEdwardsMath.Multiply(curve, k, curve.GetBasePoint());
+                var point = TwistedEdwardsMath.Multiply(curve, k, curve.GetBasePoint(), ECMode.EC_FASTEST);
 
                 var compressed = curve.CompressPoint(point, CompressionMode.EC_POINT_COMPRESSED);
                 var decompressed = curve.DecompressPoint(compressed);
