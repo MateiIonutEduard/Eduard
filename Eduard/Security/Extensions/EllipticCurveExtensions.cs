@@ -384,8 +384,14 @@ namespace Eduard.Security.Extensions
 
             BigInteger B5 = BarrettReducer.MultMod(A3, B3);
             BigInteger a = BarrettReducer.MultMod(B5, B4);
-
             BigInteger b = BarrettReducer.MultMod(A4, B3);
+
+            if(BigInteger.Jacobi(curve.B, p) == 1)
+            {
+                a = BarrettReducer.MultMod(a, B1);
+                b = BarrettReducer.MultMod(b, B2);
+            }
+
             return new EllipticCurve(a, b, p, order, cofactor);
         }
 
@@ -484,6 +490,13 @@ namespace Eduard.Security.Extensions
             BigInteger a = BarrettReducer.MultMod(B4t, B4);
 
             BigInteger b = BarrettReducer.MultMod(A4, B3);
+
+            if (BigInteger.Jacobi(B, p) == 1)
+            {
+                a = BarrettReducer.MultMod(a, B1);
+                b = BarrettReducer.MultMod(b, B2);
+            }
+
             return new EllipticCurve(a, b, p, order, cofactor);
         }
 
