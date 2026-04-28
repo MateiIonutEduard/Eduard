@@ -1,11 +1,8 @@
-﻿using Eduard.Security.Curves;
-using Eduard.Security.Primitives;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Eduard.Security.Curves;
+using Eduard.Security.Primitives;
+using System.Collections.Generic;
 
 namespace Eduard.Security.Extensions
 {
@@ -430,9 +427,19 @@ namespace Eduard.Security.Extensions
             /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
             if (Xp == 0 && Yp == 0) return new ECPoint(AB3, 0);
             BigInteger Xt = BarrettReducer.MultMod(Xp, B_inv);
-            BigInteger X = BarrettReducer.AddMod(Xt, AB3);
 
+            BigInteger X = BarrettReducer.AddMod(Xt, AB3);
             BigInteger Y = BarrettReducer.MultMod(Yp, B_inv);
+
+            if (BigInteger.Jacobi(curve.B, curve.field) == 1)
+            {
+                Bt = ModSqrtUtil.Sqrt(curve.B, true);
+                BigInteger B32 = BarrettReducer.MultMod(curve.B, Bt);
+
+                X = BarrettReducer.MultMod(X, curve.B);
+                Y = BarrettReducer.MultMod(Y, B32);
+            }
+
             return new ECPoint(X, Y);
         }
 
@@ -560,6 +567,16 @@ namespace Eduard.Security.Extensions
 
             BigInteger X = BarrettReducer.AddMod(A4, AB3);
             BigInteger Y = BarrettReducer.MultMod(Ym, B_inv);
+
+            if (BigInteger.Jacobi(B, curve.field) == 1)
+            {
+                BigInteger Bt = ModSqrtUtil.Sqrt(B, true);
+                BigInteger B32 = BarrettReducer.MultMod(B, Bt);
+
+                X = BarrettReducer.MultMod(X, B);
+                Y = BarrettReducer.MultMod(Y, B32);
+            }
+
             return new ECPoint(X, Y);
         }
 
