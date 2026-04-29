@@ -48,7 +48,7 @@ namespace Eduard
         /// <summary>
         /// Generates a cryptographically secure random integer with the specified bit length.
         /// </summary>
-        /// <param name="bits">The exact bit length of the random integer.</param>
+        /// <param name="n">The exact bit length of the random integer.</param>
         /// <returns>A random integer of exactly <paramref name="n"/> bits.</returns>
         public static BigInteger GenRandom(int n)
         {

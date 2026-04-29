@@ -1,6 +1,7 @@
-﻿using Eduard.Security.Curves;
-using Eduard.Security.Primitives;
+﻿using System;
 using System.Diagnostics;
+using Eduard.Security.Curves;
+using Eduard.Security.Primitives;
 
 namespace Eduard.Security.Extensions
 {

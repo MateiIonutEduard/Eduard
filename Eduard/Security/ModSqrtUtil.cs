@@ -1,6 +1,4 @@
 ﻿using System;
-using Eduard;
-using System.Security.Cryptography;
 
 namespace Eduard.Security
 {

@@ -1,5 +1,4 @@
-﻿using Eduard;
-using Eduard.Security.Primitives;
+﻿using Eduard.Security.Primitives;
 using System.Diagnostics;
 
 namespace Eduard.Security.Curves

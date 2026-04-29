@@ -1,6 +1,4 @@
-﻿using Eduard;
-using Eduard.Security;
-using Eduard.Security.Curves;
+﻿using Eduard.Security.Curves;
 using Eduard.Security.Extensions;
 using Eduard.Security.Primitives;
 

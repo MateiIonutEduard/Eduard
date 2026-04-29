@@ -1,5 +1,4 @@
-﻿using Eduard;
-using System;
+﻿using System;
 
 namespace Eduard.Security
 {

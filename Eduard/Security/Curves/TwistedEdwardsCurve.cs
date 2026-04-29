@@ -1,5 +1,4 @@
 ﻿using System;
-using Eduard;
 using System.Diagnostics;
 using Eduard.Security.Primitives;
 
@@ -94,12 +93,9 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BarrettReducer.SetModulus(field);
-            BigInteger t1 = BarrettReducer.SubMod(a, d);
+            bool isValid = ValidateDiscriminant();
 
-            BigInteger t2 = BarrettReducer.MultMod(a, d);
-            BigInteger t = BarrettReducer.MultMod(t1, t2);
-
-            if ((cofactor & 0x3) != 0 || t == 0)
+            if ((cofactor & 0x3) != 0 || !isValid)
                 throw new InvalidOperationException(
                     "The twisted Edwards curve is " +
                     "singular or invalid.");
@@ -123,6 +119,26 @@ namespace Eduard.Security.Curves
                 kt = BarrettReducer.AddMod(kt1, kt1);
                 computeOnTwist = true;
             }
+        }
+
+        /// <summary>
+        /// Validates the curve discriminant to ensure non-singularity.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the discriminant is valid and the curve is non-singular;
+        /// otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// A valid discriminant guarantees that the addition law is well-defined <br/>
+        /// for all points on the twisted Edwards curve.
+        /// </remarks>
+        internal bool ValidateDiscriminant()
+        {
+            BigInteger t1 = BarrettReducer.SubMod(a, d);
+            BigInteger t2 = BarrettReducer.MultMod(a, d);
+
+            BigInteger discriminant = BarrettReducer.MultMod(t1, t2);
+            return discriminant != 0;
         }
 
         /// <summary>

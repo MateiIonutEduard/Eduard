@@ -1,5 +1,4 @@
 ﻿using System;
-using Eduard;
 using System.Diagnostics;
 using Eduard.Security.Primitives;
 
@@ -45,26 +44,26 @@ namespace Eduard.Security.Curves
             a = SecureRandom.Range(1, field - 1);
             ModSqrtUtil.InitParams();
 
-            BigInteger temp = BarrettReducer.MultMod(a, a);
-            temp = BarrettReducer.MultMod(temp, a);
-            temp = BarrettReducer.MultMod(4, temp);
+            BigInteger t1 = BarrettReducer.MultMod(a, a);
+            t1 = BarrettReducer.MultMod(t1, a);
+            t1 = BarrettReducer.MultMod(4, t1);
 
             b = SecureRandom.Range(1, field - 1);
-            BigInteger B2 = BarrettReducer.MultMod(b, b);
+            BigInteger t2 = BarrettReducer.MultMod(b, b);
 
-            BigInteger val = BarrettReducer.MultMod(27, B2);
-            BigInteger check = BarrettReducer.AddMod(temp, val);
+            BigInteger t3 = BarrettReducer.MultMod(27, t2);
+            BigInteger t4 = BarrettReducer.AddMod(t1, t3);
 
             order = 1; cofactor = 1;
             basePoint = ECPoint.POINT_INFINITY;
 
-            while (check == 0)
+            while (t4 == 0)
             {
                 b = SecureRandom.Range(1, field - 1);
-                B2 = BarrettReducer.MultMod(b, b);
+                t2 = BarrettReducer.MultMod(b, b);
 
-                val = BarrettReducer.MultMod(27, B2);
-                check = BarrettReducer.AddMod(temp, val);
+                t3 = BarrettReducer.MultMod(27, t2);
+                t4 = BarrettReducer.AddMod(t1, t3);
             }
         }
 
@@ -87,20 +86,38 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BarrettReducer.SetModulus(field);
-            BigInteger A2 = BarrettReducer.MultMod(a, a);
+            bool isValid = ValidateDiscriminant();
 
-            BigInteger B2 = BarrettReducer.MultMod(b, b);
-            BigInteger delta = BarrettReducer.MultMod(a, A2);
-
-            delta = BarrettReducer.MultMod(4, delta);
-            BigInteger val = BarrettReducer.MultMod(27, B2);
-            delta = BarrettReducer.AddMod(delta, val);
-
-            if (delta == 0)
+            if (!isValid)
                 throw new InvalidOperationException(
-                    "Invalid curve: singular Weierstrass form.");
+                    "The Weierstrass curve is " +
+                    "singular or invalid.");
 
             ModSqrtUtil.InitParams();
+        }
+
+        /// <summary>
+        /// Validates the curve discriminant to ensure non-singularity.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the discriminant is valid and the curve is non-singular;
+        /// otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// A valid discriminant guarantees that the Weierstrass curve has no singular points, <br/>
+        /// ensuring the group law is well-defined for all points on the curve.
+        /// </remarks>
+        internal bool ValidateDiscriminant()
+        {
+            BigInteger t1 = BarrettReducer.MultMod(a, a);
+            BigInteger t2 = BarrettReducer.MultMod(b, b);
+
+            BigInteger t3 = BarrettReducer.MultMod(a, t1);
+            BigInteger t4 = BarrettReducer.MultMod(4, t3);
+
+            BigInteger t5 = BarrettReducer.MultMod(27, t2);
+            t3 = BarrettReducer.AddMod(t4, t5);
+            return t3 != 0;
         }
 
         /// <summary>

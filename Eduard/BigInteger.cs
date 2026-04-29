@@ -200,7 +200,7 @@ namespace Eduard
                 & mask) == mask;
 
             int trimCount = 0;
-            int i = 0, j, k;
+            int i = 0, j;
 
             while (i < array.Length - 1)
             {
@@ -669,7 +669,7 @@ namespace Eduard
             return result;
         }
 
-        public static BigInteger KMultiply(BigInteger left, BigInteger right)
+        private static BigInteger KMultiply(BigInteger left, BigInteger right)
         {
             int length = Math.Max(left.data.Used, right.data.Used);
             if (length <= 10) return PlainMultiply(left, right);

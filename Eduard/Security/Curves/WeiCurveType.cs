@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Eduard.Security.Curves
+﻿namespace Eduard.Security.Curves
 {
     /// <summary>
     /// Identifies standardized Weierstrass-form elliptic curves over prime fields. <br/>

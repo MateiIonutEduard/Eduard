@@ -1,12 +1,8 @@
 ﻿#if RELEASE && USE_BENCHMARKING
-using Eduard;
-using System;
-using Eduard.Security;
 using Eduard.Security.Curves;
 using Eduard.Security.Primitives;
 using BenchmarkDotNet.Attributes;
 using Eduard.Security.Extensions;
-#pragma warning disable
 
 namespace Eduard.BenchTests.Curves
 {

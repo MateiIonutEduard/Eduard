@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Eduard.Security.Curves
+﻿namespace Eduard.Security.Curves
 {
     /// <summary>
     /// Identifies Montgomery-form elliptic curves optimized for efficient <br/>

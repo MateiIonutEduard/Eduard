@@ -1,11 +1,8 @@
-﻿using Eduard.Security.Curves;
-using Eduard.Security.Primitives;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Eduard.Security.Curves;
+using Eduard.Security.Primitives;
+using System.Collections.Generic;
 
 namespace Eduard.Security.Extensions
 {
@@ -40,7 +37,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static MontgomeryCurve ToMontgomeryCurve(this EllipticCurve curve)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             BigInteger order = curve.order;
@@ -113,7 +112,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToMontgomeryPoint(this EllipticCurve curve, ECPoint point)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             Polynomial.SetField(curve.field);
@@ -190,7 +191,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this EllipticCurve curve)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             BigInteger order = curve.order;
@@ -273,7 +276,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToTwistedEdwardsPoint(this EllipticCurve curve, ECPoint point)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             Polynomial.SetField(curve.field);
@@ -358,7 +363,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             BigInteger order = curve.order;
@@ -384,8 +391,14 @@ namespace Eduard.Security.Extensions
 
             BigInteger B5 = BarrettReducer.MultMod(A3, B3);
             BigInteger a = BarrettReducer.MultMod(B5, B4);
-
             BigInteger b = BarrettReducer.MultMod(A4, B3);
+
+            if(BigInteger.Jacobi(curve.B, p) == 1)
+            {
+                a = BarrettReducer.MultMod(a, B1);
+                b = BarrettReducer.MultMod(b, B2);
+            }
+
             return new EllipticCurve(a, b, p, order, cofactor);
         }
 
@@ -407,7 +420,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToWeierstrassPoint(this MontgomeryCurve curve, ECPoint point)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
@@ -424,9 +439,19 @@ namespace Eduard.Security.Extensions
             /* map the rational 2-torsion point (0, 0) from a Montgomery curve to its equivalent Weierstrass curve */
             if (Xp == 0 && Yp == 0) return new ECPoint(AB3, 0);
             BigInteger Xt = BarrettReducer.MultMod(Xp, B_inv);
-            BigInteger X = BarrettReducer.AddMod(Xt, AB3);
 
+            BigInteger X = BarrettReducer.AddMod(Xt, AB3);
             BigInteger Y = BarrettReducer.MultMod(Yp, B_inv);
+
+            if (BigInteger.Jacobi(curve.B, curve.field) == 1)
+            {
+                Bt = ModSqrtUtil.Sqrt(curve.B, true);
+                BigInteger B32 = BarrettReducer.MultMod(curve.B, Bt);
+
+                X = BarrettReducer.MultMod(X, curve.B);
+                Y = BarrettReducer.MultMod(Y, B32);
+            }
+
             return new ECPoint(X, Y);
         }
 
@@ -447,7 +472,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static EllipticCurve ToWeierstrassCurve(this TwistedEdwardsCurve curve)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             BigInteger order = curve.order;
@@ -484,6 +511,13 @@ namespace Eduard.Security.Extensions
             BigInteger a = BarrettReducer.MultMod(B4t, B4);
 
             BigInteger b = BarrettReducer.MultMod(A4, B3);
+
+            if (BigInteger.Jacobi(B, p) == 1)
+            {
+                a = BarrettReducer.MultMod(a, B1);
+                b = BarrettReducer.MultMod(b, B2);
+            }
+
             return new EllipticCurve(a, b, p, order, cofactor);
         }
 
@@ -505,7 +539,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Weierstrass curve */
@@ -547,6 +583,16 @@ namespace Eduard.Security.Extensions
 
             BigInteger X = BarrettReducer.AddMod(A4, AB3);
             BigInteger Y = BarrettReducer.MultMod(Ym, B_inv);
+
+            if (BigInteger.Jacobi(B, curve.field) == 1)
+            {
+                BigInteger Bt = ModSqrtUtil.Sqrt(B, true);
+                BigInteger B32 = BarrettReducer.MultMod(B, Bt);
+
+                X = BarrettReducer.MultMod(X, B);
+                Y = BarrettReducer.MultMod(Y, B32);
+            }
+
             return new ECPoint(X, Y);
         }
 
@@ -567,7 +613,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this MontgomeryCurve curve)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             BigInteger order = curve.order;
@@ -602,7 +650,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToTwistedEdwardsPoint(this MontgomeryCurve curve, ECPoint point)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the twisted Edwards curve */
@@ -643,7 +693,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static MontgomeryCurve ToMontgomeryCurve(this TwistedEdwardsCurve curve)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             BigInteger order = curve.order;
@@ -679,7 +731,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToMontgomeryPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Montgomery curve */

@@ -1,5 +1,4 @@
 ﻿using System;
-using Eduard;
 using System.Diagnostics;
 using Eduard.Security.Primitives;
 
@@ -32,9 +31,7 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order, for Montgomery curves.
         /// </summary>
         public BigInteger cofactor;
-
         private ECPoint basePoint;
-        private static bool enableSpeedup;
 
         /// <summary>
         /// Initializes a Montgomery curve with explicit parameters.
@@ -63,13 +60,39 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BarrettReducer.SetModulus(field);
-            BInv = BarrettReducer.InvMod(B);
+            bool isValid = ValidateDiscriminant();
 
+            if ((cofactor & 0x3) != 0 || !isValid)
+                throw new InvalidOperationException(
+                    "The Montgomery curve is " +
+                    "singular or invalid.");
+
+            BInv = BarrettReducer.InvMod(B);
             BigInteger t = BarrettReducer.InvMod(4);
             BigInteger At = BarrettReducer.AddMod(A, 2);
 
             A24 = BarrettReducer.MultMod(At, t);
             ModSqrtUtil.InitParams();
+        }
+
+        /// <summary>
+        /// Validates the curve discriminant to ensure non-singularity.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the discriminant is valid and the curve is non-singular;
+        /// otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// A valid discriminant guarantees that the Montgomery curve has no singular points, <br/>
+        /// ensuring the Montgomery ladder computes correct scalar multiples for all inputs.
+        /// </remarks>
+        internal bool ValidateDiscriminant()
+        {
+            BigInteger t1 = BarrettReducer.MultMod(A, A);
+            BigInteger t2 = BarrettReducer.SubMod(t1, 4);
+
+            BigInteger discriminant = BarrettReducer.MultMod(B, t2);
+            return discriminant != 0;
         }
 
         /// <summary>
@@ -99,12 +122,19 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Evaluates the right-hand side of the Montgomery equation at a given x-coordinate.
+        /// Evaluates the right-hand side of the Montgomery equation at x.
         /// </summary>
         /// <param name="x">The x-coordinate to evaluate.</param>
         /// <returns>The value y^2 = (x^3 + A * x^2 + x) / B (mod p).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when x is negative or exceeds or equals field modulus.
+        /// </exception>
         public BigInteger Evaluate(BigInteger x)
         {
+            if (x < 0 || x >= field)
+                throw new ArgumentOutOfRangeException(nameof(x),
+                    "Coordinate must be in the range [0, p-1].");
+
             BigInteger X2 = BarrettReducer.MultMod(x, x);
             BigInteger res = BarrettReducer.MultMod(x, X2);
 
