@@ -136,6 +136,21 @@ namespace Eduard.Tests.Extensions
         }
 
         [Fact]
+        public void Montgomery_ToWeierstrassCurve_InvalidParameters_ThrowsException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                /* tiny JubJub curve in Montgomery form */
+                var montyCurve = new MontgomeryCurve(6, 7, 13, 5, 4);
+
+                /* externally mutate parameter B */
+                montyCurve.B = 0;
+
+                montyCurve.ToWeierstrassCurve();
+            });
+        }
+
+        [Fact]
         public void Montgomery_ToWeierstrassPoint_ValidPoint_MapsCorrectly()
         {
             var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
