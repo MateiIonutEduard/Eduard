@@ -1,11 +1,18 @@
 ﻿namespace Eduard
 {
     /// <summary>
-    /// Represents a specified base.
+    /// Specifies the numerical base for integer representation and conversion.
     /// </summary>
     public enum Radix : int
-    { 
-        Decimal = 10, 
-        HexaDecimal = 16 
+    {
+        /// <summary>
+        /// Base-10 decimal representation.
+        /// </summary>
+        Decimal = 10,
+
+        /// <summary>
+        /// Base-16 hexadecimal representation.
+        /// </summary>
+        HexaDecimal = 16
     }
 }
