@@ -232,6 +232,20 @@ namespace Eduard.Tests.Extensions
         }
 
         [Fact]
+        public void TwistedEdwards_ToWeierstrassCurve_InvalidParameters_ThrowsException()
+        {
+            Assert.Throws<ArgumentException>(() => {
+                /* tiny JubJub curve in twisted Edwards form */
+                var edwardsCurve = new TwistedEdwardsCurve(3, 8, 13, 5, 4);
+
+                /* intentionally change parameter a */
+                edwardsCurve.a = 0;
+
+                edwardsCurve.ToWeierstrassCurve();
+            });
+        }
+
+        [Fact]
         public void TwistedEdwards_ToWeierstrassPoint_ValidPoint_MapsCorrectly()
         {
             var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
