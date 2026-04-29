@@ -31,9 +31,7 @@ namespace Eduard.Security.Curves
         /// Cofactor h = #E(Fp)/order, for Montgomery curves.
         /// </summary>
         public BigInteger cofactor;
-
         private ECPoint basePoint;
-        private static bool enableSpeedup;
 
         /// <summary>
         /// Initializes a Montgomery curve with explicit parameters.
