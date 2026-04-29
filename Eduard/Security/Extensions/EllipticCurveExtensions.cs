@@ -460,7 +460,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static EllipticCurve ToWeierstrassCurve(this TwistedEdwardsCurve curve)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             BigInteger order = curve.order;
@@ -525,7 +527,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToWeierstrassPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Weierstrass curve */
@@ -673,7 +677,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static MontgomeryCurve ToMontgomeryCurve(this TwistedEdwardsCurve curve)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             BigInteger order = curve.order;
@@ -709,7 +715,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToMontgomeryPoint(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (curve.a == curve.d || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Montgomery curve */
