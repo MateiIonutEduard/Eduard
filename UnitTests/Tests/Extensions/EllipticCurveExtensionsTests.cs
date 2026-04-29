@@ -215,5 +215,54 @@ namespace Eduard.Tests.Extensions
         }
 
         #endregion
+
+        #region Twisted Edwards — Weierstrass Conversions
+
+        [Fact]
+        public void TwistedEdwards_ToWeierstrassCurve_ValidCurve_ReturnsWeierstrassCurve()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+
+            var recoveredCurve = edwCurve.ToWeierstrassCurve();
+            Assert.Equal(weiCurve.field, recoveredCurve.field);
+
+            Assert.Equal(weiCurve.order, recoveredCurve.order);
+            Assert.Equal(weiCurve.cofactor, recoveredCurve.cofactor);
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToWeierstrassPoint_ValidPoint_MapsCorrectly()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var G = weiCurve.GetBasePoint();
+
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+            var edwPoint = weiCurve.ToTwistedEdwardsPoint(G);
+
+            var recoveredPoint = edwCurve.ToWeierstrassPoint(edwPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToWeierstrassPoint_Identity_MapsToInfinity()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+            var point = edwCurve.ToWeierstrassPoint(new ECPoint(0, 1));
+            Assert.Equal(ECPoint.POINT_INFINITY, point);
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToWeierstrassPoint_ExceptionalPoint_ThrowsException()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+
+            Assert.Throws<ArgumentException>(() =>
+                edwCurve.ToWeierstrassPoint(new ECPoint(0, 2)));
+        }
+
+        #endregion
     }
 }
