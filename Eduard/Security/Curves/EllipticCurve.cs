@@ -86,20 +86,37 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BarrettReducer.SetModulus(field);
-            BigInteger A2 = BarrettReducer.MultMod(a, a);
+            bool isValid = ValidateDiscriminant();
 
-            BigInteger B2 = BarrettReducer.MultMod(b, b);
-            BigInteger delta = BarrettReducer.MultMod(a, A2);
-
-            delta = BarrettReducer.MultMod(4, delta);
-            BigInteger val = BarrettReducer.MultMod(27, B2);
-            delta = BarrettReducer.AddMod(delta, val);
-
-            if (delta == 0)
+            if (!isValid)
                 throw new InvalidOperationException(
-                    "Invalid curve: singular Weierstrass form.");
+                    "The Weierstrass curve is " +
+                    "singular or invalid.");
 
             ModSqrtUtil.InitParams();
+        }
+
+        /// <summary>
+        /// Validates the curve discriminant to ensure non-singularity.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the discriminant is valid and the curve is non-singular;
+        /// otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// A valid discriminant guarantees that the Weierstrass curve has no singular points, <br/>
+        /// ensuring the group law is well-defined for all points on the curve.
+        /// </remarks>
+        internal bool ValidateDiscriminant()
+        {
+            BigInteger t1 = BarrettReducer.MultMod(a, a);
+            BigInteger t2 = BarrettReducer.MultMod(b, b);
+
+            BigInteger t3 = BarrettReducer.MultMod(a, t1);
+            BigInteger t4 = BarrettReducer.MultMod(27, t2);
+
+            t3 = BarrettReducer.AddMod(t3, t4);
+            return t3 != 0;
         }
 
         /// <summary>
