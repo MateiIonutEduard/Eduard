@@ -1,5 +1,5 @@
-﻿using Eduard;
-using Eduard.Security;
+﻿using System;
+using System.Linq;
 using Eduard.Security.Curves;
 using Eduard.Security.Extensions;
 using Eduard.Security.Primitives;

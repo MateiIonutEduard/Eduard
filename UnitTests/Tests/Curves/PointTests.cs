@@ -1,4 +1,4 @@
-﻿using Eduard;
+﻿using System;
 using Eduard.Security.Primitives;
 
 namespace Eduard.Tests.Curves
