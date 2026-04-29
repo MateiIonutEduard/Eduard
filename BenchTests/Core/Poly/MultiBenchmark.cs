@@ -1,8 +1,6 @@
 ﻿#if RELEASE && USE_BENCHMARKING
-using Eduard;
 using Eduard.Security;
 using BenchmarkDotNet.Attributes;
-#pragma warning disable
 
 namespace Eduard.BenchTests.Poly
 {

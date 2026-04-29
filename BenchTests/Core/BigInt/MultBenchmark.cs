@@ -1,8 +1,5 @@
 ﻿#if RELEASE && USE_BENCHMARKING
-using Eduard;
-using System;
 using BenchmarkDotNet.Attributes;
-#pragma warning disable
 
 namespace Eduard.BenchTests.BigInt
 {
