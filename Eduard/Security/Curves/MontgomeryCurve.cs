@@ -98,12 +98,19 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
-        /// Evaluates the right-hand side of the Montgomery equation at a given x-coordinate.
+        /// Evaluates the right-hand side of the Montgomery equation at x.
         /// </summary>
         /// <param name="x">The x-coordinate to evaluate.</param>
         /// <returns>The value y^2 = (x^3 + A * x^2 + x) / B (mod p).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when x is negative or exceeds or equals field modulus.
+        /// </exception>
         public BigInteger Evaluate(BigInteger x)
         {
+            if (x < 0 || x >= field)
+                throw new ArgumentOutOfRangeException(nameof(x),
+                    "Coordinate must be in the range [0, p-1].");
+
             BigInteger X2 = BarrettReducer.MultMod(x, x);
             BigInteger res = BarrettReducer.MultMod(x, X2);
 
