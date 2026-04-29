@@ -62,8 +62,14 @@ namespace Eduard.Security.Curves
             cofactor = args[4];
 
             BarrettReducer.SetModulus(field);
-            BInv = BarrettReducer.InvMod(B);
+            bool isValid = ValidateDiscriminant();
 
+            if ((cofactor & 0x3) != 0 || !isValid)
+                throw new InvalidOperationException(
+                    "The Montgomery curve is " +
+                    "singular or invalid.");
+
+            BInv = BarrettReducer.InvMod(B);
             BigInteger t = BarrettReducer.InvMod(4);
             BigInteger At = BarrettReducer.AddMod(A, 2);
 
