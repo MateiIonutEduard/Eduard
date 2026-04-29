@@ -44,26 +44,26 @@ namespace Eduard.Security.Curves
             a = SecureRandom.Range(1, field - 1);
             ModSqrtUtil.InitParams();
 
-            BigInteger temp = BarrettReducer.MultMod(a, a);
-            temp = BarrettReducer.MultMod(temp, a);
-            temp = BarrettReducer.MultMod(4, temp);
+            BigInteger t1 = BarrettReducer.MultMod(a, a);
+            t1 = BarrettReducer.MultMod(t1, a);
+            t1 = BarrettReducer.MultMod(4, t1);
 
             b = SecureRandom.Range(1, field - 1);
-            BigInteger B2 = BarrettReducer.MultMod(b, b);
+            BigInteger t2 = BarrettReducer.MultMod(b, b);
 
-            BigInteger val = BarrettReducer.MultMod(27, B2);
-            BigInteger check = BarrettReducer.AddMod(temp, val);
+            BigInteger t3 = BarrettReducer.MultMod(27, t2);
+            BigInteger t4 = BarrettReducer.AddMod(t1, t3);
 
             order = 1; cofactor = 1;
             basePoint = ECPoint.POINT_INFINITY;
 
-            while (check == 0)
+            while (t4 == 0)
             {
                 b = SecureRandom.Range(1, field - 1);
-                B2 = BarrettReducer.MultMod(b, b);
+                t2 = BarrettReducer.MultMod(b, b);
 
-                val = BarrettReducer.MultMod(27, B2);
-                check = BarrettReducer.AddMod(temp, val);
+                t3 = BarrettReducer.MultMod(27, t2);
+                t4 = BarrettReducer.AddMod(t1, t3);
             }
         }
 
@@ -113,9 +113,10 @@ namespace Eduard.Security.Curves
             BigInteger t2 = BarrettReducer.MultMod(b, b);
 
             BigInteger t3 = BarrettReducer.MultMod(a, t1);
-            BigInteger t4 = BarrettReducer.MultMod(27, t2);
+            BigInteger t4 = BarrettReducer.MultMod(4, t3);
 
-            t3 = BarrettReducer.AddMod(t3, t4);
+            BigInteger t5 = BarrettReducer.MultMod(27, t2);
+            t3 = BarrettReducer.AddMod(t4, t5);
             return t3 != 0;
         }
 
