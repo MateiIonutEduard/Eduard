@@ -72,6 +72,26 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
+        /// Validates the curve discriminant to ensure non-singularity.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the discriminant is valid and the curve is non-singular;
+        /// otherwise, <c>false</c>.
+        /// </returns>
+        /// <remarks>
+        /// A valid discriminant guarantees that the Montgomery curve has no singular points, <br/>
+        /// ensuring the Montgomery ladder computes correct scalar multiples for all inputs.
+        /// </remarks>
+        internal bool ValidateDiscriminant()
+        {
+            BigInteger t1 = BarrettReducer.MultMod(A, A);
+            BigInteger t2 = BarrettReducer.SubMod(t1, 4);
+
+            BigInteger discriminant = BarrettReducer.MultMod(t1, t2);
+            return discriminant != 0;
+        }
+
+        /// <summary>
         /// Creates a Montgomery-form elliptic curve instance using standardized domain parameters from named curves.
         /// </summary>
         /// <param name="type">The curve type identifier from <see cref="MontyCurveType"/> enumeration.</param>
