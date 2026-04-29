@@ -374,5 +374,40 @@ namespace Eduard.Tests.Extensions
         }
 
         #endregion
+
+        #region Point Mapping Consistency Tests
+
+        [Fact]
+        public void PointMapping_WeierstrassToMontgomeryToTwistedEdwards_Consistent()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var G = weiCurve.GetBasePoint();
+
+            var directEdwPoint = weiCurve.ToTwistedEdwardsPoint(G);
+            var montyPoint = weiCurve.ToMontgomeryPoint(G);
+            var montyCurve = weiCurve.ToMontgomeryCurve();
+
+            var indirectEdPoint = montyCurve.ToTwistedEdwardsPoint(montyPoint);
+            Assert.Equal(directEdwPoint, indirectEdPoint);
+        }
+
+        [Fact]
+        public void PointMapping_TwistedEdwardsToMontgomeryToWeierstrass_Consistent()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var G = weiCurve.GetBasePoint();
+
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+            var edwPoint = weiCurve.ToTwistedEdwardsPoint(G);
+
+            var directWeiPoint = edwCurve.ToWeierstrassPoint(edwPoint);
+            var montyPoint = edwCurve.ToMontgomeryPoint(edwPoint);
+            var montyCurve = edwCurve.ToMontgomeryCurve();
+
+            var indirectWeiPoint = montyCurve.ToWeierstrassPoint(montyPoint);
+            Assert.Equal(directWeiPoint, indirectWeiPoint);
+        }
+
+        #endregion
     }
 }
