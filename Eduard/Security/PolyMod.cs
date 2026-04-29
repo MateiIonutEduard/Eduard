@@ -1,6 +1,5 @@
-﻿using Eduard;
+﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 
 namespace Eduard.Security
 {

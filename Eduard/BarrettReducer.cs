@@ -13,7 +13,7 @@ namespace Eduard
         private static BigInteger field;
 
         /// <summary>
-        /// Pre-computed Barrett constant μ = ⌊2^(2k)/mod⌋.
+        /// Pre-computed Barrett constant u = ⌊2^(2k)/mod⌋.
         /// </summary>
         private static BigInteger k;
         private static bool isEnabled;
