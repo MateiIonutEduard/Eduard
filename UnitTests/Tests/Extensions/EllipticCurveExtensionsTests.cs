@@ -313,5 +313,66 @@ namespace Eduard.Tests.Extensions
         }
 
         #endregion
+
+        #region Cross-Conversion Round-Trip Tests
+
+        [Fact]
+        public void RoundTrip_WeierstrassToMontgomeryToWeierstrass_PreservesCurve()
+        {
+            var original = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var montyCurve = original.ToMontgomeryCurve();
+
+            var recovered = montyCurve.ToWeierstrassCurve();
+            Assert.Equal(original.field, recovered.field);
+
+            Assert.Equal(original.order, recovered.order);
+            Assert.Equal(original.cofactor, recovered.cofactor);
+        }
+
+        [Fact]
+        public void RoundTrip_WeierstrassToTwistedEdwardsToWeierstrass_PreservesCurve()
+        {
+            var original = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwardsCurve = original.ToTwistedEdwardsCurve();
+
+            var recovered = edwardsCurve.ToWeierstrassCurve();
+            Assert.Equal(original.field, recovered.field);
+
+            Assert.Equal(original.order, recovered.order);
+            Assert.Equal(original.cofactor, recovered.cofactor);
+        }
+
+        [Fact]
+        public void RoundTrip_MontgomeryToTwistedEdwardsToMontgomery_PreservesCurve()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var original = weiCurve.ToMontgomeryCurve();
+
+            var edwardsCurve = original.ToTwistedEdwardsCurve();
+            var recovered = edwardsCurve.ToMontgomeryCurve();
+
+            Assert.Equal(original.field, recovered.field);
+            Assert.Equal(original.order, recovered.order);
+            Assert.Equal(original.cofactor, recovered.cofactor);
+
+            Assert.Equal(original.A, recovered.A);
+            Assert.Equal(original.B, recovered.B);
+        }
+
+        [Fact]
+        public void RoundTrip_TwistedEdwardsToMontgomeryToTwistedEdwards_PreservesCurve()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var original = weiCurve.ToTwistedEdwardsCurve();
+            var montyCurve = original.ToMontgomeryCurve();
+
+            var recovered = montyCurve.ToTwistedEdwardsCurve();
+            Assert.Equal(original.field, recovered.field);
+
+            Assert.Equal(original.order, recovered.order);
+            Assert.Equal(original.cofactor, recovered.cofactor);
+        }
+
+        #endregion
     }
 }
