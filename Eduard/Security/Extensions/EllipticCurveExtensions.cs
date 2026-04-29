@@ -37,7 +37,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static MontgomeryCurve ToMontgomeryCurve(this EllipticCurve curve)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             BigInteger order = curve.order;
@@ -110,7 +112,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToMontgomeryPoint(this EllipticCurve curve, ECPoint point)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             Polynomial.SetField(curve.field);
@@ -187,7 +191,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this EllipticCurve curve)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             BigInteger order = curve.order;
@@ -270,7 +276,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToTwistedEdwardsPoint(this EllipticCurve curve, ECPoint point)
         {
-            if ((curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Cofactor must be multiple of 4.");
 
             Polynomial.SetField(curve.field);
