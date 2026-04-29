@@ -264,5 +264,54 @@ namespace Eduard.Tests.Extensions
         }
 
         #endregion
+
+        #region Twisted Edwards — Montgomery Conversions
+
+        [Fact]
+        public void TwistedEdwards_ToMontgomeryCurve_ValidCurve_ReturnsMontgomeryCurve()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+
+            var montyCurve = edwCurve.ToMontgomeryCurve();
+            Assert.Equal(weiCurve.field, montyCurve.field);
+
+            Assert.Equal(weiCurve.order, montyCurve.order);
+            Assert.Equal(weiCurve.cofactor, montyCurve.cofactor);
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToMontgomeryPoint_ValidPoint_MapsCorrectly()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var G = weiCurve.GetBasePoint();
+
+            var edwPoint = weiCurve.ToTwistedEdwardsPoint(G);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+
+            var montyPoint = edwCurve.ToMontgomeryPoint(edwPoint);
+            Assert.NotEqual(ECPoint.POINT_INFINITY, montyPoint);
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToMontgomeryPoint_Identity_MapsToInfinity()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+            var montyPoint = edwCurve.ToMontgomeryPoint(new ECPoint(0, 1));
+            Assert.Equal(ECPoint.POINT_INFINITY, montyPoint);
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToMontgomeryPoint_ExceptionalPoint_ThrowsException()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+
+            Assert.Throws<ArgumentException>(() =>
+                edwCurve.ToMontgomeryPoint(new ECPoint(0, 2)));
+        }
+
+        #endregion
     }
 }
