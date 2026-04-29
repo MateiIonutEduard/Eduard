@@ -409,5 +409,58 @@ namespace Eduard.Tests.Extensions
         }
 
         #endregion
+
+        #region Edge Cases and Validation
+
+        [Fact]
+        public void Weierstrass_ToMontgomeryPoint_MultipleRandomPoints_AllMapCorrectly()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+
+            for (int i = 0; i < 10; i++)
+            {
+                var k = SecureRandom.Range(1, weiCurve.order - 1);
+                var point = ECMath.Multiply(weiCurve, k, weiCurve.GetBasePoint(), ECMode.EC_FASTEST);
+
+                var montyPoint = weiCurve.ToMontgomeryPoint(point);
+                var montyCurve = weiCurve.ToMontgomeryCurve();
+
+                var recovered = montyCurve.ToWeierstrassPoint(montyPoint);
+                Assert.Equal(point, recovered);
+            }
+        }
+
+        [Fact]
+        public void TwistedEdwards_ToWeierstrassPoint_MultipleRandomPoints_AllMapCorrectly()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var edwCurve = weiCurve.ToTwistedEdwardsCurve();
+
+            for (int i = 0; i < 10; i++)
+            {
+                var k = SecureRandom.Range(1, edwCurve.order - 1);
+                var point = TwistedEdwardsMath.Multiply(edwCurve, k, 
+                    edwCurve.GetBasePoint(), ECMode.EC_FASTEST);
+
+                var weiPoint = edwCurve.ToWeierstrassPoint(point);
+                var recovered = weiCurve.ToTwistedEdwardsPoint(weiPoint);
+                Assert.Equal(point, recovered);
+            }
+        }
+
+        [Fact]
+        public void Montgomery_ToTwistedEdwardsPoint_WithWei448_HandlesLargeField()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei448);
+            var montyCurve = weiCurve.ToMontgomeryCurve();
+
+            var G = weiCurve.GetBasePoint();
+            var montyPoint = weiCurve.ToMontgomeryPoint(G);
+
+            var edwPoint = montyCurve.ToTwistedEdwardsPoint(montyPoint);
+            Assert.NotEqual(ECPoint.POINT_INFINITY, edwPoint);
+        }
+
+        #endregion
     }
 }
