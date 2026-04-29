@@ -93,7 +93,7 @@ namespace Eduard.Security.Curves
             BigInteger t1 = BarrettReducer.MultMod(A, A);
             BigInteger t2 = BarrettReducer.SubMod(t1, 4);
 
-            BigInteger discriminant = BarrettReducer.MultMod(t1, t2);
+            BigInteger discriminant = BarrettReducer.MultMod(B, t2);
             return discriminant != 0;
         }
 

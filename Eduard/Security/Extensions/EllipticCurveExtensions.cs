@@ -355,7 +355,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static EllipticCurve ToWeierstrassCurve(this MontgomeryCurve curve)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             BigInteger order = curve.order;
@@ -410,7 +412,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToWeierstrassPoint(this MontgomeryCurve curve, ECPoint point)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
@@ -601,7 +605,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static TwistedEdwardsCurve ToTwistedEdwardsCurve(this MontgomeryCurve curve)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             BigInteger order = curve.order;
@@ -636,7 +642,9 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToTwistedEdwardsPoint(this MontgomeryCurve curve, ECPoint point)
         {
-            if (curve.B == 0 || curve.A == 2 || curve.A == curve.field - 2 || (curve.cofactor & 0x3) != 0)
+            bool isValid = curve.ValidateDiscriminant();
+
+            if (!isValid || (curve.cofactor & 0x3) != 0)
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the twisted Edwards curve */
