@@ -13,9 +13,13 @@ namespace Eduard
         private static BigInteger field;
 
         /// <summary>
-        /// Pre-computed Barrett constant u = ⌊2^(2k)/mod⌋.
+        /// Pre-computed Barrett constant for efficient reduction.
         /// </summary>
         private static BigInteger k;
+
+        /// <summary>
+        /// Indicates whether the reducer is initialized with a modulus.
+        /// </summary>
         private static bool isEnabled;
 
         static BarrettReducer()
