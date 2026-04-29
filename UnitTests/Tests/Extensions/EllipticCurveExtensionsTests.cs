@@ -11,7 +11,7 @@ namespace Eduard.Tests.Extensions
         #region Weierstrass — Montgomery Conversions
 
         [Fact]
-        public void Weierstrass_ToMontgomeryCurve_ValidNistP256_ReturnsMontgomeryCurve()
+        public void Weierstrass_ToMontgomeryCurve_ValidWei25519_ReturnsMontgomeryCurve()
         {
             var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
             var montCurve = weiCurve.ToMontgomeryCurve();
@@ -72,7 +72,7 @@ namespace Eduard.Tests.Extensions
         #region Weierstrass — Twisted Edwards Conversions
 
         [Fact]
-        public void Weierstrass_ToTwistedEdwardsCurve_ValidNistP256_ReturnsTwistedEdwardsCurve()
+        public void Weierstrass_ToTwistedEdwardsCurve_ValidWei25519_ReturnsTwistedEdwardsCurve()
         {
             var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
             var edCurve = weiCurve.ToTwistedEdwardsCurve();
@@ -116,6 +116,54 @@ namespace Eduard.Tests.Extensions
 
             var recoveredPoint = edCurve.ToWeierstrassPoint(edPoint);
             Assert.Equal(G, recoveredPoint);
+        }
+
+        #endregion
+
+        #region Montgomery — Weierstrass Conversions
+
+        [Fact]
+        public void Montgomery_ToWeierstrassCurve_ValidCurve_ReturnsWeierstrassCurve()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var montCurve = weiCurve.ToMontgomeryCurve();
+
+            var recoveredCurve = montCurve.ToWeierstrassCurve();
+            Assert.Equal(weiCurve.field, recoveredCurve.field);
+
+            Assert.Equal(weiCurve.order, recoveredCurve.order);
+            Assert.Equal(weiCurve.cofactor, recoveredCurve.cofactor);
+        }
+
+        [Fact]
+        public void Montgomery_ToWeierstrassPoint_ValidPoint_MapsCorrectly()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var G = weiCurve.GetBasePoint();
+
+            var montCurve = weiCurve.ToMontgomeryCurve();
+            var montPoint = weiCurve.ToMontgomeryPoint(G);
+
+            var recoveredPoint = montCurve.ToWeierstrassPoint(montPoint);
+            Assert.Equal(G, recoveredPoint);
+        }
+
+        [Fact]
+        public void Montgomery_ToWeierstrassPoint_Infinity_MapsToInfinity()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var montCurve = weiCurve.ToMontgomeryCurve();
+            var point = montCurve.ToWeierstrassPoint(ECPoint.POINT_INFINITY);
+            Assert.Equal(ECPoint.POINT_INFINITY, point);
+        }
+
+        [Fact]
+        public void Montgomery_ToWeierstrassPoint_TorsionPoint_MapsCorrectly()
+        {
+            var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
+            var montCurve = weiCurve.ToMontgomeryCurve();
+            var torsionPoint = montCurve.ToWeierstrassPoint(new ECPoint(0, 0));
+            Assert.NotEqual(ECPoint.POINT_INFINITY, torsionPoint);
         }
 
         #endregion
