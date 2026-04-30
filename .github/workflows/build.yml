@@ -1,0 +1,53 @@
+name: Eduard CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    branches: [ main, master, develop ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION_PATH: 'Eduard.sln'
+  CONFIGURATION: 'Release'
+
+jobs:
+  build-and-test:
+    name: Build & Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup .NET 10 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Display .NET version
+      run: dotnet --version
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+    
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }} --no-restore
+    
+    - name: Run xUnit Tests
+      run: dotnet test UnitTests/UnitTests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
