@@ -3,6 +3,7 @@
 **Eduard** is a production-grade cryptographic library in C# implementing high-performance multi-precision integer arithmetic and elliptic curve cryptography (ECC). Developed from independent research in Number Theory, Algebraic Geometry, and ECC, the library provides a mathematically rigorous foundation for elliptic curve–based protocols, encryption systems, and digital signature schemes. The implementation emphasizes correctness, security, and performance, validated through comprehensive testing and benchmarking.
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE.txt)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/MateiIonutEduard/Eduard/build.yml?branch=master)](https://github.com/MateiIonutEduard/Eduard/actions)
 [![Changelog](https://img.shields.io/badge/changelog-view-lightgreen)](CHANGELOG.md)
 
 ## 🎯 Scope and Motivation
