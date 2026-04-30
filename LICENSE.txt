@@ -1,28 +1,147 @@
-BSD 3-Clause License
+Copyright (c) 2020-Present, Matei Ionut-Eduard. All rights reserved.
 
-Copyright (c) 2020-Present, Matei Ionut-Eduard
+PROPRIETARY LICENSE AGREEMENT
+License Type: Proprietary — All Rights Reserved
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+IMPORTANT — READ CAREFULLY: By accessing, downloading, copying, or otherwise 
+using the Software (as defined below), you agree to be bound by the terms of 
+this License Agreement. If you do not agree to these terms, do not access or 
+use the Software in any manner.
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
+1. DEFINITIONS
 
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+   "Software" means the cryptographic library known as "Eduard", including 
+   all source code, object code, associated documentation, configuration 
+   files, test suites, benchmarks, and any related materials provided by the 
+   copyright holder, whether in the original repository or through any other 
+   means of distribution.
 
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
+   "Copyright Holder" means Matei Ionut-Eduard, the original author and sole 
+   owner of all intellectual property rights in and to the Software.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+   "Commercial Use" means any use of the Software that is intended for 
+   commercial advantage or monetary compensation, including but not limited 
+   to:
+   (a) Incorporation into a product or service offered for sale, license, 
+       subscription, or any form of revenue generation;
+   (b) Use as a component in any system, platform, or application that 
+       generates revenue, directly or indirectly;
+   (c) Distribution, resale, sublicensing, leasing, or renting of the 
+       Software, whether modified or unmodified;
+   (d) Deployment as a hosted service, SaaS, API, or cloud-based offering;
+   (e) Use within a for-profit organization for internal business operations.
+
+2. GRANT OF LICENSE
+
+   The Copyright Holder grants you a limited, non-exclusive, non-transferable, 
+   and revocable license to access and use the Software solely for the 
+   following purposes:
+
+   (a) Evaluation — reviewing the Software to determine its suitability for 
+       potential licensing;
+   (b) Academic and Scientific Research — non-commercial study, teaching, 
+       research, experimentation, and publication in the fields of Number 
+       Theory, Algebraic Geometry, Cryptography, and related disciplines, 
+       whether conducted within an academic institution or independently;
+   (c) Personal Study — individual learning and non-commercial experimentation.
+
+   Research Use Specifically Permitted:
+   - Reproducing mathematical results and benchmarks for academic papers
+   - Comparing against other cryptographic implementations in scholarly work
+   - Using the Software as a reference implementation in research projects
+   - Citing and referencing the Software in published research
+
+   NO OTHER RIGHTS ARE GRANTED. This license does not permit you to:
+   - Use the Software for any Commercial Use;
+   - Redistribute, sublicense, or republish the Software;
+   - Modify and distribute modified versions;
+   - Remove or alter any copyright notices or proprietary markings;
+   - Deploy the Software as part of any production system or service.
+
+3. STRICTLY PROHIBITED ACTIVITIES
+
+   The following activities are expressly forbidden without prior written 
+   permission from the Copyright Holder:
+
+   (a) Selling, licensing, sublicensing, renting, or leasing the Software or 
+       any derivative works thereof, in whole or in part, for any fee or 
+       other consideration;
+
+   (b) Incorporating the Software, in whole or in part, into any product, 
+       service, system, platform, or application that is sold, licensed, or 
+       otherwise made available to third parties, whether for a fee or free 
+       of charge;
+
+   (c) Using the Software to provide services, consulting, or solutions to 
+       third parties;
+
+   (d) Distributing the Software through any channel, including but not 
+       limited to public repositories, package managers, app stores, or 
+       physical media;
+
+   (e) Using the Software in any manner that competes with or undermines the 
+       Copyright Holder's ability to license the Software commercially.
+
+4. INTELLECTUAL PROPERTY RIGHTS
+
+   The Software is protected by copyright law and international treaties. 
+   The Copyright Holder retains all right, title, and interest in and to the 
+   Software, including all intellectual property rights. Nothing in this 
+   License Agreement transfers or assigns any ownership rights to you.
+
+   All algorithms, implementations, optimizations, and design elements remain 
+   the exclusive intellectual property of the Copyright Holder.
+
+5. TERMINATION
+
+   This license is effective until terminated. Your rights under this license 
+   will terminate automatically without notice if you fail to comply with any 
+   term or condition of this License Agreement. Upon termination, you must 
+   immediately cease all use of the Software and destroy all copies, full or 
+   partial, in your possession or control.
+
+6. DISCLAIMER OF WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL 
+   THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, 
+   WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT 
+   OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+   THE SOFTWARE.
+
+7. LIMITATION OF LIABILITY
+
+   TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE 
+   COPYRIGHT HOLDER BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR 
+   CONSEQUENTIAL DAMAGES WHATSOEVER (INCLUDING, BUT NOT LIMITED TO, DAMAGES 
+   FOR LOSS OF PROFITS, BUSINESS INTERRUPTION, LOSS OF INFORMATION, OR ANY 
+   OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR INABILITY TO USE THE 
+   SOFTWARE, EVEN IF THE COPYRIGHT HOLDER HAS BEEN ADVISED OF THE POSSIBILITY 
+   OF SUCH DAMAGES.
+
+8. GOVERNING LAW
+
+   This License Agreement shall be governed by and construed in accordance 
+   with the laws of Romania. Any disputes arising from this License Agreement 
+   shall be subject to the exclusive jurisdiction of the courts of Romania.
+
+9. SEVERABILITY
+
+   If any provision of this License Agreement is found to be invalid or 
+   unenforceable, the remaining provisions shall remain in full force and 
+   effect.
+
+10. ENTIRE AGREEMENT
+
+    This License Agreement constitutes the entire agreement between you and 
+    the Copyright Holder concerning the Software and supersedes all prior or 
+    contemporaneous oral or written communications, proposals, and 
+    representations.
+
+11. COMMERCIAL LICENSING
+
+    To obtain a commercial license permitting uses beyond the scope of this 
+    agreement, please contact the Copyright Holder at:
+
+    Email: eduardmatei@outlook.com
