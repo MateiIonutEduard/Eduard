@@ -15,6 +15,12 @@ The cryptographic framework delivers the following functionality:
   * Multiplication and squaring (classical, Karatsuba, FFT multiplication)
   * Modular exponentiation combining the binary method and a dynamic sliding window method
 
+- **Complete finite field arithmetic** for elements over prime fields:
+  * Algebraic operations on elements over 𝔽ₚ, elegantly extending the multi-precision integer arithmetic functionality
+  * Algebraic operations on polynomials over 𝔽ₚ, complete for cryptographic use
+  * `PolyMod` class, built on polynomials in 𝔽ₚ[X], providing advanced functionality essential for Computer Algebra, Number Theory, and isogeny-based cryptography
+  * Partial support for algebraic operations and management of bivariate polynomials over 𝔽ₚ[X][Y], used in Schoof's and Schoof–Elkies–Atkin algorithms as well as isogeny-based protocols
+
 - **Full support for elliptic curve families** in Weierstrass and Twisted Edwards form, including:
   * Algebraic point operations in affine form and all state-of-the-art projective representations
   * Scalar multiplication on elliptic curves using the fractional w-NAF sliding window method
