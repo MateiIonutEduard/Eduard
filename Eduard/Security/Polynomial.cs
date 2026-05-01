@@ -25,6 +25,13 @@ namespace Eduard.Security
         /// Automatically updated when coefficients change. A zero polynomial has degree 0.
         /// </remarks>
         public int degree;
+
+        /// <summary>
+        /// The coefficients of the polynomial in ascending order (constant term at index 0).
+        /// </summary>
+        /// <remarks>
+        /// Coefficients are always reduced modulo the current field. Automatically sized to degree + 1.
+        /// </remarks>
         public BigInteger[] coeffs;
 
         /// <summary>
