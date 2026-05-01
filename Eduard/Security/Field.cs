@@ -87,7 +87,7 @@ namespace Eduard.Security
         public static Field operator /(Field left, Field right)
         {
             BigInteger field = BarrettReducer.GetModulus();
-            BigInteger inv = right.fn.Inverse(field);
+            BigInteger inv = BarrettReducer.InvMod(right.fn);
             BigInteger val = BarrettReducer.MultMod(inv, left.fn);
             return val;
         }
