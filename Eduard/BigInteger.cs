@@ -2552,7 +2552,7 @@ namespace Eduard
         /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
         /// <returns>The string representation of the value in the specified radix.</returns>
         /// <remarks>
-        /// For <see cref="Radix.Decimal"/>, this method delegates to <see cref="ToString"/> which performs <br/>
+        /// For <see cref="Radix.Decimal"/>, this method delegates to <see cref="ToString()"/> which performs <br/>
         /// chunked conversion (9 digits per iteration). For <see cref="Radix.HexaDecimal"/>, this method <br/>
         /// delegates to <see cref="ToHexString"/>.
         /// </remarks>
