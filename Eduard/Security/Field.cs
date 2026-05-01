@@ -3,14 +3,15 @@
 namespace Eduard.Security
 {
     /// <summary>
-    /// Represents an element of a prime field Fp with automatic Barrett reduction caching.<br/>
+    /// Represents an element of a prime field Fp with automatic Barrett reduction caching. <br/>
     /// Provides efficient arithmetic operations using pre-computed Barrett constants.
     /// </summary>
     /// <remarks>
-    /// This struct implements field arithmetic for cryptographic operations.<br/> The modulus
-    /// must be set via <see cref="BarrettReducer.SetModulus"/><br/>
-    /// or <see cref="Polynomial.SetField"/> before any field operations.<br/> All arithmetic
-    /// is performed in constant-time where possible to <br/>prevent side-channel attacks.
+    /// This struct implements field arithmetic for cryptographic operations. <br/>
+    /// The modulus must be set via <see cref="BarrettReducer.SetModulus"/> <br/>
+    /// or <see cref="Polynomial.SetField"/> before any field operations. <br/>
+    /// All arithmetic is performed in constant-time where possible to <br/>
+    /// prevent side-channel attacks.
     /// </remarks>
     public struct Field : IEquatable<Field>
     {
@@ -30,6 +31,35 @@ namespace Eduard.Security
 
             if (fn < 0) 
                 fn += field;
+        }
+
+        /// <summary>
+        /// Sets the finite field modulus for all field operations.
+        /// </summary>
+        /// <param name="field">The prime field modulus.</param>
+        /// <exception cref="ArgumentException">
+        /// Thrown when field modulus is less than 5 or not prime.
+        /// </exception>
+        /// <remarks>
+        /// Initializes Barrett reduction constants and square root computation parameters. <br/>
+        /// Must be called before any field arithmetic operations. The modulus must remain <br/>
+        /// fixed throughout the lifetime of field element usage.
+        /// </remarks>
+        public static void SetField(BigInteger field)
+        {
+            if (field < 5)
+                throw new ArgumentException(
+                    "Field modulus cannot "
+                    + "be less than 5.");
+
+            bool isPrime = BigInteger.IsProbablePrime(field);
+
+            if (!isPrime)
+                throw new ArgumentException(
+                    "Field modulus must be prime.");
+
+            BarrettReducer.SetModulus(field);
+            ModSqrtUtil.InitParams();
         }
 
         /// <summary>
