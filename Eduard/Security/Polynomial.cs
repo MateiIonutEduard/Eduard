@@ -98,8 +98,22 @@ namespace Eduard.Security
         /// Initializes Barrett reduction constants and optimizes square root computations<br/>
         /// based on field properties. Must be called before any polynomial operations.
         /// </remarks>
+        /// <exception cref="ArgumentException">
+        /// Thrown when field modulus is less than 5 or not prime.
+        /// </exception>
         public static void SetField(BigInteger field)
         {
+            if (field < 5)
+                throw new ArgumentException(
+                    "Field modulus cannot " 
+                    + "be less than 5.");
+
+            bool isPrime = BigInteger.IsProbablePrime(field);
+
+            if (!isPrime)
+                throw new ArgumentException(
+                    "Field modulus must be prime.");
+
             BarrettReducer.SetModulus(field);
             ModSqrtUtil.InitParams();
         }
