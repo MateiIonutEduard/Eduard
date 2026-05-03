@@ -2172,9 +2172,6 @@ namespace Eduard
         /// <returns><c>true</c> if <paramref name="obj"/> is a BigInteger and has the same value; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(obj, null))
-                return false;
-
             if (ReferenceEquals(this, obj))
                 return true;
 
