@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Eduard.Security
 {
     /// <summary>
-    /// Represents an element of a polynomial quotient ring Fp[X]/(m(X)) with automatic reduction.<br/>
+    /// Represents an element of a polynomial quotient ring Fp[X]/(M(X)) with automatic reduction.<br/>
     /// Provides arithmetic operations in the ring using the specified modulus polynomial.
     /// </summary>
 #if !USE_PROFILER
@@ -178,11 +178,11 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Composes two ring elements, computing f(g(X)) modulo the ring modulus.
+        /// Composes two ring elements, computing F(G(X)) modulo the ring modulus.
         /// </summary>
-        /// <param name="left">The outer polynomial f(X).</param>
-        /// <param name="right">The inner polynomial g(X).</param>
-        /// <returns>The composition f(g(X)) reduced modulo the ring modulus m(X).</returns>
+        /// <param name="left">The outer polynomial F(X).</param>
+        /// <param name="right">The inner polynomial G(X).</param>
+        /// <returns>The composition F(G(X)) reduced modulo the ring modulus M(X).</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the ring modulus has not been initialized via <see cref="SetModulus"/>.
         /// </exception>
@@ -269,7 +269,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="poly">The base ring element.</param>
         /// <param name="k">The exponent.</param>
-        /// <returns>poly^k mod m(X).</returns>
+        /// <returns>poly^k mod M(X).</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when the ring modulus has not been initialized.
         /// </exception>
@@ -289,18 +289,18 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Evaluates the ring element as a polynomial at a point x.
+        /// Evaluates the ring element as a polynomial at a point.
         /// </summary>
-        /// <param name="x">The point to evaluate at.</param>
-        /// <returns>poly(x) mod field.</returns>
-        public BigInteger F(BigInteger x)
-        { return poly.Horner(x); }
+        /// <param name="X">The point to evaluate at.</param>
+        /// <returns>P(X) evaluated at X modulo the field.</returns>
+        public BigInteger F(BigInteger X)
+        { return poly.Horner(X); }
 
         /// <summary>
-        /// Sets the modulus polynomial for the ring Fp[X]/(m(X)).
+        /// Sets the modulus polynomial for the ring Fp[X]/(M(X)).
         /// Must be called before any ring operations.
         /// </summary>
-        /// <param name="modulus">The modulus polynomial m(X) (must be non-zero).</param>
+        /// <param name="modulus">The modulus polynomial M(X) (must be non-zero).</param>
         /// <exception cref="DivideByZeroException">
         /// Thrown when modulus polynomial is zero.
         /// </exception>
