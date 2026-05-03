@@ -114,8 +114,16 @@ namespace Eduard.Security
         /// <summary>
         /// Divides two field elements (left * (1 / right)).
         /// </summary>
+        /// <param name="left">The dividend field element.</param>
+        /// <param name="right">The divisor field element.</param>
+        /// <returns>The quotient of left divided by right modulo the field.</returns>
+        /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
         public static Field operator /(Field left, Field right)
         {
+            if (right == 0)
+                throw new DivideByZeroException(
+                    "Divisor cannot be zero.");
+
             BigInteger field = BarrettReducer.GetModulus();
             BigInteger inv = BarrettReducer.InvMod(right.fn);
             BigInteger val = BarrettReducer.MultMod(inv, left.fn);
