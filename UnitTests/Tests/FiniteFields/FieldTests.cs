@@ -174,5 +174,92 @@ namespace Eduard.Tests.FiniteFields
 
         #endregion
 
+        #region Addition Tests
+
+        [Fact]
+        public void Addition_WithinField_NoOverflow()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+
+            Field result = a + b;
+            Assert.Equal(300, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Addition_ExceedsModulus_ReducesCorrectly()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = P256 - 100;
+            Field b = 200;
+
+            Field result = a + b;
+            Assert.Equal(100, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Addition_WithZero_PreservesValue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field zero = 0;
+
+            Field result1 = a + zero;
+            Field result2 = zero + a;
+
+            Assert.Equal(a, result1);
+            Assert.Equal(a, result2);
+        }
+
+        [Fact]
+        public void Addition_Commutative_ProducesSameResult()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field b = 67890;
+
+            Field result1 = a + b;
+            Field result2 = b + a;
+            Assert.Equal(result1, result2);
+        }
+
+        [Fact]
+        public void Addition_Associative_ProducesSameResult()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+            Field c = 300;
+
+            Field result1 = (a + b) + c;
+            Field result2 = a + (b + c);
+            Assert.Equal(result1, result2);
+        }
+
+        [Fact]
+        public void Addition_NegativeNumbers_ReducesCorrectly()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = new Field(-100);
+            Field b = new Field(-200);
+
+            Field result = a + b;
+            Assert.Equal(P256 - 300, (BigInteger)result);
+        }
+
+        #endregion
     }
 }
