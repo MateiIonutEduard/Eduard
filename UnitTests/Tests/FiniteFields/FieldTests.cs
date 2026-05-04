@@ -847,5 +847,31 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region String Representation Tests
+
+        [Fact]
+        public void ToString_ReturnsCorrectRepresentation()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field f = 12345;
+
+            string result = f.ToString();
+            Assert.Equal("12345", result);
+        }
+
+        [Fact]
+        public void ToString_LargeField_ReturnsFullNumber()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field f = P256 - 1;
+
+            string result = f.ToString();
+            Assert.Equal((P256 - 1).ToString(), result);
+        }
+
+        #endregion
     }
 }
