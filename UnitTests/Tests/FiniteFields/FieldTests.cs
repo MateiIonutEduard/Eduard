@@ -773,5 +773,79 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Equality Tests
+
+        [Fact]
+        public void Equality_SameValues_ReturnsTrue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 100;
+
+            Assert.True(a == b);
+            Assert.True(a.Equals(b));
+        }
+
+        [Fact]
+        public void Equality_DifferentValues_ReturnsFalse()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+
+            Assert.False(a == b);
+            Assert.False(a.Equals(b));
+        }
+
+        [Fact]
+        public void Equality_WithNull_ReturnsFalse()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 100;
+
+            object obj = null;
+            Assert.False(a.Equals(obj));
+        }
+
+        [Fact]
+        public void Equality_WithDifferentType_ReturnsFalse()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 100;
+            Assert.False(a.Equals("100"));
+        }
+
+        [Fact]
+        public void Equality_GetHashCode_IdenticalForEqualValues()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field b = 12345;
+
+            Assert.Equal(a.GetHashCode(),
+                b.GetHashCode());
+        }
+
+        [Fact]
+        public void Inequality_DifferentValues_ReturnsTrue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 100;
+
+            Field b = 200;
+            Assert.True(a != b);
+        }
+
+        #endregion
     }
 }
