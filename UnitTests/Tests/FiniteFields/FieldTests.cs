@@ -331,5 +331,55 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Negation Tests
+
+        [Fact]
+        public void Negation_PositiveValue_ProducesFieldComplement()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 100;
+
+            Field result = -a;
+            Assert.Equal(P256 - 100, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Negation_Zero_RemainsZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field zero = 0;
+
+            Field result = -zero;
+            Assert.Equal(0, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Negation_DoubleNegation_ReturnsOriginal()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 12345;
+
+            Field result = -(-a);
+            Assert.Equal(a, result);
+        }
+
+        [Fact]
+        public void Negation_AdditiveInverse_SumsToZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 54321;
+            Field negA = -a;
+
+            Field sum = a + negA;
+            Assert.Equal(0, (BigInteger)sum);
+        }
+
+        #endregion
     }
 }
