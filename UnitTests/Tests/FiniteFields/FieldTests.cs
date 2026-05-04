@@ -1,4 +1,5 @@
-﻿using Eduard.Security;
+﻿using System;
+using Eduard.Security;
 
 namespace Eduard.Tests.FiniteFields
 {
@@ -86,5 +87,92 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region SetField Validation Tests
+
+        [Fact]
+        public void SetField_ValidPrime_SetsModulus()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+
+            Field sum = a + b;
+            Assert.Equal(300, (BigInteger)sum);
+        }
+
+        [Fact]
+        public void SetField_PrimeLessThanFive_ThrowsArgumentException()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => Field.SetField(3));
+            Assert.Contains("less than 5", ex.Message);
+        }
+
+        [Fact]
+        public void SetField_CompositeNumber_ThrowsArgumentException()
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                Field.SetField(81719));
+            Assert.Contains("prime", ex.Message);
+        }
+
+        [Fact]
+        public void SetField_EvenNumber_ThrowsArgumentException()
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                Field.SetField(90288));
+            Assert.Contains("prime", ex.Message);
+        }
+
+        [Fact]
+        public void SetField_SmallestValidPrime_SetsSuccessfully()
+        {
+            Field.SetField(5);
+            Field a = 3;
+            Field b = 4;
+
+            Field sum = a + b;
+            Assert.Equal(2, (BigInteger)sum);
+        }
+
+        [Fact]
+        public void SetField_LargeCryptographicPrime_SetsSuccessfully()
+        {
+            BigInteger P384 = BigInteger.Parse("39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112319");
+            Field.SetField(P384);
+
+            Field a = 100;
+            Field b = 200;
+
+            Field prod = a * b;
+            Assert.Equal(20000, (BigInteger)prod);
+        }
+
+        [Fact]
+        public void SetField_SwitchingModulus_WorksCorrectly()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+
+            Field sum256 = a + b;
+            Assert.Equal(300, (BigInteger)sum256);
+
+            BigInteger P384 = BigInteger.Parse("39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112319");
+            Field.SetField(P384);
+
+            Field c = 100;
+            Field d = 200;
+
+            Field sum384 = c + d;
+            Assert.Equal(300, (BigInteger)sum384);
+        }
+
+        #endregion
+
     }
 }
