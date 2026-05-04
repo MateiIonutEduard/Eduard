@@ -716,5 +716,62 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Implicit Conversion Tests
+
+        [Fact]
+        public void ImplicitConversion_FromInt_CreatesField()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field f = 42;
+
+            Assert.Equal(42, (BigInteger)f);
+            Assert.IsType<Field>(f);
+        }
+
+        [Fact]
+        public void ImplicitConversion_FromLong_CreatesField()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field f = 123456789012345L;
+            Assert.Equal(123456789012345L % P256, (BigInteger)f);
+        }
+
+        [Fact]
+        public void ImplicitConversion_FromBigInteger_CreatesField()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            BigInteger val = BigInteger.Parse("12345678901234567890");
+            Field f = val;
+            Assert.Equal(val % P256, (BigInteger)f);
+        }
+
+        [Fact]
+        public void ImplicitConversion_FromUInt_HandlesCorrectly()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            uint val = 12345;
+
+            Field f = val;
+            Assert.Equal(val % P256, (BigInteger)f);
+        }
+
+        [Fact]
+        public void ExplicitConversion_ToBigInteger_ReturnsValue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field f = 12345;
+
+            BigInteger val = (BigInteger)f;
+            Assert.Equal(12345, val);
+        }
+
+        #endregion
     }
 }
