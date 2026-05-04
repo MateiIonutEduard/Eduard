@@ -873,5 +873,70 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Cryptographic Field Properties Tests
+
+        [Fact]
+        public void Field_AllZeroOperations_Consistent()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field zero = 0;
+
+            Assert.Equal(0, (BigInteger)(zero + zero));
+            Assert.Equal(0, (BigInteger)(zero - zero));
+
+            Assert.Equal(0, (BigInteger)(zero * zero));
+            Assert.Equal(0, (BigInteger)(-zero));
+        }
+
+        [Fact]
+        public void Field_MultiplicativeGroup_NonZeroHasInverse()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 12345;
+
+            Field inverse = new Field(1) / a;
+            Field product = a * inverse;
+            Assert.Equal(new Field(1), product);
+        }
+
+        [Fact]
+        public void Field_Pow_PowerOfP_MinusOne_EqualsOneForNonZero()
+        {
+            Field.SetField(17);
+            Field a = 5;
+
+            Field result = Field.Pow(a, 16);
+            Assert.Equal(new Field(1), result);
+        }
+
+        [Fact]
+        public void Field_ConsistentArithmetic_UnderMultipleModuli()
+        {
+            Field.SetField(17);
+
+            Field a = 5;
+            Field b = 7;
+
+            Field sum = a + b;
+            Field prod = a * b;
+
+            Assert.Equal(12, (BigInteger)sum);
+            Assert.Equal(1, (BigInteger)prod);
+            Field.SetField(23);
+
+            a = 5;
+            b = 7;
+
+            sum = a + b;
+            prod = a * b;
+
+            Assert.Equal(12, (BigInteger)sum);
+            Assert.Equal(12, (BigInteger)prod);
+        }
+
+        #endregion
     }
 }
