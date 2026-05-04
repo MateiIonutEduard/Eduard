@@ -381,5 +381,122 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Multiplication Tests
+
+        [Fact]
+        public void Multiplication_WithinField_NoReductionNeeded()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+
+            Field result = a * b;
+            Assert.Equal(20000, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Multiplication_ExceedsModulus_ReducesCorrectly()
+        {
+            Field.SetField(17);
+            Field a = 5;
+            Field b = 4;
+
+            Field result = a * b;
+            Assert.Equal(3, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Multiplication_ByZero_ProducesZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field zero = 0;
+
+            Field result1 = a * zero;
+            Field result2 = zero * a;
+
+            Assert.Equal(0, (BigInteger)result1);
+            Assert.Equal(0, (BigInteger)result2);
+        }
+
+        [Fact]
+        public void Multiplication_ByOne_PreservesValue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field one = 1;
+
+            Field result1 = a * one;
+            Field result2 = one * a;
+
+            Assert.Equal(a, result1);
+            Assert.Equal(a, result2);
+        }
+
+        [Fact]
+        public void Multiplication_Commutative_ProducesSameResult()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field b = 67890;
+
+            Field result1 = a * b;
+            Field result2 = b * a;
+            Assert.Equal(result1, result2);
+        }
+
+        [Fact]
+        public void Multiplication_Associative_ProducesSameResult()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+            Field c = 300;
+
+            Field result1 = (a * b) * c;
+            Field result2 = a * (b * c);
+            Assert.Equal(result1, result2);
+        }
+
+        [Fact]
+        public void Multiplication_Distributive_OverAddition()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 10;
+            Field b = 20;
+            Field c = 30;
+
+            Field left = a * (b + c);
+            Field right = (a * b) + (a * c);
+            Assert.Equal(left, right);
+        }
+
+        [Fact]
+        public void Multiplication_LargeValues_HandlesCorrectly()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = P256 - 1;
+            Field b = P256 - 1;
+
+            Field result = a * b;
+            Assert.Equal(1, (BigInteger)result);
+        }
+
+        #endregion
     }
 }
