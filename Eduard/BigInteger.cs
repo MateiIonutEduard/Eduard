@@ -1852,12 +1852,12 @@ namespace Eduard
             }
             else
             {
-                for(int j = 0; j < bits; j++)
+                for (int j = bits - 1; j >= 0; j--)
                 {
+                    result = BarrettReduction(result * result, modulus, bconst);
+
                     if (exponent.TestBit(j))
                         result = BarrettReduction(result * tb, modulus, bconst);
-
-                    tb = BarrettReduction(tb * tb, modulus, bconst);
                 }
             }
 
