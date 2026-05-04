@@ -498,5 +498,84 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Division Tests
+
+        [Fact]
+        public void Division_ByOne_ReturnsSameValue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 12345;
+            Field one = 1;
+
+            Field result = a / one;
+            Assert.Equal(a, result);
+        }
+
+        [Fact]
+        public void Division_BySelf_ReturnsOne()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 12345;
+
+            Field result = a / a;
+            Assert.Equal(new Field(1), result);
+        }
+
+        [Fact]
+        public void Division_MultiplicationInverse_CombinesToOne()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 54321;
+            Field b = 12345;
+
+            Field quotient = a / b;
+            Field product = quotient * b;
+            Assert.Equal(a, product);
+        }
+
+        [Fact]
+        public void Division_ByZero_ThrowsDivideByZeroException()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 100;
+
+            Field zero = 0;
+            Assert.Throws<DivideByZeroException>(() => a / zero);
+        }
+
+        [Fact]
+        public void Division_ZeroByNonZero_ReturnsZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field zero = 0;
+            Field a = 100;
+
+            Field result = zero / a;
+            Assert.Equal(0, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Division_InverseMultiplication_RoundTrip()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 999888777;
+            Field b = 555444333;
+
+            Field result = (a * b) / b;
+            Assert.Equal(a, result);
+        }
+
+        #endregion
     }
 }
