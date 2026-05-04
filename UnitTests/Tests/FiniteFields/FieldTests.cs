@@ -577,5 +577,89 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Exponentiation Tests
+
+        [Fact]
+        public void Pow_ZeroExponent_ReturnsOne()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field b = 12345;
+
+            Field result = Field.Pow(b, 0);
+            Assert.Equal(new Field(1), result);
+        }
+
+        [Fact]
+        public void Pow_OneExponent_ReturnsSameValue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field b = 12345;
+
+            Field result = Field.Pow(b, 1);
+            Assert.Equal(b, result);
+        }
+
+        [Fact]
+        public void Pow_LargeExponent_ComputesCorrectly()
+        {
+            Field.SetField(17);
+            Field b = 3;
+            Field result = Field.Pow(b, 5);
+            Assert.Equal(5, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Pow_FermatLittleTheorem_HoldsForPrimeField()
+        {
+            Field.SetField(17);
+            Field a = 3;
+
+            Field result = Field.Pow(a, 16);
+            Assert.Equal(new Field(1), result);
+        }
+
+        [Fact]
+        public void Pow_BaseZero_ExponentZero_ThrowsArithmeticException()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field b = 0;
+
+            Assert.Throws<ArithmeticException>(() =>
+                Field.Pow(b, 0));
+        }
+
+        [Fact]
+        public void Pow_BaseZero_PositiveExponent_ReturnsZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field b = 0;
+
+            Field result = Field.Pow(b, 100);
+            Assert.Equal(new Field(0), result);
+        }
+
+        [Fact]
+        public void Pow_MultiplicationOfPowers_EquivalentToAdditionOfExponents()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field b = 12345;
+
+            BigInteger k1 = 10;
+            BigInteger k2 = 20;
+
+            Field pow1 = Field.Pow(b, k1);
+            Field pow2 = Field.Pow(b, k2);
+
+            Field powCombined = Field.Pow(b, k1 + k2);
+            Assert.Equal(pow1 * pow2, powCombined);
+        }
+
+        #endregion
     }
 }
