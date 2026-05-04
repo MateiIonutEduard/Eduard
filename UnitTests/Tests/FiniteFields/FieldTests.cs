@@ -661,5 +661,60 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Square Root Tests
+
+        [Fact]
+        public void Sqrt_PerfectSquare_ReturnsCorrectRoot()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field a = 9;
+
+            Field root = Field.Sqrt(a);
+            Assert.Equal(a, root * root);
+        }
+
+        [Fact]
+        public void Sqrt_Zero_ReturnsZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field zero = 0;
+
+            Field root = Field.Sqrt(zero);
+            Assert.Equal(0, (BigInteger)root);
+        }
+
+        [Fact]
+        public void Sqrt_One_ReturnsPlusMinusOne()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            Field one = 1;
+
+            Field root = Field.Sqrt(one);
+            Assert.True(root == 1 || root == P256 - 1);
+        }
+
+        [Fact]
+        public void Sqrt_LargeField_QuadraticResidue()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+            int k;
+
+            /* test large modular quadratic residues mod p */
+            for (k = 1; k <= 10; k++)
+            {
+                Field a = SecureRandom.Range(1, P256 - 1);
+                Field qr = a * a;
+                Field aroot = Field.Sqrt(qr);
+                Field squareTest = aroot * aroot;
+                Assert.True(qr == squareTest);
+            }
+        }
+
+        #endregion
     }
 }
