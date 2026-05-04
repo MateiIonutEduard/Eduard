@@ -261,5 +261,75 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Subtraction Tests
+
+        [Fact]
+        public void Subtraction_PositiveResult_NoReduction()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 500;
+            Field b = 200;
+
+            Field result = a - b;
+            Assert.Equal(300, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Subtraction_ZeroResult_ReducesToZero()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 100;
+
+            Field result = a - b;
+            Assert.Equal(0, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Subtraction_NegativeResult_WrapsAround()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 500;
+
+            Field result = a - b;
+            Assert.Equal(P256 - 400, (BigInteger)result);
+        }
+
+        [Fact]
+        public void Subtraction_Anticommutative_NegationHolds()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field b = 200;
+
+            Field result1 = a - b;
+            Field result2 = -(b - a);
+            Assert.Equal(result1, result2);
+        }
+
+        [Fact]
+        public void Subtraction_FromZero_ProducesNegation()
+        {
+            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            Field.SetField(P256);
+
+            Field a = 100;
+            Field zero = 0;
+
+            Field result = zero - a;
+            Assert.Equal(-a, result);
+        }
+
+        #endregion
     }
 }
