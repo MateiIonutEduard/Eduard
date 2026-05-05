@@ -589,13 +589,14 @@ namespace Eduard.Security
         public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial modulus)
         {
             Polynomial nb = new Polynomial(val);
+            Polynomial rb = nb % modulus;
             Polynomial result = 1;
 
             if(modulus.degree == 0 && modulus.coeffs[0] == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
-            if (val == 0 && exponent == 0)
+            if (rb == 0 && exponent == 0)
                 throw new ArithmeticException(
                     "Cannot compute 0^0: zero " + 
                     "polynomial raised to power " 
@@ -607,8 +608,7 @@ namespace Eduard.Security
                     "polynomial modular exponentiation.");
 
             if (exponent == 0) return 1;
-            Polynomial b = nb % modulus;
-            if (exponent == 1) return b;
+            if (exponent == 1) return rb;
 
 #if !USE_BENCHMARKING
             int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
@@ -623,8 +623,8 @@ namespace Eduard.Security
                 SetPolyMod(modulus);
 
                 Polynomial[] table = new Polynomial[store];
-                table[0] = b;
-                Polynomial b2 = MultMod(b, b, modulus);
+                table[0] = rb;
+                Polynomial b2 = MultMod(rb, rb, modulus);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
@@ -655,12 +655,12 @@ namespace Eduard.Security
             {
                 int size = exponent.GetBits();
 
-                for(int k = 0; k < size; k++)
+                for(int k = size - 1; k >= 0; k--)
                 {
-                    if (exponent.TestBit(k))
-                        result = (b * result) % modulus;
+                    result = (result * result) % modulus;
 
-                    b = (b * b) % modulus;
+                    if (exponent.TestBit(k))
+                        result = (result * rb) % modulus;
                 }
             }
 
