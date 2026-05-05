@@ -136,7 +136,7 @@ namespace Eduard.Security.Curves
             }
 
             ECPoint result = ECPoint.POINT_INFINITY;
-            int bitSize = k.GetBits();
+            int bitSize = nk.GetBits();
 
             if (opMode == ECMode.EC_STANDARD_AFFINE)
             {
