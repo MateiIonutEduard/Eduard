@@ -102,7 +102,7 @@ namespace Eduard.Security.Curves
                 {
                     result = Add(curve, result, result);
 
-                    if (k.TestBit(j))
+                    if (nk.TestBit(j))
                         result = Add(curve, result, affinePoint);
                 }
             }
@@ -115,7 +115,7 @@ namespace Eduard.Security.Curves
                 {
                     auxPoint = Ed3Math.UnifiedDoubling(curve, auxPoint);
 
-                    if (k.TestBit(j))
+                    if (nk.TestBit(j))
                         auxPoint = Ed3Math.UnifiedAdd(curve, auxPoint, basePoint);
                 }
 

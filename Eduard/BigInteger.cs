@@ -1785,20 +1785,21 @@ namespace Eduard
 
             BigInteger tb = val % modulus;
             if (tb < 0) tb += modulus;
+            BigInteger exp = exponent;
 
-            if (tb.IsZero && exponent.IsZero)
+            if (tb.IsZero && exp.IsZero)
                 throw new ArithmeticException(
                     "Zero raised to the power" + 
                     " of zero is undefined.");
 
-            if (exponent.IsNegative)
+            if (exp.IsNegative)
             {
                 tb = tb.Inverse(modulus);
-                exponent = -exponent;
+                exp = exp.Negate();
             }
 
-            if (exponent == 0) return 1;
-            if (exponent == 1) return tb;
+            if (exp == 0) return 1;
+            if (exp == 1) return tb;
 
             int k = modulus.data.Used << 1;
             Data buffer = new Data(k + 1, k + 1);
@@ -1807,7 +1808,7 @@ namespace Eduard
             BigInteger bconst = new BigInteger(buffer);
             bconst /= modulus;
 
-            int bits = exponent.GetBits();
+            int bits = exp.GetBits();
             BigInteger result = 1;
 
 #if !USE_BENCHMARKING
@@ -1834,7 +1835,7 @@ namespace Eduard
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int win = WindowUtil.Window(exponent, i, ref ubits, ref tbits, 5);
+                    int win = WindowUtil.Window(exp, i, ref ubits, ref tbits, 5);
 
                     for (int j = 0; j < ubits; j++)
                         result = BarrettReduction(result * result, modulus, bconst);
@@ -1856,7 +1857,7 @@ namespace Eduard
                 {
                     result = BarrettReduction(result * result, modulus, bconst);
 
-                    if (exponent.TestBit(j))
+                    if (exp.TestBit(j))
                         result = BarrettReduction(result * tb, modulus, bconst);
                 }
             }
