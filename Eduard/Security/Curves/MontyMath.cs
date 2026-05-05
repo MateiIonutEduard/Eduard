@@ -97,7 +97,7 @@ namespace Eduard.Security.Curves
         /// Performs scalar multiplication on a Montgomery curve point using affine coordinates.
         /// </summary>
         /// <param name="curve">The Montgomery curve context.</param>
-        /// <param name="k">Scalar multiplier (must be non-negative).</param>
+        /// <param name="k">The scalar multiplier.</param>
         /// <param name="point">Base point to multiply in affine coordinates.</param>
         /// <param name="opMode">Execution mode (only affine mode is currently supported).</param>
         /// <returns>The resulting point k * point in affine coordinates.</returns>

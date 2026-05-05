@@ -80,20 +80,20 @@ namespace Eduard.Security.Curves
         /// Performs scalar multiplication on a Weierstrass curve point.
         /// </summary>
         /// <param name="curve">The elliptic curve context.</param>
-        /// <param name="k">Scalar multiplier (non-negative integer).</param>
+        /// <param name="k">The scalar multiplier.</param>
         /// <param name="point">Base point to multiply.</param>
         /// <param name="opMode">Execution mode selecting algorithm and coordinate system.</param>
         /// <param name="securityCheck">If true, validates point order before multiplication.</param>
         /// <returns>The resulting point k * point.</returns>
         /// <exception cref="ArgumentException">
-        /// Thrown when k is negative, or when security check fails on invalid point.
+        /// Thrown when security check fails on invalid point.
         /// </exception>
         /// <remarks>
         /// <para>
         /// Supports multiple operation modes:
         /// <list type="bullet">
         /// <item><description><see cref="ECMode.EC_STANDARD_AFFINE"/>: Binary method in affine coordinates</description></item>
-        /// <item><description><see cref="ECMode.EC_STANDARD_PROJECTIVE"/>: Binary method with mixed coordinates</description></item>
+        /// <item><description><see cref="ECMode.EC_STANDARD_PROJECTIVE"/>: Binary method with projective coordinates</description></item>
         /// <item><description><see cref="ECMode.EC_SECURE"/>: Montgomery ladder for side-channel resistance</description></item>
         /// <item><description><see cref="ECMode.EC_FASTEST"/>: NAF fractional sliding window method with precomputation</description></item>
         /// </list>
@@ -105,11 +105,6 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
-            if (k < 0)
-                throw new ArgumentException(
-                    "Scalar multiplier must be non-negative.",
-                    nameof(k));
-
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
@@ -131,31 +126,39 @@ namespace Eduard.Security.Curves
                         nameof(point));
             }
 
-            ECPoint temp = point;
+            ECPoint affinePoint = point;
+            BigInteger nk = k;
+
+            if (k < 0)
+            {
+                affinePoint = ECMath.Negate(curve, affinePoint);
+                nk = k.Negate();
+            }
+
             ECPoint result = ECPoint.POINT_INFINITY;
-            int t = k.GetBits();
+            int bitSize = k.GetBits();
 
             if (opMode == ECMode.EC_STANDARD_AFFINE)
             {
-                for (int j = 0; j < t; j++)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
-                    if (k.TestBit(j))
-                        result = Add(curve, result, temp);
+                    result = Add(curve, result, result);
 
-                    temp = Add(curve, temp, temp);
+                    if (nk.TestBit(j))
+                        result = Add(curve, result, affinePoint);
                 }
             }
             else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
             {
                 ECPoint3w auxPoint = ECPoint3w.POINT_INFINITY;
-                var basePoint = curve.ToModifiedJacobian(temp);
+                var basePoint = curve.ToJacobian(affinePoint);
 
-                for (int j = 0; j < t; j++)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
-                    if (k.TestBit(j))
-                        auxPoint = Wei3Math.Add(curve, auxPoint, curve.ToJacobian(basePoint));
+                    auxPoint = Wei3Math.Doubling(curve, auxPoint);
 
-                    basePoint = Wei4Math.Doubling(curve, basePoint);
+                    if (nk.TestBit(j))
+                        auxPoint = Wei3Math.Add(curve, auxPoint, basePoint);
                 }
 
                 result = curve.ToAffine(auxPoint);
@@ -163,11 +166,11 @@ namespace Eduard.Security.Curves
             else if (opMode == ECMode.EC_SECURE)
             {
                 ECPoint3w R0 = ECPoint3w.POINT_INFINITY;
-                ECPoint3w R1 = curve.ToJacobian(temp);
+                ECPoint3w R1 = curve.ToJacobian(affinePoint);
 
-                for (int j = t - 1; j >= 0; j--)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
-                    if (!k.TestBit(j))
+                    if (!nk.TestBit(j))
                     {
                         R1 = Wei3Math.Add(curve, R0, R1);
                         R0 = Wei3Math.Doubling(curve, R0);
@@ -190,12 +193,12 @@ namespace Eduard.Security.Curves
                 int tbits = 0;
 
                 var table = new ECPoint5w[windowSize];
-                table[0] = curve.ToJacobianChudnovsky(point);
+                table[0] = curve.ToJacobianChudnovsky(affinePoint);
 
                 var squarePoint = Wei5Math.Doubling(curve, table[0]);
                 ECPoint3w auxPoint = ECPoint3w.POINT_INFINITY;
 
-                BigInteger exp3 = 3 * k;
+                BigInteger exp3 = 3 * nk;
                 bc = exp3.GetBits();
 
                 /* compute the lookup table */
@@ -204,7 +207,7 @@ namespace Eduard.Security.Curves
 
                 for (i = bc - 1; i >= 1;)
                 {
-                    win = WindowUtil.NAFWindow(k, exp3, i, ref ubits, ref tbits, windowSize);
+                    win = WindowUtil.NAFWindow(nk, exp3, i, ref ubits, ref tbits, windowSize);
                     var auxModifiedJacobianPoint = curve.ToModifiedJacobian(auxPoint);
 
                     for (j = 0; j < ubits - 1; j++)
