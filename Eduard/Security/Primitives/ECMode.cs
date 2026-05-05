@@ -10,7 +10,7 @@
         /// </summary>
         EC_STANDARD_AFFINE,
         /// <summary>
-        /// Use the standard mixed projective representation for scalar multiplication of points.
+        /// Use the standard projective representation for scalar multiplication of points.
         /// </summary>
         EC_STANDARD_PROJECTIVE,
         /// <summary>

@@ -34,15 +34,14 @@ namespace Eduard.Security.Curves
         /// security validation and algorithm selection.
         /// </summary>
         /// <param name="curve">The twisted Edwards curve context containing parameters a, d, and field prime.</param>
-        /// <param name="k">Scalar multiplier (must be non-negative).</param>
+        /// <param name="k">The scalar multiplier.</param>
         /// <param name="point">Base point to multiply in affine coordinates.</param>
         /// <param name="opMode">Execution mode selecting algorithm and coordinate system.</param>
         /// <param name="securityCheck">If true, validates point lies on curve and has appropriate order.</param>
         /// <returns>The resulting point k * point in affine coordinates.</returns>
         /// <exception cref="ArgumentException">
-        /// <para>Thrown when <paramref name="k"/> is negative.</para>
-        /// <para>Thrown when <paramref name="securityCheck"/> is enabled and the point does not lie on the curve,
-        /// indicating a potential small-subgroup or invalid curve attack.</para>
+        /// Thrown when <paramref name="securityCheck"/> is enabled and the point does not lie
+        /// on the curve, indicating a potential small-subgroup or invalid curve attack.
         /// </exception>
         /// <exception cref="NotImplementedException">
         /// Thrown when <paramref name="opMode"/> is set to <see cref="ECMode.EC_SECURE"/> as this mode
@@ -64,11 +63,6 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Multiply(TwistedEdwardsCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
-            if (k < 0) 
-                throw new ArgumentException(
-                    "Scalar multiplier must be non-negative.", 
-                    nameof(k));
-
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
@@ -90,31 +84,39 @@ namespace Eduard.Security.Curves
                         nameof(point));
             }
 
-            ECPoint temp = point;
+            ECPoint affinePoint = point;
+            BigInteger nk = k;
+
+            if (k < 0)
+            {
+                affinePoint = TwistedEdwardsMath.Negate(curve, affinePoint);
+                nk = k.Negate();
+            }
+
             ECPoint result = ECPoint.POINT_INFINITY;
-            int t = k.GetBits();
+            int bitSize = nk.GetBits();
 
             if (opMode == ECMode.EC_STANDARD_AFFINE)
             {
-                for (int j = 0; j < t; j++)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
-                    if (k.TestBit(j))
-                        result = Add(curve, result, temp);
+                    result = Add(curve, result, result);
 
-                    temp = Add(curve, temp, temp);
+                    if (k.TestBit(j))
+                        result = Add(curve, result, affinePoint);
                 }
             }
             else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
             {
                 ECPoint3 auxPoint = ECPoint3.POINT_INFINITY;
-                var basePoint = curve.ToProjective(temp);
+                var basePoint = curve.ToProjective(affinePoint);
 
-                for (int j = 0; j < t; j++)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
+                    auxPoint = Ed3Math.UnifiedDoubling(curve, auxPoint);
+
                     if (k.TestBit(j))
                         auxPoint = Ed3Math.UnifiedAdd(curve, auxPoint, basePoint);
-
-                    basePoint = Ed3Math.UnifiedDoubling(curve, basePoint);
                 }
 
                 result = curve.ToAffine(auxPoint);
@@ -132,12 +134,12 @@ namespace Eduard.Security.Curves
                 int tbits = 0;
 
                 var table = new ECPoint4[windowSize];
-                table[0] = curve.ToExtendedProjective(point);
+                table[0] = curve.ToExtendedProjective(affinePoint);
 
                 var squarePoint = Ed4Math.DedicatedDoubling(curve, table[0]);
                 ECPoint4 auxPoint = ECPoint4.POINT_INFINITY;
 
-                BigInteger exp3 = 3 * k;
+                BigInteger exp3 = 3 * nk;
                 bc = exp3.GetBits();
 
                 /* compute the lookup table */
@@ -146,7 +148,7 @@ namespace Eduard.Security.Curves
 
                 for (i = bc - 1; i >= 1;)
                 {
-                    win = WindowUtil.NAFWindow(k, exp3, i, ref ubits, ref tbits, windowSize);
+                    win = WindowUtil.NAFWindow(nk, exp3, i, ref ubits, ref tbits, windowSize);
                     var projectivePoint = curve.ToProjective(auxPoint);
 
                     for (j = 0; j < ubits - 1; j++)

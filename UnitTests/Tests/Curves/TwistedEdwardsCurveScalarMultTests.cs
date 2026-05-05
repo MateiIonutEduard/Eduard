@@ -594,7 +594,7 @@ namespace Eduard.Tests.Curves
             var G = curve.GetBasePoint();
 
             var k = new BigInteger(1234567);
-            var negK = curve.order - k;
+            BigInteger negK = -k;
 
             var kG = TwistedEdwardsMath.Multiply(curve, k, G, ECMode.EC_FASTEST);
             var negKG = TwistedEdwardsMath.Multiply(curve, negK, G, ECMode.EC_FASTEST);
@@ -611,7 +611,7 @@ namespace Eduard.Tests.Curves
             var G = curve.GetBasePoint();
 
             var k = new BigInteger(1234567);
-            var negK = curve.order - k;
+            BigInteger negK = -k;
 
             var kG = TwistedEdwardsMath.Multiply(curve, k, G, ECMode.EC_FASTEST);
             var negKG = TwistedEdwardsMath.Multiply(curve, negK, G, ECMode.EC_FASTEST);
