@@ -130,18 +130,26 @@ namespace Eduard.Security.Curves
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
-            ECPoint temp = point;
+            ECPoint affinePoint = point;
+            BigInteger nk = k;
+
+            if(k < 0)
+            {
+                affinePoint = MontyMath.Negate(curve, affinePoint);
+                nk = k.Negate();
+            }
+
             ECPoint result = ECPoint.POINT_INFINITY;
-            int t = k.GetBits();
+            int bitSize = nk.GetBits();
 
             if (opMode == ECMode.EC_STANDARD_AFFINE)
             {
-                for (int j = 0; j < t; j++)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
-                    if (k.TestBit(j))
-                        result = Add(curve, result, temp);
+                    result = Add(curve, result, result);
 
-                    temp = Add(curve, temp, temp);
+                    if (nk.TestBit(j))
+                        result = Add(curve, result, affinePoint);
                 }
             }
             else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)
