@@ -4,8 +4,22 @@ using System.Text;
 
 namespace Eduard
 {
+    /// <summary>
+    /// Provides low-level modular arithmetic primitives optimized for cryptographic operations.
+    /// </summary>
+    /// <remarks>
+    /// Implements constant-time-safe modular addition, subtraction, multiplication, exponentiation, <br/>
+    /// square root (Tonelli-Shanks), and inverse algorithms over 32-bit unsigned integers.
+    /// </remarks>
     internal class CoreMath
     {
+        /// <summary>
+        /// Computes (a + b) mod m with conditional subtraction.
+        /// </summary>
+        /// <param name="a">First operand in [0, m-1].</param>
+        /// <param name="b">Second operand in [0, m-1].</param>
+        /// <param name="m">Modulus.</param>
+        /// <returns>Sum modulo m.</returns>
         internal static uint AddMod(uint a, uint b, uint m)
         {
             long s = (long)a + b;
@@ -13,6 +27,13 @@ namespace Eduard
             return (uint)s;
         }
 
+        /// <summary>
+        /// Computes (a - b) mod m with conditional addition.
+        /// </summary>
+        /// <param name="a">First operand in [0, m-1].</param>
+        /// <param name="b">Second operand in [0, m-1].</param>
+        /// <param name="m">Modulus.</param>
+        /// <returns>Difference modulo m.</returns>
         internal static uint DiffMod(uint a, uint b, uint m)
         {
             long s = (long)a - b;
@@ -20,6 +41,15 @@ namespace Eduard
             return (uint)s;
         }
 
+        /// <summary>
+        /// Computes fused multiply-add with quotient: q = (a*b + c) / m, remainder set in rem.
+        /// </summary>
+        /// <param name="a">First factor.</param>
+        /// <param name="b">Second factor.</param>
+        /// <param name="c">Addend.</param>
+        /// <param name="m">Modulus.</param>
+        /// <param name="rem">Receives (a*b + c) % m.</param>
+        /// <returns>Quotient (a*b + c) / m.</returns>
         internal static uint MultAdd(uint a, uint b, uint c, uint m, ref uint rem)
         {
             uint q;
@@ -29,6 +59,13 @@ namespace Eduard
             return q;
         }
 
+        /// <summary>
+        /// Computes x^n mod m using binary exponentiation.
+        /// </summary>
+        /// <param name="x">Base.</param>
+        /// <param name="n">Exponent.</param>
+        /// <param name="m">Modulus.</param>
+        /// <returns>x^n mod m.</returns>
         internal static uint ModPow(uint x, uint n, uint m)
         {
             ulong res = 1;
@@ -46,6 +83,9 @@ namespace Eduard
             return (uint)res;
         }
 
+        /// <summary>
+        /// Computes (x * y) mod n using 64-bit intermediate.
+        /// </summary>
         internal static uint MultMod(uint x, uint y, uint n)
         {
             ulong val = (ulong)x * y;
@@ -53,6 +93,14 @@ namespace Eduard
             return (uint)val;
         }
 
+        /// <summary>
+        /// Computes high and low 32-bit words of (a * b) + c.
+        /// </summary>
+        /// <param name="a">First factor.</param>
+        /// <param name="b">Second factor.</param>
+        /// <param name="c">Addend.</param>
+        /// <param name="rem">Receives low 32 bits of result.</param>
+        /// <returns>High 32 bits of result (carry word).</returns>
         internal static uint MultDiv(uint a, uint b, uint c, ref uint rem)
         {
             ulong res = ((ulong)a * b) + c;
@@ -62,6 +110,16 @@ namespace Eduard
             return (uint)(res >> 32);
         }
 
+        /// <summary>
+        /// Computes modular square root of x modulo prime m using Tonelli-Shanks algorithm.
+        /// </summary>
+        /// <param name="x">Quadratic residue.</param>
+        /// <param name="m">Prime modulus.</param>
+        /// <returns>Square root of x mod m, or 0 if none exists.</returns>
+        /// <remarks>
+        /// Handles m = 3 mod 4, m = 5 mod 8, and general case via Tonelli-Shanks.<br/>
+        /// Returns 0 when no square root exists or when m is detected as composite.
+        /// </remarks>
         internal static uint ModSquareRoot(uint x, uint m)
         {
             uint z, y, v, w, t, q;
@@ -147,6 +205,12 @@ namespace Eduard
             return v;
         }
 
+        /// <summary>
+        /// Computes modular inverse of val modulo field using extended Euclidean algorithm.
+        /// </summary>
+        /// <param name="val">Value to invert.</param>
+        /// <param name="field">Modulus.</param>
+        /// <returns>Inverse such that (val * result) % field = 1.</returns>
         internal static uint Inverse(uint val, uint field)
         {
             long b0 = field, t, q;
