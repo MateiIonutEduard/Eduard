@@ -26,9 +26,6 @@ namespace Eduard
         static int degree;
         static uint[][] t;
 
-        static BigInteger[] C;
-        static BigInteger N;
-
         /// <summary>
         /// Multiplies two polynomials using NTT with multiple prime moduli.
         /// </summary>
@@ -65,19 +62,19 @@ namespace Eduard
                 pc = InitFFT(logn, field, field);
             else pc = count;
 
-            uint[] wa = new uint[newn];
+            uint[] buf = new uint[newn];
             
             for (i = 0; i < pc; i++)
             {
                 p = primes[i];
 
                 for (j = 0; j <= degx; j++)
-                    wa[j] = (uint)(x[j] % p);
+                    buf[j] = (uint)(x[j] % p);
 
                 for (j = degx + 1; j < newn; j++)
-                    wa[j] = 0;
+                    buf[j] = 0;
 
-                DFT(logn, i, wa);
+                DFT(logn, i, buf);
 
                 for (j = 0; j <= degy; j++)
                     t[i][j] = (uint)(y[j] % p);
@@ -88,7 +85,7 @@ namespace Eduard
                 DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    CoreMath.MultAdd(wa[j], t[i][j], 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(buf[j], t[i][j], 0, p, ref t[i][j]);
 
                 iDFT(logn, i, t[i]);
                 inv = inverse[i];
@@ -107,16 +104,12 @@ namespace Eduard
 
             for (j = 0; j <= degree; j++)
             {
-                res[j] = 0;
-                BigInteger coeff = 0;
+                uint[] residues = new uint[pc];
 
-                for(i = 0; i < pc; i++)
-                {
-                    BigInteger val = (t[i][j] * C[i]) % N;
-                    coeff += val;
-                    if (coeff >= N) coeff -= N;
-                }
+                for (i = 0; i < pc; i++)
+                    residues[i] = t[i][j];
 
+                BigInteger coeff = Garner.GetInteger(residues);
                 res[j] = BarrettReducer.Reduce(coeff, field); 
             }
 
@@ -185,16 +178,12 @@ namespace Eduard
 
             for (j = 0; j <= degree; j++)
             {
-                res[j] = 0;
-                BigInteger coeff = 0;
+                uint[] residues = new uint[pc];
 
                 for (i = 0; i < pc; i++)
-                {
-                    BigInteger val = (t[i][j] * C[i]) % N;
-                    coeff += val;
-                    if (coeff >= N) coeff -= N;
-                }
+                    residues[i] = t[i][j];
 
+                BigInteger coeff = Garner.GetInteger(residues);
                 res[j] = BarrettReducer.Reduce(coeff, field);
             }
 
@@ -226,6 +215,8 @@ namespace Eduard
 
             int degG = G.Length - 1;
             BigInteger field = BarrettReducer.GetModulus();
+
+            uint[] residues;
             pc = count;
 
             newn = 1;
@@ -267,16 +258,13 @@ namespace Eduard
 
             for (j = 0; j < degn; j++)
             {
-                R[j] = 0;
+                residues = new uint[pc];
 
                 for (i = 0; i < pc; i++)
-                {
-                    BigInteger ts = (t[i][j + degn - 1] * C[i]) % N;
-                    R[j] += ts;
-                    if (R[j] >= N) R[j] -= N;
-                }
+                    residues[i] = t[i][j + degn - 1];
 
-                R[j] = BarrettReducer.Reduce(R[j], field);
+                BigInteger coeff = Garner.GetInteger(residues);
+                R[j] = BarrettReducer.Reduce(coeff, field);
             }
 
             for (i = 0; i < pc; i++)
@@ -312,16 +300,14 @@ namespace Eduard
 
             for (j = 0; j < degn; j++)
             {
-                R[j] = 0;
+                residues = new uint[pc];
 
                 for (i = 0; i < pc; i++)
-                {
-                    BigInteger ts = (t[i][j] * C[i]) % N;
-                    R[j] += ts;
-                    if (R[j] >= N) R[j] -= N;
-                }
+                    residues[i] = t[i][j];
 
+                R[j] = Garner.GetInteger(residues);
                 BigInteger diff = (G[j] - R[j]) % field;
+
                 if (diff < 0) diff += field;
                 R[j] = diff;
             }
@@ -466,7 +452,7 @@ namespace Eduard
             logN = logn;
             count = pr;
 
-            InitCRT();
+            Garner.Init(primes);
             return pr;
         }
 
@@ -733,22 +719,6 @@ namespace Eduard
                 }
 
                 mmax = istep;
-            }
-        }
-
-        static void InitCRT()
-        {
-            N = 1;
-            C = new BigInteger[count];
-
-            for (int i = 0; i < count; i++)
-                N *= primes[i];
-
-            for(int i = 0; i < count; i++)
-            {
-                BigInteger rev = N / primes[i];
-                BigInteger inv = rev.Inverse(primes[i]);
-                C[i] = (rev * inv) % N;
             }
         }
     }
