@@ -28,8 +28,22 @@ namespace Eduard
         /// </summary>
         /// <param name="moduli">Array of prime or pairwise-coprime moduli.</param>
         /// <param name="negative">When true, reconstruction returns representatives in (-N/2, N/2].</param>
+        /// <exception cref="ArgumentNullException">Thrown when moduli is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when moduli is empty.</exception>
+        /// <remarks>
+        /// Assumes moduli are pairwise coprime. Non-coprime moduli produce incorrect reconstruction.
+        /// </remarks>
         public static void Init(uint[] moduli, bool negative = false)
         {
+            if (ReferenceEquals(moduli, null))
+                throw new ArgumentNullException(nameof(moduli), 
+                    "Moduli array must not be null.");
+
+            if (moduli.Length == 0)
+                throw new ArgumentException(
+                    "Moduli array must not" + 
+                    " be empty.", nameof(moduli));
+
             n = moduli.Length;
             c = new uint[n][];
             int i;
@@ -60,9 +74,33 @@ namespace Eduard
         /// Reconstructs the integer from a set of residues using mixed-radix conversion.
         /// </summary>
         /// <param name="residues">Residues modulo the moduli specified in <see cref="Init"/>.</param>
-        /// <returns>The reconstructed integer, optionally normalized to signed range.</returns>
+        /// <returns>The reconstructed integer, optionally normalized to centered range.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when <see cref="Init"/> has not been called.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when residues is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when residues length does not match the number of moduli.
+        /// </exception>
         public static BigInteger GetInteger(uint[] residues)
         {
+            if (ReferenceEquals(residues, null))
+                throw new ArgumentNullException(nameof(residues), 
+                    "Residues array must not be null.");
+
+            if (ReferenceEquals(m, null))
+                throw new InvalidOperationException(
+                    "Garner not initialized. Call" + 
+                    " Init() first.");
+
+            if (residues.Length != n)
+                throw new ArgumentException(
+                    "Residues length must match " 
+                    + "the number of moduli.", 
+                    nameof(residues));
+
             uint[] v = new uint[n];
             uint product, sum;
 
