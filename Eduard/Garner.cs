@@ -8,9 +8,14 @@ namespace Eduard
     {
         static uint[][] c;
         static uint[] m;
+
+        static BigInteger N;
+        static BigInteger halfN;
+
+        static bool signed;
         static int n;
 
-        public static void Init(uint[] moduli)
+        public static void Init(uint[] moduli, bool negative = false)
         {
             n = moduli.Length;
             c = new uint[n][];
@@ -18,17 +23,24 @@ namespace Eduard
 
             m = new uint[n];
             uint product;
+            N = 1;
 
-            for(i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
             {
                 c[i] = new uint[n];
                 m[i] = moduli[i];
                 product = 1;
 
+                if (negative)
+                    N *= moduli[i];
+
                 for (int j = 0; j < i; j++)
                     product = CoreMath.MultMod(product, 
                         moduli[j], moduli[i]);
             }
+
+            signed = negative;
+            halfN = N >> 1;
         }
 
         public static BigInteger GetInteger(uint[] residues)
@@ -64,6 +76,12 @@ namespace Eduard
             {
                 weight *= m[i - 1];
                 res += v[i] * weight;
+            }
+
+            if (signed)
+            {
+                if (res > halfN) 
+                    res -= N;
             }
 
             return res;
