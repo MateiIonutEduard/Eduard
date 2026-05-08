@@ -500,8 +500,11 @@ namespace Eduard
             newn = 1; 
             logn = 0;
 
-            xlen = x.data.Used;
-            ylen = y.data.Used;
+            BigInteger ax = x.Abs();
+            BigInteger ay = y.Abs();
+
+            xlen = ax.data.Used;
+            ylen = ay.data.Used;
             zlen = xlen + ylen;
 
             while (zlen > newn)
@@ -526,7 +529,7 @@ namespace Eduard
                 inv = inverse[index];
 
                 for (i = 0; i < xlen; i++)
-                    rbuf[i] = x.data[i] % p;
+                    rbuf[i] = ax.data[i] % p;
 
                 for (i = xlen; i < newn; i++)
                     rbuf[i] = 0;
@@ -536,7 +539,7 @@ namespace Eduard
                 if (x != y)
                 {
                     for (i = 0; i < ylen; i++)
-                        lbuf[i] = y.data[i] % p;
+                        lbuf[i] = ay.data[i] % p;
 
                     for (i = ylen; i < newn; i++)
                         lbuf[i] = 0;
