@@ -818,12 +818,21 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="X">The point to evaluate at.</param>
         /// <returns>The value of the polynomial at X modulo the field.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when evaluation point is outside the valid field range [0, field-1].
+        /// </exception>
         public BigInteger Horner(BigInteger X)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger sum = coeffs[0];
             BigInteger val = 1;
 
-            for(int k = 1; k <= degree; k++)
+            if (X < 0 || X >= field)
+                throw new ArgumentOutOfRangeException(
+                    nameof(X), "Evaluation point must" +
+                    " be in range [0, field-1].");
+
+            for (int k = 1; k <= degree; k++)
             {
                 val = BarrettReducer.MultMod(val, X);
                 BigInteger test = BarrettReducer.MultMod(val, coeffs[k]);
