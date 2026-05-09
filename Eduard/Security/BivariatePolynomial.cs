@@ -357,7 +357,7 @@ namespace Eduard.Security
             }
 
             BigInteger field = BarrettReducer.GetModulus();
-
+            
             if (Y < 0 || Y >= field)
                 throw new ArgumentOutOfRangeException(
                     nameof(Y), "Evaluation point must" +
@@ -365,18 +365,13 @@ namespace Eduard.Security
 
             int termsCount = terms.Count;
             int maxy = 0, i, j;
-            bool found = false;
 
             for (i = 0; i < termsCount; i++)
             {
                 if (maxy < terms[i].degy)
-                {
                     maxy = terms[i].degy;
-                    found = true;
-                }
             }
 
-            if (!found) return 0;
             BigInteger[] py = new BigInteger[maxy + 1];
             py[0] = 1;
 
