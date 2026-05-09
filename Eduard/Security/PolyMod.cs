@@ -293,6 +293,9 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="X">The point to evaluate at.</param>
         /// <returns>P(X) evaluated at X modulo the field.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when evaluation point is outside the valid field range [0, field-1].
+        /// </exception>
         public BigInteger F(BigInteger X)
         { return poly.Horner(X); }
 
