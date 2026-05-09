@@ -571,5 +571,59 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Degree and Coefficient
+
+        [Fact]
+        public void GetDegreeX_MixedPolynomial_ReturnsHighestX()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(1, 0, 5);
+            poly.AddTerm(2, 7, 0);
+
+            poly.AddTerm(3, 3, 2);
+            Assert.True(BivariatePolynomial.GetDegreeX(poly) == 7);
+        }
+
+        [Fact]
+        public void GetDegreeX_ZeroPolynomial_ReturnsZero()
+        {
+            Assert.True(BivariatePolynomial.GetDegreeX(BivariatePolynomial.Zero) == 0);
+        }
+
+        [Fact]
+        public void GetDegreeY_MixedPolynomial_ReturnsHighestY()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(1, 10, 0);
+            poly.AddTerm(2, 1, 9);
+
+            poly.AddTerm(3, 0, 3);
+            Assert.True(BivariatePolynomial.GetDegreeY(poly) == 9);
+        }
+
+        [Fact]
+        public void GetDegreeY_ZeroPolynomial_ReturnsZero()
+        {
+            Assert.True(BivariatePolynomial.GetDegreeY(BivariatePolynomial.Zero) == 0);
+        }
+
+        [Fact]
+        public void GetCoeff_ExistingTerm_ReturnsCoefficient()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(5, 2, 3);
+            Assert.True(poly.GetCoeff(2, 3) == 5);
+        }
+
+        [Fact]
+        public void GetCoeff_NonexistentTerm_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(5, 2, 3);
+            Assert.True(poly.GetCoeff(0, 0) == 0);
+        }
+
+        #endregion
     }
 }
