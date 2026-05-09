@@ -238,5 +238,131 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Arithmetic - Scalar Multiplication
+
+        [Fact]
+        public void ScalarMultiply_ByOne_ReturnsCopy()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(5, 1, 1);
+            var result = (BigInteger)1 * poly;
+            Assert.True(result == poly);
+        }
+
+        [Fact]
+        public void ScalarMultiply_ByZero_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(100, 2, 2);
+            var result = (BigInteger)0 * poly;
+            Assert.True(result.IsZero);
+        }
+
+        [Fact]
+        public void ScalarMultiply_ByFieldElement_AppliesModularMultiplication()
+        {
+            BivariatePolynomial.SetField(17);
+            var poly = new BivariatePolynomial(3, 1, 0);
+
+            poly.AddTerm(5, 0, 1);
+            var scaled = (BigInteger)5 * poly;
+
+            Assert.True(scaled.GetCoeff(1, 0) == (3 * 5) % 17);
+            Assert.True(scaled.GetCoeff(0, 1) == (5 * 5) % 17);
+        }
+
+        #endregion
+
+        #region Arithmetic - Polynomial Multiplication
+
+        [Fact]
+        public void Multiplication_ConstantTimesPolynomial_ScalesAllTerms()
+        {
+            BivariatePolynomial.SetField(P256);
+            var constant = new BivariatePolynomial(3);
+            var poly = new BivariatePolynomial(1, 2, 0);
+
+            poly.AddTerm(2, 1, 1);
+            var product = constant * poly;
+
+            Assert.True(product.GetCoeff(2, 0) == 3);
+            Assert.True(product.GetCoeff(1, 1) == 6);
+        }
+
+        [Fact]
+        public void Multiplication_XYTermTimesXYTerm_IncreasesDegrees()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 2, 1);
+
+            var b = new BivariatePolynomial(3, 1, 2);
+            var product = a * b;
+
+            Assert.True(product.GetCoeff(3, 3) == 6);
+            Assert.True(BivariatePolynomial.GetDegreeX(product) == 3);
+            Assert.True(BivariatePolynomial.GetDegreeY(product) == 3);
+        }
+
+        [Fact]
+        public void Multiplication_Commutative()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 2, 3);
+            a.AddTerm(4, 0, 1);
+
+            var b = new BivariatePolynomial(5, 1, 0);
+            b.AddTerm(6, 0, 0);
+            Assert.True(a * b == b * a);
+        }
+
+        [Fact]
+        public void Multiplication_Distributive_OverAddition()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 1, 0);
+            var b = new BivariatePolynomial(3, 0, 1);
+
+            var c = new BivariatePolynomial(4, 0, 0);
+            var left = a * (b + c);
+
+            var right = a * b + a * c;
+            Assert.True(left == right);
+        }
+
+        [Fact]
+        public void Multiplication_ByZero_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(5, 3, 2);
+            var zero = BivariatePolynomial.Zero;
+
+            Assert.True((poly * zero).IsZero);
+            Assert.True((zero * poly).IsZero);
+        }
+
+        [Fact]
+        public void Multiplication_Associative()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 1, 0);
+            var b = new BivariatePolynomial(2, 0, 1);
+
+            var c = new BivariatePolynomial(3, 1, 1);
+            Assert.True((a * b) * c == a * (b * c));
+        }
+
+        [Fact]
+        public void Multiplication_ModularReduction_AppliedToCoefficients()
+        {
+            BivariatePolynomial.SetField(17);
+            var a = new BivariatePolynomial(10, 1, 0);
+            var b = new BivariatePolynomial(10, 0, 1);
+
+            var product = a * b;
+            Assert.True(product.GetCoeff(1, 1) == 15);
+        }
+
+        #endregion
     }
 }
