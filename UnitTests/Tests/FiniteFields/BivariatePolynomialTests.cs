@@ -1,7 +1,5 @@
-﻿using Eduard.Security;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using Eduard.Security;
 
 namespace Eduard.Tests.FiniteFields
 {
@@ -361,6 +359,127 @@ namespace Eduard.Tests.FiniteFields
 
             var product = a * b;
             Assert.True(product.GetCoeff(1, 1) == 15);
+        }
+
+        #endregion
+
+        #region Arithmetic - Division
+
+        [Fact]
+        public void Division_ExactDivision_ReturnsQuotient()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 1, 1);
+
+            var b = new BivariatePolynomial(3, 0, 0);
+            var product = a * b;
+
+            var quotient = product / a;
+            Assert.True(quotient == b);
+        }
+
+        [Fact]
+        public void Division_DividendLessDegree_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var dividend = new BivariatePolynomial(5, 1, 0);
+            var divisor = new BivariatePolynomial(1, 2, 2);
+            Assert.True((dividend / divisor).IsZero);
+        }
+
+        [Fact]
+        public void Division_BySelf_ReturnsOne()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(3, 2, 1);
+            poly.AddTerm(4, 1, 3);
+
+            var quotient = poly / poly;
+            Assert.True(quotient == BivariatePolynomial.One);
+        }
+
+        [Fact]
+        public void Division_ByZero_ThrowsDivideByZeroException()
+        {
+            BivariatePolynomial.SetField(P256);
+            var dividend = new BivariatePolynomial(1, 0, 0);
+            Assert.Throws<DivideByZeroException>(() => dividend / BivariatePolynomial.Zero);
+        }
+
+        [Fact]
+        public void Division_WithRemainder_QuotientCorrect()
+        {
+            BivariatePolynomial.SetField(P256);
+            var dividend = new BivariatePolynomial(2, 2, 0);
+            dividend.AddTerm(1, 1, 0);
+
+            var divisor = new BivariatePolynomial(1, 1, 0);
+            var quotient = dividend / divisor;
+
+            var expected = new BivariatePolynomial(2, 1, 0);
+            expected.AddTerm(1, 0, 0);
+            Assert.True(quotient == expected);
+        }
+
+        [Fact]
+        public void Division_Remainder_LessThanDivisorDegrees()
+        {
+            BivariatePolynomial.SetField(P256);
+            var dividend = new BivariatePolynomial(1, 1, 1);
+            dividend.AddTerm(1, 0, 1);
+
+            var divisor = new BivariatePolynomial(1, 1, 0);
+            var quotient = dividend / divisor;
+
+            var remainder = dividend % divisor;
+            Assert.True(quotient.GetCoeff(0, 1) == 1);
+
+            Assert.True(remainder.GetCoeff(0, 1) == 1);
+            Assert.True(BivariatePolynomial.GetDegreeX(remainder) == 0);
+        }
+
+        #endregion
+
+        #region Arithmetic - Modulus
+
+        [Fact]
+        public void Modulus_Remainder_DegreeLessThanDivisor()
+        {
+            BivariatePolynomial.SetField(17);
+            var a = new BivariatePolynomial(1, 2, 0);
+
+            a.AddTerm(1, 1, 0);
+            a.AddTerm(1, 0, 0);
+
+            var b = new BivariatePolynomial(1, 1, 0);
+            b.AddTerm(1, 0, 0);
+            var rem = a % b;
+
+            Assert.True(rem.GetCoeff(0, 0) == 1);
+            var remDegX = BivariatePolynomial.GetDegreeX(rem);
+
+            var bDegX = BivariatePolynomial.GetDegreeX(b);
+            Assert.True(remDegX < bDegX);
+        }
+
+        [Fact]
+        public void Modulus_ExactDivision_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 1, 0);
+            var b = new BivariatePolynomial(3, 1, 0);
+            Assert.True((a * b) % a == BivariatePolynomial.Zero);
+        }
+
+        [Fact]
+        public void Modulus_DividendLessDegree_ReturnsDividend()
+        {
+            BivariatePolynomial.SetField(P256);
+            var dividend = new BivariatePolynomial(5, 0, 1);
+            var divisor = new BivariatePolynomial(1, 2, 0);
+
+            var rem = dividend % divisor;
+            Assert.True(rem == dividend);
         }
 
         #endregion
