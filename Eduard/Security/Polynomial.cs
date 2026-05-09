@@ -87,7 +87,7 @@ namespace Eduard.Security
             list.Reverse();
 
             for (int i = 0; i <= degree; i++)
-                this.coeffs[i] = Reduce(list[i]);
+                this.coeffs[i] = BarrettReducer.Reduce(list[i], true);
         }
 
         /// <summary>
@@ -116,17 +116,6 @@ namespace Eduard.Security
 
             BarrettReducer.SetModulus(field);
             ModSqrtUtil.InitParams();
-        }
-
-        internal static BigInteger Reduce(BigInteger val)
-        {
-            BigInteger field = BarrettReducer.GetModulus();
-            BigInteger temp = val % field;
-
-            if (temp < 0)
-                temp += field;
-
-            return temp;
         }
 
         internal void Update()

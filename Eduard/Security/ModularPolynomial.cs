@@ -387,7 +387,7 @@ namespace Eduard.Security
         /// <param name="degy"></param>
         public void AddTerm(BigInteger coeff, int degx, int degy)
         {
-            coeff = Polynomial.Reduce(coeff);
+            coeff = BarrettReducer.Reduce(coeff, true);
 
             if(head == null)
             {
