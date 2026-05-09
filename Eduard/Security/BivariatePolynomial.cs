@@ -206,7 +206,7 @@ namespace Eduard.Security
         /// <returns>The product polynomial reduced modulo the field.</returns>
         public static BivariatePolynomial operator *(BivariatePolynomial left, BivariatePolynomial right)
         {
-            if (left.IsZero && right.IsZero)
+            if (left.IsZero || right.IsZero)
                 return Zero;
 
             var res = new BivariatePolynomial();
