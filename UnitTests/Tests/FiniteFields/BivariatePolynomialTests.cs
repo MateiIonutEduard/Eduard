@@ -695,5 +695,32 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Implicit Conversions
+
+        [Fact]
+        public void ImplicitFromBigInteger_ConstantPolynomial()
+        {
+            BivariatePolynomial.SetField(P256);
+            BivariatePolynomial poly = (BigInteger)42;
+            Assert.True(poly.GetCoeff(0, 0) == 42);
+            Assert.True(poly == new BivariatePolynomial(42));
+        }
+
+        [Fact]
+        public void ImplicitFromPolynomial_UnivariateToBivariate()
+        {
+            BivariatePolynomial.SetField(P256);
+            var univariate = new Polynomial(new BigInteger[] { 2, 0, 1 });
+            BivariatePolynomial poly = univariate;
+
+            Assert.True(BivariatePolynomial.GetDegreeX(poly) == 2);
+            Assert.True(BivariatePolynomial.GetDegreeY(poly) == 0);
+
+            Assert.True(poly.GetCoeff(2, 0) == 2);
+            Assert.True(poly.GetCoeff(0, 0) == 1);
+        }
+
+        #endregion
     }
 }
