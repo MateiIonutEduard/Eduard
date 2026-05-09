@@ -483,5 +483,93 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Differentiation
+
+        [Fact]
+        public void DiffX_XYMonomial_ReducesDegreeX()
+        {
+            BivariatePolynomial.SetField(17);
+            var poly = new BivariatePolynomial(2, 3, 2);
+
+            var diff = BivariatePolynomial.DiffX(poly);
+            Assert.True(diff.GetCoeff(2, 2) == (2 * 3) % 17);
+
+            Assert.True(BivariatePolynomial.GetDegreeX(diff) == 2);
+            Assert.True(BivariatePolynomial.GetDegreeY(diff) == 2);
+        }
+
+        [Fact]
+        public void DiffX_Constant_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(7);
+            var diff = BivariatePolynomial.DiffX(poly);
+            Assert.True(diff.IsZero);
+        }
+
+        [Fact]
+        public void DiffX_PolynomialWithOnlyYTerms_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(3, 0, 4);
+            var diff = BivariatePolynomial.DiffX(poly);
+            Assert.True(diff.IsZero);
+        }
+
+        [Fact]
+        public void DiffY_XYMonomial_ReducesDegreeY()
+        {
+            BivariatePolynomial.SetField(17);
+            var poly = new BivariatePolynomial(3, 1, 4);
+            var diff = BivariatePolynomial.DiffY(poly);
+
+            Assert.True(diff.GetCoeff(1, 3) == (3 * 4) % 17);
+            Assert.True(BivariatePolynomial.GetDegreeY(diff) == 3);
+        }
+
+        [Fact]
+        public void DiffY_Constant_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(1);
+            Assert.True(BivariatePolynomial.DiffY(poly).IsZero);
+        }
+
+        [Fact]
+        public void DiffY_PolynomialWithOnlyXTerms_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(2, 5, 0);
+            Assert.True(BivariatePolynomial.DiffY(poly).IsZero);
+        }
+
+        [Fact]
+        public void DiffX_Summation_LinearBehavior()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 2, 0);
+
+            var b = new BivariatePolynomial(3, 0, 2);
+            var diffSum = BivariatePolynomial.DiffX(a + b);
+
+            var sumDiff = BivariatePolynomial.DiffX(a) + BivariatePolynomial.DiffX(b);
+            Assert.True(diffSum == sumDiff);
+        }
+
+        [Fact]
+        public void DiffY_Summation_LinearBehavior()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 0, 2);
+
+            var b = new BivariatePolynomial(3, 2, 0);
+            var diffSum = BivariatePolynomial.DiffY(a + b);
+
+            var sumDiff = BivariatePolynomial.DiffY(a) + BivariatePolynomial.DiffY(b);
+            Assert.True(diffSum == sumDiff);
+        }
+
+        #endregion
     }
 }
