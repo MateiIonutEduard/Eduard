@@ -625,5 +625,75 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Equality
+
+        [Fact]
+        public void Equality_SamePolynomial_ReturnsTrue()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 2, 3);
+            a.AddTerm(4, 1, 1);
+
+            var b = new BivariatePolynomial(1, 2, 3);
+            b.AddTerm(4, 1, 1);
+
+            Assert.True(a == b);
+            Assert.True(a.Equals(b));
+        }
+
+        [Fact]
+        public void Equality_DifferentPolynomial_ReturnsFalse()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 2, 0);
+            var b = new BivariatePolynomial(1, 2, 1);
+            Assert.False(a == b);
+        }
+
+        [Fact]
+        public void Equality_WithNull_ReturnsFalse()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1);
+            object someObject = null;
+            Assert.False(a.Equals(someObject));
+        }
+
+        [Fact]
+        public void Equality_WithDifferentType_ReturnsFalse()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1);
+            Assert.False(a.Equals("not a polynomial"));
+        }
+
+        [Fact]
+        public void Inequality_Operator_OppositeOfEquality()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(5);
+
+            var b = new BivariatePolynomial(5);
+            var c = new BivariatePolynomial(6);
+
+            Assert.False(a != b);
+            Assert.True(a != c);
+        }
+
+        [Fact]
+        public void GetHashCode_SamePolynomial_SameHash()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 2, 3);
+
+            a.AddTerm(4, 0, 1);
+            var b = new BivariatePolynomial(1, 2, 3);
+
+            b.AddTerm(4, 0, 1);
+            Assert.True(a.GetHashCode() == b.GetHashCode());
+        }
+
+        #endregion
     }
 }
