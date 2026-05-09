@@ -138,5 +138,105 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Arithmetic - Addition
+
+        [Fact]
+        public void Addition_TwoPolynomials_AddsCoefficients()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(2, 1, 0);
+            a.AddTerm(3, 0, 1);
+
+            var b = new BivariatePolynomial(4, 1, 0);
+            b.AddTerm(5, 0, 0);
+            var sum = a + b;
+
+            Assert.True(sum.GetCoeff(1, 0) == 6);
+            Assert.True(sum.GetCoeff(0, 1) == 3);
+            Assert.True(sum.GetCoeff(0, 0) == 5);
+        }
+
+        [Fact]
+        public void Addition_WithZero_OriginalUnchanged()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(42, 0, 0);
+            var zero = BivariatePolynomial.Zero;
+
+            var sum = poly + zero;
+            Assert.True(sum == poly);
+        }
+
+        [Fact]
+        public void Addition_Commutative()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 2, 3);
+            var b = new BivariatePolynomial(4, 5, 6);
+            Assert.True(a + b == b + a);
+        }
+
+        [Fact]
+        public void Addition_Associative()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(1, 0, 0);
+            var b = new BivariatePolynomial(2, 1, 0);
+
+            var c = new BivariatePolynomial(3, 0, 1);
+            Assert.True((a + b) + c == a + (b + c));
+        }
+
+        [Fact]
+        public void Addition_TermCancellation_YieldsCorrectResult()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(5, 1, 1);
+            var b = new BivariatePolynomial(-5, 1, 1);
+
+            var sum = a + b;
+            Assert.True(sum.IsZero);
+        }
+
+        #endregion
+
+        #region Arithmetic - Subtraction
+
+        [Fact]
+        public void Subtraction_Subtrahend_SubtractsCoefficients()
+        {
+            BivariatePolynomial.SetField(P256);
+            var a = new BivariatePolynomial(10, 1, 0);
+            a.AddTerm(7, 0, 1);
+
+            var b = new BivariatePolynomial(3, 1, 0);
+            b.AddTerm(2, 0, 1);
+            var diff = a - b;
+
+            Assert.True(diff.GetCoeff(1, 0) == 7);
+            Assert.True(diff.GetCoeff(0, 1) == 5);
+        }
+
+        [Fact]
+        public void Subtraction_FromZero_ProducesNegation()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(5, 1, 1);
+            var zero = BivariatePolynomial.Zero;
+            var neg = zero - poly;
+            Assert.True(neg.GetCoeff(1, 1) == P256 - 5);
+        }
+
+        [Fact]
+        public void Subtraction_Self_YieldsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(3, 2, 1);
+            poly.AddTerm(4, 0, 3);
+            Assert.True((poly - poly).IsZero);
+        }
+
+        #endregion
     }
 }
