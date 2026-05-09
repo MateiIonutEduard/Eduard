@@ -484,6 +484,84 @@ namespace Eduard.Tests.FiniteFields
 
         #endregion
 
+        #region Evaluation
+
+        [Fact]
+        public void EvaluateAtY_Univariate_X_Polynomial()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(1, 2, 0);
+
+            poly.AddTerm(2, 1, 1);
+            poly.AddTerm(3, 0, 2);
+
+            Polynomial evalAt2 = poly.F(2);
+            Assert.True(evalAt2.coeffs[0] == (3 * 4) % P256);
+            Assert.True(evalAt2.coeffs[1] == (2 * 2) % P256);
+
+            Assert.True(evalAt2.coeffs[2] == 1);
+            Assert.True(evalAt2.degree == 2);
+        }
+
+        [Fact]
+        public void EvaluateAtX_Y_ConstantPolynomial_ReturnsConstant()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(42);
+            var val = poly.F(100, 200);
+            Assert.True(val == 42);
+        }
+
+        [Fact]
+        public void EvaluateAtX_Y_Monomial_ComputesCorrectValue()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(5, 2, 3);
+            BigInteger x = 3, y = 2;
+
+            BigInteger expected = 5 * BigInteger.Pow(x, 2) * BigInteger.Pow(y, 3) % P256;
+            Assert.True(poly.F(x, y) == expected);
+        }
+
+        [Fact]
+        public void EvaluateAtY_ZeroPolynomial_ReturnsZeroPolynomial()
+        {
+            BivariatePolynomial.SetField(P256);
+            var zero = BivariatePolynomial.Zero;
+            var univariate = zero.F(123);
+
+            Assert.True(univariate.degree == 0);
+            Assert.True(univariate.coeffs[0] == 0);
+        }
+
+        [Fact]
+        public void EvaluateAtX_Y_ZeroPolynomial_ReturnsZero()
+        {
+            BivariatePolynomial.SetField(P256);
+            var zero = BivariatePolynomial.Zero;
+            Assert.True(zero.F(123, 456) == 0);
+        }
+
+        [Fact]
+        public void EvaluateAtY_OutsideFieldRange_ThrowsArgumentOutOfRange()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(1, 1, 1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => poly.F(P256));
+            Assert.Throws<ArgumentOutOfRangeException>(() => poly.F(-1));
+        }
+
+        [Fact]
+        public void EvaluateAtXY_OutsideFieldRange_ThrowsArgumentOutOfRange()
+        {
+            BivariatePolynomial.SetField(P256);
+            var poly = new BivariatePolynomial(1, 1, 1);
+            Assert.Throws<ArgumentOutOfRangeException>(() => poly.F(P256, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => poly.F(0, -1));
+        }
+
+        #endregion
+
         #region Differentiation
 
         [Fact]
