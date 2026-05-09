@@ -110,7 +110,7 @@ namespace Eduard
                     residues[i] = t[i][j];
 
                 BigInteger coeff = Garner.GetInteger(residues);
-                res[j] = BarrettReducer.Reduce(coeff, field); 
+                res[j] = BarrettReducer.Reduce(coeff); 
             }
 
             return res;
@@ -184,7 +184,7 @@ namespace Eduard
                     residues[i] = t[i][j];
 
                 BigInteger coeff = Garner.GetInteger(residues);
-                res[j] = BarrettReducer.Reduce(coeff, field);
+                res[j] = BarrettReducer.Reduce(coeff);
             }
 
             return res;
@@ -264,7 +264,7 @@ namespace Eduard
                     residues[i] = t[i][j + degn - 1];
 
                 BigInteger coeff = Garner.GetInteger(residues);
-                R[j] = BarrettReducer.Reduce(coeff, field);
+                R[j] = BarrettReducer.Reduce(coeff);
             }
 
             for (i = 0; i < pc; i++)
