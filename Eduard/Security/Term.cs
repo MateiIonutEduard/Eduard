@@ -55,7 +55,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="left">The first term to compare.</param>
         /// <param name="right">The second term to compare.</param>
-        /// <returns>true if the terms have identical coefficient and degrees; otherwise false.</returns>
+        /// <returns><c>true</c> if the terms have identical coefficient and degrees; otherwise <c>false</c>.</returns>
         public static bool operator ==(Term left, Term right)
         {
             return left.Equals(right);
@@ -66,7 +66,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="left">The first term to compare.</param>
         /// <param name="right">The second term to compare.</param>
-        /// <returns>true if the terms differ in coefficient or degrees; otherwise false.</returns>
+        /// <returns><c>true</c> if the terms differ in coefficient or degrees; otherwise <c>false</c>.</returns>
         public static bool operator !=(Term left, Term right)
         {
             return !left.Equals(right);
@@ -76,7 +76,7 @@ namespace Eduard.Security
         /// Determines whether the specified object is equal to the current term.
         /// </summary>
         /// <param name="obj">The object to compare with the current term.</param>
-        /// <returns>true if the specified object is a Term with identical values; otherwise false.</returns>
+        /// <returns><c>true</c> if the specified object is a Term with identical values; otherwise <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
             if (!(obj is Term))
@@ -90,7 +90,7 @@ namespace Eduard.Security
         /// Determines whether the current term is equal to another term.
         /// </summary>
         /// <param name="other">The term to compare with the current term.</param>
-        /// <returns>true if the terms have identical coefficient and degrees; otherwise false.</returns>
+        /// <returns><c>true</c> if the terms have identical coefficient and degrees; otherwise <c>false</c>.</returns>
         public bool Equals(Term other)
         {
             return coeff == other.coeff
