@@ -6,18 +6,24 @@ namespace Eduard.Tests.FiniteFields
     [Collection("Sequential")]
     public class FieldTests
     {
+        #region Prime Fields
+
+        private static readonly BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
+        private static readonly BigInteger P384 = BigInteger.Parse("39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112319");
+
+        #endregion
+
         #region Constructor Tests
 
         [Fact]
         public void Constructor_PositiveValue_ReducesModField()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             BigInteger value = P256 + 100;
 
             Field f = new Field(value);
-
             Assert.Equal(100, (BigInteger)f);
+
             Assert.True(f.fn >= 0);
             Assert.True(f.fn < P256);
         }
@@ -25,13 +31,12 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Constructor_NegativeValue_ReducesModField()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             BigInteger value = -50;
 
             Field f = new Field(value);
-
             Assert.Equal(P256 - 50, (BigInteger)f);
+
             Assert.True(f.fn >= 0);
             Assert.True(f.fn < P256);
         }
@@ -39,11 +44,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Constructor_Zero_ReducesCorrectly()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field f = new Field(0);
-
             Assert.Equal(0, (BigInteger)f);
             Assert.True(f.fn == 0);
         }
@@ -51,37 +53,30 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Constructor_ValueAlreadyInRange_NoReduction()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             BigInteger value = 123456789;
-
             Field f = new Field(value);
-
             Assert.Equal(value, (BigInteger)f);
         }
 
         [Fact]
         public void Constructor_MultipleOfModulus_ReducesToZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             BigInteger value = P256 * 3;
-
             Field f = new Field(value);
-
             Assert.Equal(0, (BigInteger)f);
         }
 
         [Fact]
         public void Constructor_VeryLargeValue_ProperlyReduced()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             BigInteger value = BigInteger.Pow(2, 500);
 
             Field f = new Field(value);
-
             Assert.True(f.fn >= 0);
+
             Assert.True(f.fn < P256);
             Assert.Equal(value % P256, (BigInteger)f);
         }
@@ -93,9 +88,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void SetField_ValidPrime_SetsModulus()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field b = 200;
 
@@ -139,13 +132,11 @@ namespace Eduard.Tests.FiniteFields
 
         [Fact]
         public void SetField_LargeCryptographicPrime_SetsSuccessfully()
-        {
-            BigInteger P384 = BigInteger.Parse("39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112319");
+        {      
             Field.SetField(P384);
-
             Field a = 100;
-            Field b = 200;
 
+            Field b = 200;
             Field prod = a * b;
             Assert.Equal(20000, (BigInteger)prod);
         }
@@ -153,16 +144,13 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void SetField_SwitchingModulus_WorksCorrectly()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
+
             Field b = 200;
-
             Field sum256 = a + b;
-            Assert.Equal(300, (BigInteger)sum256);
 
-            BigInteger P384 = BigInteger.Parse("39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112319");
+            Assert.Equal(300, (BigInteger)sum256);
             Field.SetField(P384);
 
             Field c = 100;
@@ -179,12 +167,10 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Addition_WithinField_NoOverflow()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
-            Field b = 200;
 
+            Field b = 200;
             Field result = a + b;
             Assert.Equal(300, (BigInteger)result);
         }
@@ -192,9 +178,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Addition_ExceedsModulus_ReducesCorrectly()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = P256 - 100;
             Field b = 200;
 
@@ -205,9 +189,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Addition_WithZero_PreservesValue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
             Field zero = 0;
 
@@ -221,13 +203,12 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Addition_Commutative_ProducesSameResult()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
-            Field b = 67890;
 
+            Field b = 67890;
             Field result1 = a + b;
+
             Field result2 = b + a;
             Assert.Equal(result1, result2);
         }
@@ -235,10 +216,9 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Addition_Associative_ProducesSameResult()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
+
             Field b = 200;
             Field c = 300;
 
@@ -250,9 +230,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Addition_NegativeNumbers_ReducesCorrectly()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = new Field(-100);
             Field b = new Field(-200);
 
@@ -267,9 +245,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Subtraction_PositiveResult_NoReduction()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 500;
             Field b = 200;
 
@@ -280,9 +256,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Subtraction_ZeroResult_ReducesToZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field b = 100;
 
@@ -293,9 +267,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Subtraction_NegativeResult_WrapsAround()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field b = 500;
 
@@ -306,13 +278,12 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Subtraction_Anticommutative_NegationHolds()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
-            Field b = 200;
 
+            Field b = 200;
             Field result1 = a - b;
+
             Field result2 = -(b - a);
             Assert.Equal(result1, result2);
         }
@@ -320,9 +291,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Subtraction_FromZero_ProducesNegation()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field zero = 0;
 
@@ -337,21 +306,19 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Negation_PositiveValue_ProducesFieldComplement()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 100;
 
             Field result = -a;
-            Assert.Equal(P256 - 100, (BigInteger)result);
+            Assert.Equal(P256 - 100, 
+                (BigInteger)result);
         }
 
         [Fact]
         public void Negation_Zero_RemainsZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field zero = 0;
-
             Field result = -zero;
             Assert.Equal(0, (BigInteger)result);
         }
@@ -359,10 +326,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Negation_DoubleNegation_ReturnsOriginal()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 12345;
-
             Field result = -(-a);
             Assert.Equal(a, result);
         }
@@ -370,9 +335,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Negation_AdditiveInverse_SumsToZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 54321;
             Field negA = -a;
 
@@ -387,9 +350,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_WithinField_NoReductionNeeded()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field b = 200;
 
@@ -411,9 +372,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_ByZero_ProducesZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
             Field zero = 0;
 
@@ -427,9 +386,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_ByOne_PreservesValue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
             Field one = 1;
 
@@ -443,13 +400,12 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_Commutative_ProducesSameResult()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
-            Field b = 67890;
 
+            Field b = 67890;
             Field result1 = a * b;
+
             Field result2 = b * a;
             Assert.Equal(result1, result2);
         }
@@ -457,10 +413,9 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_Associative_ProducesSameResult()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
+
             Field b = 200;
             Field c = 300;
 
@@ -472,10 +427,9 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_Distributive_OverAddition()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 10;
+
             Field b = 20;
             Field c = 30;
 
@@ -487,9 +441,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Multiplication_LargeValues_HandlesCorrectly()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = P256 - 1;
             Field b = P256 - 1;
 
@@ -504,9 +456,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Division_ByOne_ReturnsSameValue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
             Field one = 1;
 
@@ -517,10 +467,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Division_BySelf_ReturnsOne()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 12345;
-
             Field result = a / a;
             Assert.Equal(new Field(1), result);
         }
@@ -528,13 +476,12 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Division_MultiplicationInverse_CombinesToOne()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 54321;
-            Field b = 12345;
 
+            Field b = 12345;
             Field quotient = a / b;
+
             Field product = quotient * b;
             Assert.Equal(a, product);
         }
@@ -542,10 +489,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Division_ByZero_ThrowsDivideByZeroException()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 100;
-
             Field zero = 0;
             Assert.Throws<DivideByZeroException>(() => a / zero);
         }
@@ -553,9 +498,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Division_ZeroByNonZero_ReturnsZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field zero = 0;
             Field a = 100;
 
@@ -566,9 +509,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Division_InverseMultiplication_RoundTrip()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 999888777;
             Field b = 555444333;
 
@@ -583,10 +524,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Pow_ZeroExponent_ReturnsOne()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field b = 12345;
-
             Field result = Field.Pow(b, 0);
             Assert.Equal(new Field(1), result);
         }
@@ -594,10 +533,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Pow_OneExponent_ReturnsSameValue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field b = 12345;
-
             Field result = Field.Pow(b, 1);
             Assert.Equal(b, result);
         }
@@ -624,7 +561,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Pow_BaseZero_ExponentZero_ThrowsArithmeticException()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field b = 0;
 
@@ -635,7 +571,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Pow_BaseZero_PositiveExponent_ReturnsZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field b = 0;
 
@@ -646,7 +581,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Pow_MultiplicationOfPowers_EquivalentToAdditionOfExponents()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field b = 12345;
 
@@ -667,10 +601,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Sqrt_PerfectSquare_ReturnsCorrectRoot()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 9;
-
             Field root = Field.Sqrt(a);
             Assert.Equal(a, root * root);
         }
@@ -678,10 +610,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Sqrt_Zero_ReturnsZero()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field zero = 0;
-
             Field root = Field.Sqrt(zero);
             Assert.Equal(0, (BigInteger)root);
         }
@@ -689,10 +619,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Sqrt_One_ReturnsPlusMinusOne()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field one = 1;
-
             Field root = Field.Sqrt(one);
             Assert.True(root == 1 || root == P256 - 1);
         }
@@ -700,7 +628,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Sqrt_LargeField_QuadraticResidue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             int k;
 
@@ -722,10 +649,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ImplicitConversion_FromInt_CreatesField()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field f = 42;
-
             Assert.Equal(42, (BigInteger)f);
             Assert.IsType<Field>(f);
         }
@@ -733,7 +658,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ImplicitConversion_FromLong_CreatesField()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field f = 123456789012345L;
             Assert.Equal(123456789012345L % P256, (BigInteger)f);
@@ -742,9 +666,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ImplicitConversion_FromBigInteger_CreatesField()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             BigInteger val = BigInteger.Parse("12345678901234567890");
             Field f = val;
             Assert.Equal(val % P256, (BigInteger)f);
@@ -753,10 +675,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ImplicitConversion_FromUInt_HandlesCorrectly()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             uint val = 12345;
-
             Field f = val;
             Assert.Equal(val % P256, (BigInteger)f);
         }
@@ -764,10 +684,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ExplicitConversion_ToBigInteger_ReturnsValue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field f = 12345;
-
             BigInteger val = (BigInteger)f;
             Assert.Equal(12345, val);
         }
@@ -779,9 +697,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Equality_SameValues_ReturnsTrue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field b = 100;
 
@@ -792,9 +708,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Equality_DifferentValues_ReturnsFalse()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 100;
             Field b = 200;
 
@@ -805,10 +719,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Equality_WithNull_ReturnsFalse()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 100;
-
             object obj = null;
             Assert.False(a.Equals(obj));
         }
@@ -816,7 +728,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Equality_WithDifferentType_ReturnsFalse()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 100;
             Assert.False(a.Equals("100"));
@@ -825,9 +736,7 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Equality_GetHashCode_IdenticalForEqualValues()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
-
             Field a = 12345;
             Field b = 12345;
 
@@ -838,10 +747,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Inequality_DifferentValues_ReturnsTrue()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 100;
-
             Field b = 200;
             Assert.True(a != b);
         }
@@ -853,10 +760,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ToString_ReturnsCorrectRepresentation()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field f = 12345;
-
             string result = f.ToString();
             Assert.Equal("12345", result);
         }
@@ -864,10 +769,8 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void ToString_LargeField_ReturnsFullNumber()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field f = P256 - 1;
-
             string result = f.ToString();
             Assert.Equal((P256 - 1).ToString(), result);
         }
@@ -879,7 +782,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Field_AllZeroOperations_Consistent()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field zero = 0;
 
@@ -893,7 +795,6 @@ namespace Eduard.Tests.FiniteFields
         [Fact]
         public void Field_MultiplicativeGroup_NonZeroHasInverse()
         {
-            BigInteger P256 = BigInteger.Parse("115792089210356248762697446949407573530086143415290314195533631308867097853951");
             Field.SetField(P256);
             Field a = 12345;
 
