@@ -5,18 +5,22 @@ using System.Text;
 namespace Eduard
 {
     /// <summary>
-    /// Implements Garner's algorithm for CRT reconstruction from mixed-radix residues.
+    /// Implements Garner's algorithm for CRT reconstruction using Knuth's mixed-radix method.
     /// </summary>
     /// <remarks>
-    /// Recovers an integer from its residues modulo a set of pairwise-coprime moduli.<br/>
-    /// Optional negative mode reconstructs the unique representative in (-N/2, N/2],<br/>
+    /// Recovers an integer from its residues modulo a set of pairwise-coprime moduli. <br/>
+    /// Precomputes modular inverses in the constructor for efficient reconstruction. <br/>
+    /// Optional negative mode reconstructs the unique representative in (-N/2, N/2], <br/>
     /// useful for signed arithmetic over finite fields (Schoof, SEA).
     /// </remarks>
     public struct Garner
-    { 
+    {
+        private uint[] c;
+        private uint[] m;
+        private uint[] v;
+
         private BigInteger N;
         private BigInteger halfN;
-        private uint[] m;
 
         private bool signed;
         private int n;
@@ -29,6 +33,7 @@ namespace Eduard
         /// <exception cref="ArgumentNullException">Thrown when moduli is null.</exception>
         /// <exception cref="ArgumentException">Thrown when moduli is empty.</exception>
         /// <remarks>
+        /// Precomputes all pairwise modular inverses for Knuth's mixed-radix conversion. <br/>
         /// Assumes moduli are pairwise coprime. Non-coprime moduli produce incorrect reconstruction.
         /// </remarks>
         public Garner(uint[] moduli, bool negative = false)
@@ -43,23 +48,24 @@ namespace Eduard
                     " be empty.", nameof(moduli));
 
             n = moduli.Length;
-            int i;
+            int inversesCount = n * (n - 1) / 2;
+            c = new uint[inversesCount];
 
             m = new uint[n];
-            uint product;
+            v = new uint[n];
+
+            int k = 0;
             N = 1;
 
-            for (i = 0; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 m[i] = moduli[i];
-                product = 1;
 
                 if (negative)
                     N *= moduli[i];
 
-                for (int j = 0; j < i; j++)
-                    product = CoreMath.MultMod(product,
-                        moduli[j], moduli[i]);
+                for (int j = 0; j < i; j++, k++)
+                    c[k] = CoreMath.Inverse(m[j], m[i]);
             }
 
             signed = negative;
@@ -67,7 +73,7 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Reconstructs the integer from a set of residues using mixed-radix conversion.
+        /// Reconstructs the integer from a set of residues using Knuth's mixed-radix conversion.
         /// </summary>
         /// <param name="residues">Residues modulo the moduli specified in the constructor.</param>
         /// <returns>The reconstructed integer, optionally normalized to centered range.</returns>
@@ -97,28 +103,21 @@ namespace Eduard
                     + "the number of moduli.", 
                     nameof(residues));
 
-            uint[] v = new uint[n];
-            uint product, sum;
-
             v[0] = residues[0] % m[0];
             if (v[0] < 0) v[0] += m[0];
+            int k = 0;
 
             for (int i = 1; i < n; i++)
             {
-                sum = v[0];
-                product = 1;
+                v[i] = CoreMath.DiffMod(residues[i], v[0], m[i]);
+                v[i] = CoreMath.MultMod(v[i], c[k], m[i]);
+                k++;
 
-                for (int j = 1; j < i; j++)
+                for (int j = 1; j < i; j++, k++)
                 {
-                    product = CoreMath.MultMod(product, m[j - 1], m[i]);
-                    CoreMath.MultAdd(v[j], product, sum, m[i], ref sum);
+                    v[i] = CoreMath.DiffMod(v[i], v[j], m[i]);
+                    v[i] = CoreMath.MultMod(v[i], c[k], m[i]);
                 }
-
-                uint diff = CoreMath.DiffMod(residues[i], sum, m[i]);
-                product = CoreMath.MultMod(product, m[i - 1], m[i]);
-
-                uint inverse = CoreMath.Inverse(product, m[i]);
-                v[i] = CoreMath.MultMod(diff, inverse, m[i]);
             }
 
             BigInteger res = v[0];
@@ -132,7 +131,7 @@ namespace Eduard
 
             if (signed)
             {
-                if (res > halfN) 
+                if (res > halfN)
                     res -= N;
             }
 
