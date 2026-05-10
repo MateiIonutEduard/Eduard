@@ -23,6 +23,7 @@ namespace Eduard
         static uint w1, w2;
         static uint w3, msw, lsw;
 
+        static Garner garner;
         static int degree;
         static uint[][] t;
 
@@ -109,7 +110,7 @@ namespace Eduard
                 for (i = 0; i < pc; i++)
                     residues[i] = t[i][j];
 
-                BigInteger coeff = Garner.GetInteger(residues);
+                BigInteger coeff = garner.GetInteger(residues);
                 res[j] = BarrettReducer.Reduce(coeff); 
             }
 
@@ -183,7 +184,7 @@ namespace Eduard
                 for (i = 0; i < pc; i++)
                     residues[i] = t[i][j];
 
-                BigInteger coeff = Garner.GetInteger(residues);
+                BigInteger coeff = garner.GetInteger(residues);
                 res[j] = BarrettReducer.Reduce(coeff);
             }
 
@@ -263,7 +264,7 @@ namespace Eduard
                 for (i = 0; i < pc; i++)
                     residues[i] = t[i][j + degn - 1];
 
-                BigInteger coeff = Garner.GetInteger(residues);
+                BigInteger coeff = garner.GetInteger(residues);
                 R[j] = BarrettReducer.Reduce(coeff);
             }
 
@@ -305,7 +306,7 @@ namespace Eduard
                 for (i = 0; i < pc; i++)
                     residues[i] = t[i][j];
 
-                R[j] = Garner.GetInteger(residues);
+                R[j] = garner.GetInteger(residues);
                 BigInteger diff = (G[j] - R[j]) % field;
 
                 if (diff < 0) diff += field;
@@ -452,7 +453,7 @@ namespace Eduard
             logN = logn;
             count = pr;
 
-            Garner.Init(primes);
+            garner = new Garner(primes);
             return pr;
         }
 

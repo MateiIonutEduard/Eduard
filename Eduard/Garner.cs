@@ -12,19 +12,17 @@ namespace Eduard
     /// Optional negative mode reconstructs the unique representative in (-N/2, N/2],<br/>
     /// useful for signed arithmetic over finite fields (Schoof, SEA).
     /// </remarks>
-    public class Garner
-    {
-        static uint[][] c;
-        static uint[] m;
+    public struct Garner
+    { 
+        private BigInteger N;
+        private BigInteger halfN;
+        private uint[] m;
 
-        static BigInteger N;
-        static BigInteger halfN;
-
-        static bool signed;
-        static int n;
+        private bool signed;
+        private int n;
 
         /// <summary>
-        /// Initializes Garner's algorithm with a set of pairwise-coprime moduli.
+        /// Initializes a new Garner instance with a set of pairwise-coprime moduli.
         /// </summary>
         /// <param name="moduli">Array of prime or pairwise-coprime moduli.</param>
         /// <param name="negative">When true, reconstruction returns representatives in (-N/2, N/2].</param>
@@ -33,19 +31,18 @@ namespace Eduard
         /// <remarks>
         /// Assumes moduli are pairwise coprime. Non-coprime moduli produce incorrect reconstruction.
         /// </remarks>
-        public static void Init(uint[] moduli, bool negative = false)
+        public Garner(uint[] moduli, bool negative = false)
         {
             if (ReferenceEquals(moduli, null))
-                throw new ArgumentNullException(nameof(moduli), 
+                throw new ArgumentNullException(nameof(moduli),
                     "Moduli array must not be null.");
 
             if (moduli.Length == 0)
                 throw new ArgumentException(
-                    "Moduli array must not" + 
+                    "Moduli array must not" +
                     " be empty.", nameof(moduli));
 
             n = moduli.Length;
-            c = new uint[n][];
             int i;
 
             m = new uint[n];
@@ -54,7 +51,6 @@ namespace Eduard
 
             for (i = 0; i < n; i++)
             {
-                c[i] = new uint[n];
                 m[i] = moduli[i];
                 product = 1;
 
@@ -62,7 +58,7 @@ namespace Eduard
                     N *= moduli[i];
 
                 for (int j = 0; j < i; j++)
-                    product = CoreMath.MultMod(product, 
+                    product = CoreMath.MultMod(product,
                         moduli[j], moduli[i]);
             }
 
@@ -73,10 +69,10 @@ namespace Eduard
         /// <summary>
         /// Reconstructs the integer from a set of residues using mixed-radix conversion.
         /// </summary>
-        /// <param name="residues">Residues modulo the moduli specified in <see cref="Init"/>.</param>
+        /// <param name="residues">Residues modulo the moduli specified in the constructor.</param>
         /// <returns>The reconstructed integer, optionally normalized to centered range.</returns>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when <see cref="Init"/> has not been called.
+        /// Thrown when the instance has not been properly initialized.
         /// </exception>
         /// <exception cref="ArgumentNullException">
         /// Thrown when residues is null.
@@ -84,7 +80,7 @@ namespace Eduard
         /// <exception cref="ArgumentException">
         /// Thrown when residues length does not match the number of moduli.
         /// </exception>
-        public static BigInteger GetInteger(uint[] residues)
+        public BigInteger GetInteger(uint[] residues)
         {
             if (ReferenceEquals(residues, null))
                 throw new ArgumentNullException(nameof(residues), 
@@ -92,8 +88,8 @@ namespace Eduard
 
             if (ReferenceEquals(m, null))
                 throw new InvalidOperationException(
-                    "Garner not initialized. Call" + 
-                    " Init() first.");
+                    "Garner not initialized. Construct" +
+                    " an instance with new Garner(moduli).");
 
             if (residues.Length != n)
                 throw new ArgumentException(
