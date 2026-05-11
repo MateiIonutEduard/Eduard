@@ -42,7 +42,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void ScalarMult_NegativeScalar_ThrowsException()
+        public void ScalarMult_NegativeScalar_ReturnsValidPoints()
         {
             WeiCurveType[] curveTypes = new WeiCurveType[]
             {
@@ -67,11 +67,14 @@ namespace Eduard.Tests.Curves
 
                 for (int j = 0; j < modes.Length; j++)
                 {
-                    Assert.Throws<ArgumentException>(() =>
-                        ECMath.Multiply(curve, -1, G, modes[j]));
+                    var neg1G = ECMath.Multiply(curve, -1, G, modes[j]);
+                    Assert.Equal(neg1G, ECMath.Negate(curve, G));
 
-                    Assert.Throws<ArgumentException>(() =>
-                        ECMath.Multiply(curve, -100, G, modes[j]));
+                    var neg100G = ECMath.Multiply(curve, -100, G, modes[j]);
+                    var G100 = ECMath.Multiply(curve, 100, G, modes[j]);
+
+                    var negG100 = ECMath.Negate(curve, G100);
+                    Assert.Equal(negG100, neg100G);
                 }
             }
         }
@@ -290,12 +293,12 @@ namespace Eduard.Tests.Curves
                 var G = curve.GetBasePoint();
 
                 var k = new BigInteger(1234567);
-                var negK = curve.order - k;
+                BigInteger negK = k.Negate();
 
                 var kG = ECMath.Multiply(curve, k, G, ECMode.EC_FASTEST);
                 var negKG = ECMath.Multiply(curve, negK, G, ECMode.EC_FASTEST);
-                var negated = ECMath.Negate(curve, kG);
 
+                var negated = ECMath.Negate(curve, kG);
                 Assert.Equal(negated, negKG);
             }
         }

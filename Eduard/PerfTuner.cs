@@ -34,7 +34,7 @@ namespace Eduard
         {
             thresholds = new int[] { 
                 1792, 16, 32, 10,
-                128, 96, 64, 16, 
+                64, 64, 64, 16, 
                 88
             };
         }

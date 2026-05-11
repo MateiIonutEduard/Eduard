@@ -25,6 +25,13 @@ namespace Eduard.Security
         /// Automatically updated when coefficients change. A zero polynomial has degree 0.
         /// </remarks>
         public int degree;
+
+        /// <summary>
+        /// The coefficients of the polynomial in ascending order (constant term at index 0).
+        /// </summary>
+        /// <remarks>
+        /// Coefficients are always reduced modulo the current field. Automatically sized to degree + 1.
+        /// </remarks>
         public BigInteger[] coeffs;
 
         /// <summary>
@@ -80,7 +87,7 @@ namespace Eduard.Security
             list.Reverse();
 
             for (int i = 0; i <= degree; i++)
-                this.coeffs[i] = Reduce(list[i]);
+                this.coeffs[i] = BarrettReducer.Reduce(list[i], true);
         }
 
         /// <summary>
@@ -91,21 +98,24 @@ namespace Eduard.Security
         /// Initializes Barrett reduction constants and optimizes square root computations<br/>
         /// based on field properties. Must be called before any polynomial operations.
         /// </remarks>
+        /// <exception cref="ArgumentException">
+        /// Thrown when field modulus is less than 5 or not prime.
+        /// </exception>
         public static void SetField(BigInteger field)
         {
+            if (field < 5)
+                throw new ArgumentException(
+                    "Field modulus cannot " 
+                    + "be less than 5.");
+
+            bool isPrime = BigInteger.IsProbablePrime(field);
+
+            if (!isPrime)
+                throw new ArgumentException(
+                    "Field modulus must be prime.");
+
             BarrettReducer.SetModulus(field);
             ModSqrtUtil.InitParams();
-        }
-
-        internal static BigInteger Reduce(BigInteger val)
-        {
-            BigInteger field = BarrettReducer.GetModulus();
-            BigInteger temp = val % field;
-
-            if (temp < 0)
-                temp += field;
-
-            return temp;
         }
 
         internal void Update()
@@ -389,11 +399,11 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Multiplies a polynomial by x^n, shifting coefficients upward.
+        /// Multiplies a polynomial by X^n, shifting coefficients upward.
         /// </summary>
         /// <param name="poly">The input polynomial.</param>
         /// <param name="words">The exponent n (number of shifts).</param>
-        /// <returns>Polynomial result of multiplying by x^n (coefficients shifted up by n).</returns>
+        /// <returns>Polynomial result of multiplying by X^n (coefficients shifted up by n).</returns>
         /// <remarks>
         /// Used internally for polynomial arithmetic and FFT-based algorithms.
         /// </remarks>
@@ -568,13 +578,14 @@ namespace Eduard.Security
         public static Polynomial Pow(Polynomial val, BigInteger exponent, Polynomial modulus)
         {
             Polynomial nb = new Polynomial(val);
+            Polynomial rb = nb % modulus;
             Polynomial result = 1;
 
             if(modulus.degree == 0 && modulus.coeffs[0] == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
-            if (val == 0 && exponent == 0)
+            if (rb == 0 && exponent == 0)
                 throw new ArithmeticException(
                     "Cannot compute 0^0: zero " + 
                     "polynomial raised to power " 
@@ -586,8 +597,7 @@ namespace Eduard.Security
                     "polynomial modular exponentiation.");
 
             if (exponent == 0) return 1;
-            Polynomial b = nb % modulus;
-            if (exponent == 1) return b;
+            if (exponent == 1) return rb;
 
 #if !USE_BENCHMARKING
             int DEGREE_THRESHOLD = (int)Threshold.POLY_DEGREE_THRESHOLD;
@@ -602,8 +612,8 @@ namespace Eduard.Security
                 SetPolyMod(modulus);
 
                 Polynomial[] table = new Polynomial[store];
-                table[0] = b;
-                Polynomial b2 = MultMod(b, b, modulus);
+                table[0] = rb;
+                Polynomial b2 = MultMod(rb, rb, modulus);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
@@ -634,12 +644,12 @@ namespace Eduard.Security
             {
                 int size = exponent.GetBits();
 
-                for(int k = 0; k < size; k++)
+                for(int k = size - 1; k >= 0; k--)
                 {
-                    if (exponent.TestBit(k))
-                        result = (b * result) % modulus;
+                    result = (result * result) % modulus;
 
-                    b = (b * b) % modulus;
+                    if (exponent.TestBit(k))
+                        result = (result * rb) % modulus;
                 }
             }
 
@@ -658,11 +668,11 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Composes two polynomials, computing P(Q(x)) over the current finite field.
+        /// Composes two polynomials, computing P(Q(X)) over the current finite field.
         /// </summary>
-        /// <param name="left">The outer polynomial P(x).</param>
-        /// <param name="right">The inner polynomial Q(x).</param>
-        /// <returns>The composition polynomial P(Q(x)) reduced modulo the field.</returns>
+        /// <param name="left">The outer polynomial P(X).</param>
+        /// <param name="right">The inner polynomial Q(X).</param>
+        /// <returns>The composition polynomial P(Q(X)) reduced modulo the field.</returns>
         /// <remarks>
         /// Implements Horner's method for polynomial composition. The result degree is deg(P) * deg(Q). For <br/>
         /// composition with modular reduction, use <see cref="Compose(Polynomial, Polynomial, Polynomial, bool)"/>.
@@ -686,16 +696,16 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Composes two polynomials modulo a third polynomial, computing P(Q(x)) mod M(x) over the current finite field.
+        /// Composes two polynomials modulo a third polynomial, computing P(Q(X)) mod M(X) over the current finite field.
         /// </summary>
-        /// <param name="left">The outer polynomial P(x).</param>
-        /// <param name="right">The inner polynomial Q(x).</param>
-        /// <param name="modulus">The modulus polynomial M(x).</param>
+        /// <param name="left">The outer polynomial P(X).</param>
+        /// <param name="right">The inner polynomial Q(X).</param>
+        /// <param name="modulus">The modulus polynomial M(X).</param>
         /// <param name="prepareModulus">
         /// If <c>true</c>, precomputes FFT parameters for the modulus using <see cref="SetPolyMod"/>.
         /// Set to <c>false</c> when calling repeatedly with the same modulus.
         /// </param>
-        /// <returns>The composition polynomial P(Q(x)) reduced modulo M(x) over the current field.</returns>
+        /// <returns>The composition polynomial P(Q(X)) reduced modulo M(X) over the current field.</returns>
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         /// <remarks>
         /// <para>
@@ -806,16 +816,25 @@ namespace Eduard.Security
         /// <summary>
         /// Evaluates the polynomial at a given point using Horner's method.
         /// </summary>
-        /// <param name="x">The point to evaluate at.</param>
-        /// <returns>The value of the polynomial at x modulo the field.</returns>
-        public BigInteger Horner(BigInteger x)
+        /// <param name="X">The point to evaluate at.</param>
+        /// <returns>The value of the polynomial at X modulo the field.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when evaluation point is outside the valid field range [0, field-1].
+        /// </exception>
+        public BigInteger Horner(BigInteger X)
         {
+            BigInteger field = BarrettReducer.GetModulus();
             BigInteger sum = coeffs[0];
             BigInteger val = 1;
 
-            for(int k = 1; k <= degree; k++)
+            if (X < 0 || X >= field)
+                throw new ArgumentOutOfRangeException(
+                    nameof(X), "Evaluation point must" +
+                    " be in range [0, field-1].");
+
+            for (int k = 1; k <= degree; k++)
             {
-                val = BarrettReducer.MultMod(val, x);
+                val = BarrettReducer.MultMod(val, X);
                 BigInteger test = BarrettReducer.MultMod(val, coeffs[k]);
                 sum = BarrettReducer.AddMod(sum, test);
             }
@@ -934,11 +953,11 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Divides a polynomial by x^n, effectively shifting coefficients down.
+        /// Divides a polynomial by X^n, effectively shifting coefficients down.
         /// </summary>
         /// <param name="poly">The input polynomial.</param>
         /// <param name="degn">The exponent n (number of shifts).</param>
-        /// <returns>Polynomial result of dividing by x^n (coefficients shifted down by n).</returns>
+        /// <returns>Polynomial result of dividing by X^n (coefficients shifted down by n).</returns>
         public static Polynomial Divxn(Polynomial poly, int degn)
         {
             if (poly.degree < degn) return 0;
@@ -954,7 +973,7 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Computes polynomial modulo x^n, keeping only the lowest n coefficients.
+        /// Computes polynomial modulo X^n, keeping only the lowest n coefficients.
         /// </summary>
         /// <param name="poly">The input polynomial.</param>
         /// <param name="degn">The exponent n (number of coefficients to keep).</param>
@@ -974,13 +993,13 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Computes polynomial modulo x^n - 1, wrapping coefficients cyclically.
+        /// Computes polynomial modulo X^n - 1, wrapping coefficients cyclically.
         /// </summary>
         /// <param name="poly">The input polynomial.</param>
-        /// <param name="degn">The exponent n (modulus is x^n - 1).</param>
-        /// <returns>Polynomial reduced modulo x^n - 1 with degree less than n.</returns>
+        /// <param name="degn">The exponent n (modulus is X^n - 1).</param>
+        /// <returns>Polynomial reduced modulo X^n - 1 with degree less than n.</returns>
         /// <remarks>
-        /// Reduces poly modulo x^n - 1 by adding coefficient k to coefficient (k mod n).<br/>
+        /// Reduces poly modulo X^n - 1 by adding coefficient k to coefficient (k mod n).<br/>
         /// This implements cyclic convolution and is used in NTT-based algorithms.
         /// </remarks>
         public static Polynomial Modxn_l(Polynomial poly, int degn)
@@ -996,14 +1015,14 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Computes the modular inverse of a polynomial modulo x^n using Newton iteration.
+        /// Computes the modular inverse of a polynomial modulo X^n using Newton iteration.
         /// </summary>
         /// <param name="poly">The polynomial to invert (constant term must be invertible).</param>
-        /// <param name="degn">The exponent n (inverse is computed modulo x^n).</param>
-        /// <returns>The polynomial A(x) such that poly * A = 1 (mod x^n).</returns>
+        /// <param name="degn">The exponent n (inverse is computed modulo X^n).</param>
+        /// <returns>The polynomial A(X) such that poly * A = 1 (mod X^n).</returns>
         /// <remarks>
         /// Implements Newton's method for polynomial inversion: given an initial approximation <br/>
-        /// modulo x^1, each iteration doubles the precision. Complexity is O(n log n).
+        /// modulo X^1, each iteration doubles the precision. Complexity is O(n log n).
         /// Used internally<br/> for FFT-based division and modular reduction algorithms.
         /// </remarks>
         public static Polynomial Invmodxn(Polynomial poly, int degn)
@@ -1125,9 +1144,6 @@ namespace Eduard.Security
         /// </remarks>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(obj, null))
-                return false;
-
             if (!(obj is Polynomial))
                 return false;
 

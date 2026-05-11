@@ -97,7 +97,7 @@ namespace Eduard.Security.Curves
         /// Performs scalar multiplication on a Montgomery curve point using affine coordinates.
         /// </summary>
         /// <param name="curve">The Montgomery curve context.</param>
-        /// <param name="k">Scalar multiplier (must be non-negative).</param>
+        /// <param name="k">The scalar multiplier.</param>
         /// <param name="point">Base point to multiply in affine coordinates.</param>
         /// <param name="opMode">Execution mode (only affine mode is currently supported).</param>
         /// <returns>The resulting point k * point in affine coordinates.</returns>
@@ -130,18 +130,26 @@ namespace Eduard.Security.Curves
             if (k == 0 || point == ECPoint.POINT_INFINITY)
                 return ECPoint.POINT_INFINITY;
 
-            ECPoint temp = point;
+            ECPoint affinePoint = point;
+            BigInteger nk = k;
+
+            if(k < 0)
+            {
+                affinePoint = MontyMath.Negate(curve, affinePoint);
+                nk = k.Negate();
+            }
+
             ECPoint result = ECPoint.POINT_INFINITY;
-            int t = k.GetBits();
+            int bitSize = nk.GetBits();
 
             if (opMode == ECMode.EC_STANDARD_AFFINE)
             {
-                for (int j = 0; j < t; j++)
+                for (int j = bitSize - 1; j >= 0; j--)
                 {
-                    if (k.TestBit(j))
-                        result = Add(curve, result, temp);
+                    result = Add(curve, result, result);
 
-                    temp = Add(curve, temp, temp);
+                    if (nk.TestBit(j))
+                        result = Add(curve, result, affinePoint);
                 }
             }
             else if (opMode == ECMode.EC_STANDARD_PROJECTIVE)

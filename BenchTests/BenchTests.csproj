@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="System.Management" Version="10.0.7" />
   </ItemGroup>
 
   <ItemGroup>

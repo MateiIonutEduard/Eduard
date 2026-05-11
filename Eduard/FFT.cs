@@ -23,11 +23,9 @@ namespace Eduard
         static uint w1, w2;
         static uint w3, msw, lsw;
 
+        static Garner garner;
         static int degree;
         static uint[][] t;
-
-        static BigInteger[] C;
-        static BigInteger N;
 
         /// <summary>
         /// Multiplies two polynomials using NTT with multiple prime moduli.
@@ -65,19 +63,19 @@ namespace Eduard
                 pc = InitFFT(logn, field, field);
             else pc = count;
 
-            uint[] wa = new uint[newn];
+            uint[] buf = new uint[newn];
             
             for (i = 0; i < pc; i++)
             {
                 p = primes[i];
 
                 for (j = 0; j <= degx; j++)
-                    wa[j] = (uint)(x[j] % p);
+                    buf[j] = (uint)(x[j] % p);
 
                 for (j = degx + 1; j < newn; j++)
-                    wa[j] = 0;
+                    buf[j] = 0;
 
-                DFT(logn, i, wa);
+                DFT(logn, i, buf);
 
                 for (j = 0; j <= degy; j++)
                     t[i][j] = (uint)(y[j] % p);
@@ -88,7 +86,7 @@ namespace Eduard
                 DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    MulAdd(wa[j], t[i][j], 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(buf[j], t[i][j], 0, p, ref t[i][j]);
 
                 iDFT(logn, i, t[i]);
                 inv = inverse[i];
@@ -96,28 +94,24 @@ namespace Eduard
                 if (logN > logn)
                 {
                     maxn = (uint)1 << (logN - logn);
-                    inv = MulMod(maxn, inv, p);
+                    inv = CoreMath.MultMod(maxn, inv, p);
                 }
 
                 for (j = 0; j <= degree; j++)
-                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
             BigInteger[] res = new BigInteger[degree + 1];
 
             for (j = 0; j <= degree; j++)
             {
-                res[j] = 0;
-                BigInteger coeff = 0;
+                uint[] residues = new uint[pc];
 
-                for(i = 0; i < pc; i++)
-                {
-                    BigInteger val = (t[i][j] * C[i]) % N;
-                    coeff += val;
-                    if (coeff >= N) coeff -= N;
-                }
+                for (i = 0; i < pc; i++)
+                    residues[i] = t[i][j];
 
-                res[j] = BarrettReducer.Reduce(coeff, field); 
+                BigInteger coeff = garner.GetInteger(residues);
+                res[j] = BarrettReducer.Reduce(coeff); 
             }
 
             return res;
@@ -166,7 +160,7 @@ namespace Eduard
                 DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    MulAdd(t[i][j], t[i][j], 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(t[i][j], t[i][j], 0, p, ref t[i][j]);
 
                 iDFT(logn, i, t[i]);
                 inv = inverse[i];
@@ -174,28 +168,24 @@ namespace Eduard
                 if (logN > logn)
                 {
                     maxn = (uint)1 << (logN - logn);
-                    inv = MulMod(maxn, inv, p);
+                    inv = CoreMath.MultMod(maxn, inv, p);
                 }
 
                 for (j = 0; j <= degree; j++)
-                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
             BigInteger[] res = new BigInteger[degree + 1];
 
             for (j = 0; j <= degree; j++)
             {
-                res[j] = 0;
-                BigInteger coeff = 0;
+                uint[] residues = new uint[pc];
 
                 for (i = 0; i < pc; i++)
-                {
-                    BigInteger val = (t[i][j] * C[i]) % N;
-                    coeff += val;
-                    if (coeff >= N) coeff -= N;
-                }
+                    residues[i] = t[i][j];
 
-                res[j] = BarrettReducer.Reduce(coeff, field);
+                BigInteger coeff = garner.GetInteger(residues);
+                res[j] = BarrettReducer.Reduce(coeff);
             }
 
             return res;
@@ -226,6 +216,8 @@ namespace Eduard
 
             int degG = G.Length - 1;
             BigInteger field = BarrettReducer.GetModulus();
+
+            uint[] residues;
             pc = count;
 
             newn = 1;
@@ -250,7 +242,7 @@ namespace Eduard
                 DFT(logn, i, t[i]);
 
                 for (j = 0; j < newn; j++)
-                    MulAdd(t[i][j], s1[i][j], 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(t[i][j], s1[i][j], 0, p, ref t[i][j]);
 
                 iDFT(logn, i, t[i]);
                 inv = inverse[i];
@@ -258,25 +250,22 @@ namespace Eduard
                 if (logN > logn)
                 {
                     maxn = (uint)1 << (logN - logn);
-                    inv = MulMod(maxn, inv, p);
+                    inv = CoreMath.MultMod(maxn, inv, p);
                 }
 
                 for (j = 0; j < degn; j++)
-                    MulAdd(t[i][j + degn - 1], inv, 0, p, ref t[i][j + degn - 1]);
+                    CoreMath.MultAdd(t[i][j + degn - 1], inv, 0, p, ref t[i][j + degn - 1]);
             }
 
             for (j = 0; j < degn; j++)
             {
-                R[j] = 0;
+                residues = new uint[pc];
 
                 for (i = 0; i < pc; i++)
-                {
-                    BigInteger ts = (t[i][j + degn - 1] * C[i]) % N;
-                    R[j] += ts;
-                    if (R[j] >= N) R[j] -= N;
-                }
+                    residues[i] = t[i][j + degn - 1];
 
-                R[j] = BarrettReducer.Reduce(R[j], field);
+                BigInteger coeff = garner.GetInteger(residues);
+                R[j] = BarrettReducer.Reduce(coeff);
             }
 
             for (i = 0; i < pc; i++)
@@ -292,7 +281,7 @@ namespace Eduard
                 DFT(logn - 1, i, t[i]);
 
                 for (j = 0; j < newn / 2; j++)
-                    MulAdd(t[i][j], s2[i][j], 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(t[i][j], s2[i][j], 0, p, ref t[i][j]);
 
                 iDFT(logn - 1, i, t[i]);
 
@@ -301,27 +290,25 @@ namespace Eduard
                 if (logN > logn - 1)
                 {
                     maxn = (uint)1 << (logN - logn + 1);
-                    inv = MulMod(maxn, inv, p);
+                    inv = CoreMath.MultMod(maxn, inv, p);
                 }
 
                 for (j = 0; j < degn; j++)
-                    MulAdd(t[i][j], inv, 0, p, ref t[i][j]);
+                    CoreMath.MultAdd(t[i][j], inv, 0, p, ref t[i][j]);
             }
 
             Modxn(newn >> 1, degG, G);
 
             for (j = 0; j < degn; j++)
             {
-                R[j] = 0;
+                residues = new uint[pc];
 
                 for (i = 0; i < pc; i++)
-                {
-                    BigInteger ts = (t[i][j] * C[i]) % N;
-                    R[j] += ts;
-                    if (R[j] >= N) R[j] -= N;
-                }
+                    residues[i] = t[i][j];
 
+                R[j] = garner.GetInteger(residues);
                 BigInteger diff = (G[j] - R[j]) % field;
+
                 if (diff < 0) diff += field;
                 R[j] = diff;
             }
@@ -453,20 +440,20 @@ namespace Eduard
                 uint root = p - 1;
 
                 for (j = 1; j < logn; j++)
-                    root = ModSquareRoot(root, p);
+                    root = CoreMath.ModSqrt(root, p);
 
                 roots[i][0] = root;
 
                 for(j = 1; j < newn; j++)
-                    roots[i][j] = MulMod(roots[i][j - 1], root, p);
+                    roots[i][j] = CoreMath.MultMod(roots[i][j - 1], root, p);
 
-                inverse[i] = Inverse(newn, p);
+                inverse[i] = CoreMath.Inverse(newn, p);
             }
 
             logN = logn;
             count = pr;
 
-            InitCRT();
+            garner = new Garner(primes);
             return pr;
         }
 
@@ -477,24 +464,15 @@ namespace Eduard
             if (InitFFT(logn, maxc, maxc) != 3)
                 return false;
 
-            w1 = Inverse(primes[0], primes[1]);
-            w2 = Inverse(primes[0], primes[2]);
-            w3 = Inverse(primes[1], primes[2]);
+            w1 = CoreMath.Inverse(primes[0], primes[1]);
+            w2 = CoreMath.Inverse(primes[0], primes[2]);
+            w3 = CoreMath.Inverse(primes[1], primes[2]);
 
             ulong tw = (ulong)primes[0] * (ulong)primes[1];
             lsw = (uint)(tw & 0xFFFFFFFF);
 
             msw = (uint)(tw >> 32);
             return true;
-        }
-
-        static uint MultDiv(uint a, uint b, uint c, ref uint rem)
-        {
-            ulong res = ((ulong)a * b) + c;
-            uint mask = 0xFFFFFFFF;
-
-            rem = (uint)(res & mask);
-            return (uint)(res >> 32);
         }
 
         /// <summary>
@@ -523,8 +501,11 @@ namespace Eduard
             newn = 1; 
             logn = 0;
 
-            xlen = x.data.Used;
-            ylen = y.data.Used;
+            BigInteger ax = x.Abs();
+            BigInteger ay = y.Abs();
+
+            xlen = ax.data.Used;
+            ylen = ay.data.Used;
             zlen = xlen + ylen;
 
             while (zlen > newn)
@@ -533,8 +514,8 @@ namespace Eduard
                 logn++;
             }
 
-            uint[] wptr = new uint[newn];
-            uint[] dptr = new uint[newn];
+            uint[] lbuf = new uint[newn];
+            uint[] rbuf = new uint[newn];
 
             if (logn > logN)
             {
@@ -549,43 +530,43 @@ namespace Eduard
                 inv = inverse[index];
 
                 for (i = 0; i < xlen; i++)
-                    dptr[i] = x.data[i] % p;
+                    rbuf[i] = ax.data[i] % p;
 
                 for (i = xlen; i < newn; i++)
-                    dptr[i] = 0;
+                    rbuf[i] = 0;
 
-                DFT(logn, index, dptr);
+                DFT(logn, index, rbuf);
 
                 if (x != y)
                 {
                     for (i = 0; i < ylen; i++)
-                        wptr[i] = y.data[i] % p;
+                        lbuf[i] = ay.data[i] % p;
 
                     for (i = ylen; i < newn; i++)
-                        wptr[i] = 0;
+                        lbuf[i] = 0;
 
-                    DFT(logn, index, wptr);
+                    DFT(logn, index, lbuf);
                 }
                 else
                 {
                     for (i = 0; i < newn; i++)
-                        wptr[i] = dptr[i];
+                        lbuf[i] = rbuf[i];
                 }
 
                 for (i = 0; i < newn; i++)
-                    MulAdd(dptr[i], wptr[i], 0, p, ref dptr[i]);
+                    CoreMath.MultAdd(rbuf[i], lbuf[i], 0, p, ref rbuf[i]);
 
-                iDFT(logn, index, dptr);
+                iDFT(logn, index, rbuf);
 
                 if (logN > logn)
                 {
                     maxn = (uint)1 << (logN - logn);
-                    inv = MulMod(maxn, inv, p);
+                    inv = CoreMath.MultMod(maxn, inv, p);
                 }
 
                 for (i = 0; i < newn; i++)
                 {
-                    MulAdd(dptr[i], inv, 0, p, ref t[index][i]);
+                    CoreMath.MultAdd(rbuf[i], inv, 0, p, ref t[index][i]);
                     long diff = 0;
 
                     if (index == 1)
@@ -626,16 +607,16 @@ namespace Eduard
                 v2 = t[1][i];
                 v3 = t[2][i];
 
-                v2 = MultDiv(v2, primes[0], v1, ref v1);
+                v2 = CoreMath.MultDiv(v2, primes[0], v1, ref v1);
                 carry1 += v1;
 
                 if (carry1 < v1)
                     v2++;
 
-                icarry = carry2 + MultDiv(lsw, v3, (uint)carry1, ref result[i]);
+                icarry = carry2 + CoreMath.MultDiv(lsw, v3, (uint)carry1, ref result[i]);
                 uint temp_c = (uint)carry1;
 
-                carry2 = MultDiv(msw, v3, (uint)icarry, ref temp_c);
+                carry2 = CoreMath.MultDiv(msw, v3, (uint)icarry, ref temp_c);
                 carry1 = temp_c;
                 carry1 += v2;
 
@@ -674,8 +655,8 @@ namespace Eduard
                 for (i = 0; i < newn; i += istep)
                 {
                     j = i + mmax;
-                    temp = DiffMod(data[i], data[j], prime);
-                    data[i] = AddMod(data[i], data[j], prime);
+                    temp = CoreMath.DiffMod(data[i], data[j], prime);
+                    data[i] = CoreMath.AddMod(data[i], data[j], prime);
                     data[j] = temp;
                 }
 
@@ -688,9 +669,9 @@ namespace Eduard
                     for (i = m; i < newn; i += istep)
                     {
                         j = i + mmax;
-                        temp = DiffMod(data[i], data[j], prime);
-                        data[i] = AddMod(data[i], data[j], prime);
-                        MulAdd(w, temp, 0, prime, ref data[j]);
+                        temp = CoreMath.DiffMod(data[i], data[j], prime);
+                        data[i] = CoreMath.AddMod(data[i], data[j], prime);
+                        CoreMath.MultAdd(w, temp, 0, prime, ref data[j]);
                     }
                 }
 
@@ -722,8 +703,8 @@ namespace Eduard
                     j = i + mmax;
                     temp = data[j];
 
-                    data[j] = DiffMod(data[i], temp, prime);
-                    data[i] = AddMod(data[i], temp, prime);
+                    data[j] = CoreMath.DiffMod(data[i], temp, prime);
+                    data[i] = CoreMath.AddMod(data[i], temp, prime);
                 }
 
                 for (m = 1; m < mmax; m++)
@@ -734,176 +715,15 @@ namespace Eduard
                     for (i = m; i < newn; i += istep)
                     {
                         j = i + mmax;
-                        MulAdd(w, data[j], 0, prime, ref temp);
+                        CoreMath.MultAdd(w, data[j], 0, prime, ref temp);
 
-                        data[j] = DiffMod(data[i], temp, prime);
-                        data[i] = AddMod(data[i], temp, prime);
+                        data[j] = CoreMath.DiffMod(data[i], temp, prime);
+                        data[i] = CoreMath.AddMod(data[i], temp, prime);
                     }
                 }
 
                 mmax = istep;
             }
-        }
-
-        static void InitCRT()
-        {
-            N = 1;
-            C = new BigInteger[count];
-
-            for (int i = 0; i < count; i++)
-                N *= primes[i];
-
-            for(int i = 0; i < count; i++)
-            {
-                BigInteger rev = N / primes[i];
-                BigInteger inv = rev.Inverse(primes[i]);
-                C[i] = (rev * inv) % N;
-            }
-        }
-
-        static uint AddMod(uint a, uint b, uint m)
-        {
-            long s = (long)a + b;
-            if (s >= m) s -= m;
-            return (uint)s;
-        }
-
-        static uint DiffMod(uint a, uint b, uint m)
-        {
-            long s = (long)a - b;
-            if (s < 0) s += m;
-            return (uint)s;
-        }
-
-        static uint ModSquareRoot(uint x, uint m)
-        {
-            uint z, y, v, w, t, q;
-            int i, e, n, r;
-
-            if ((m & 3) == 3)
-                return pow(x, (m + 1) >> 2, m);
-
-            if((m & 7) == 5)
-            {
-                t = pow(x, (m - 1) >> 2, m);
-                if (t == 1) return pow(x, (m + 3) >> 3, m);
-
-                if (t == m - 1)
-                {
-                    MulAdd(4, x, 0, m, ref t);
-                    t = pow(t, (m + 3) >> 3, m);
-                    MulAdd(t, (m + 1) >> 1, 0, m, ref t);
-                    return t;
-                }
-
-                return 0;
-            }
-
-            bool pp = true;
-            q = m - 1;
-            e = 0;
-
-            while ((q & 1) == 0)
-            {
-                q >>= 1;
-                e++;
-            }
-
-            if (e == 0) return 0;
-
-            for (r = 2; ; r++)
-            {
-                z = pow((uint)r, q, m);
-                if (z == 1) continue;
-
-                t = z;
-                pp = false;
-
-                for (i = 1; i < e; i++)
-                {
-                    if (t == m - 1) pp = true;
-                    MulAdd(t, t, 0, m, ref t);
-                    if (t == 1 && !pp) return 0;
-                }
-
-                if (t == m - 1) break;
-                if (!pp) return 0;   /* m is not prime */
-            }
-
-            y = z;
-            r = e;
-            v = pow(x, (q + 1) >> 1, m);
-            w = pow(x, q, m);
-
-            while (w != 1)
-            {
-                t = w;
-                for (n = 0; t != 1; n++) 
-                    MulAdd(t, t, 0, m, ref t);
-
-                if (n >= r) return 0;
-                y = pow(y, (uint)1 << (r - n - 1), m);
-                MulAdd(v, y, 0, m, ref v);
-                MulAdd(y, y, 0, m, ref y);
-                MulAdd(w, y, 0, m, ref w);
-                r = n;
-            }
-
-            return v;
-        }
-
-        static uint MulAdd(uint a, uint b, uint c, uint m, ref uint rem)
-        {
-            uint q;
-            ulong p = (ulong)a * b + c;
-            q = (uint)(p / m);
-            rem = (uint)(p - (ulong)q * m);
-            return q;
-        }
-
-        static uint pow(uint x, uint n, uint m)
-        {
-            ulong res = 1;
-            ulong t = x;
-
-            while(n > 0)
-            {
-                if ((n & 1) == 1)
-                    res = (res * t) % m;
-
-                n >>= 1;
-                t = (t * t) % m;
-            }
-
-            return (uint)res;
-        }
-
-        static uint MulMod(uint x, uint y, uint n)
-        {
-            ulong val = (ulong)x * y;
-            val %= n;
-            return (uint)val;
-        }
-
-        static uint Inverse(uint val, uint field)
-        {
-            long b0 = field, t, q;
-            long x0 = 0, x1 = 1;
-            if (field == 1) return 1;
-
-            while (val > 1)
-            {
-                q = val / field;
-                t = field;
-                field = val % field;
-                val = (uint)t;
-                t = x0;
-                x0 = x1 - q * x0;
-                x1 = t;
-            }
-
-            if (x1 < 0) x1 += b0;
-            return (uint)x1;
         }
     }
 }

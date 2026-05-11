@@ -1751,55 +1751,55 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Performs modular exponentiation, computing (base raised to exponent) modulo modulus.
+        /// Performs modular exponentiation of a BigInteger raised to a specified exponent modulo a modulus.
         /// </summary>
         /// <param name="val">The base value.</param>
-        /// <param name="exponent">The exponent (must be non-negative).</param>
-        /// <param name="modulus">The modulus for the reduction.</param>
+        /// <param name="exponent">The exponent.</param>
+        /// <param name="modulus">The modulus.</param>
         /// <returns>The result of <paramref name="val"/> raised to <paramref name="exponent"/> modulo <paramref name="modulus"/>.</returns>
-        /// <exception cref="DivideByZeroException">
-        /// Thrown when <paramref name="modulus"/> is zero. 
-        /// Modular arithmetic is undefined modulo zero.
-        /// </exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown when <paramref name="exponent"/> is negative. 
-        /// Negative exponents are not supported as they would 
-        /// require modular inversion.
-        /// </exception>
-        /// <exception cref="ArithmeticException">
-        /// Thrown when both <paramref name="val"/> and <paramref name="exponent"/> 
-        /// are zero, as zero raised to the power of zero is mathematically undefined.
-        /// </exception>
+        /// <exception cref="DivideByZeroException">Thrown when modulus is zero.</exception>
+        /// <exception cref="ArgumentException">Thrown when modulus is negative.</exception>
+        /// <exception cref="ArithmeticException">Thrown when base and exponent are both zero.</exception>
         /// <remarks>
         /// This method implements optimized modular exponentiation using:
         /// <list type="bullet">
         /// <item><description>Binary method with Barrett reduction for smaller moduli</description></item>
-        /// <item><description>Dynamic sliding window (max size 5) with Barrett reduction <br/>
-        /// and precomputed odd powers table for larger moduli</description></item>
+        /// <item><description>Sliding window (window size 5) with Barrett reduction for larger moduli</description></item>
         /// </list>
-        /// For RSA operations, this is used for both encryption (public exponent) <br/> 
-        /// and decryption (private exponent). For Diffie-Hellman key exchange, this <br/>computes the shared secret.
+        /// For RSA operations, this is used for both encryption and decryption.<br/>
+        /// For Diffie-Hellman key exchange, this computes the shared secret.
         /// </remarks>
         public static BigInteger Pow(BigInteger val, BigInteger exponent, BigInteger modulus)
         {
+            if (modulus.IsNegative)
+                throw new ArgumentException(
+                    "Modulus must be non-negative" +
+                    " for modular exponentiation.",
+                    nameof(modulus));
+
             if (modulus.IsZero)
                 throw new DivideByZeroException(
                     "Modular exponentiation requires" + 
                     " a non-zero modulus. Operation " + 
                     "modulo zero is undefined.");
 
-            if (val.IsZero && exponent.IsZero)
+            BigInteger tb = val % modulus;
+            if (tb < 0) tb += modulus;
+            BigInteger exp = exponent;
+
+            if (tb.IsZero && exp.IsZero)
                 throw new ArithmeticException(
                     "Zero raised to the power" + 
                     " of zero is undefined.");
 
-            if (exponent.IsNegative)
-                throw new ArgumentOutOfRangeException(
-                    nameof(exponent), "The exponent must be " + 
-                    $"non-negative. Specified exponent: {exponent}.");
+            if (exp.IsNegative)
+            {
+                tb = tb.Inverse(modulus);
+                exp = exp.Negate();
+            }
 
-            if (modulus.IsNegative)
-                modulus = -modulus;
+            if (exp == 0) return 1;
+            if (exp == 1) return tb;
 
             int k = modulus.data.Used << 1;
             Data buffer = new Data(k + 1, k + 1);
@@ -1808,14 +1808,8 @@ namespace Eduard
             BigInteger bconst = new BigInteger(buffer);
             bconst /= modulus;
 
+            int bits = exp.GetBits();
             BigInteger result = 1;
-            bool negative = false;
-
-            if (val.IsNegative)
-            {
-                val = -val;
-                negative = true;
-            }
 
 #if !USE_BENCHMARKING
             int WORDS_THRESHOLD = (int)Threshold.BIGINT_WORDS_THRESHOLD;
@@ -1829,19 +1823,19 @@ namespace Eduard
                 int store = 1 << (windowSize - 1);
 
                 BigInteger[] table = new BigInteger[store];
-                table[0] = val % modulus;
+                table[0] = tb;
                 BigInteger b2 = BarrettReduction(table[0] * table[0], modulus, bconst);
 
                 // Creates table of odd powers.
                 for (int i = 1; i < store; i++)
                     table[i] = BarrettReduction(table[i - 1] * b2, modulus, bconst);
 
-                int bits = exponent.GetBits();
-                int ubits = 0, tbits = 0;
+                int ubits = 0;
+                int tbits = 0;
 
                 for (int i = bits - 1; i > -1;)
                 {
-                    int win = WindowUtil.Window(exponent, i, ref ubits, ref tbits, 5);
+                    int win = WindowUtil.Window(exp, i, ref ubits, ref tbits, 5);
 
                     for (int j = 0; j < ubits; j++)
                         result = BarrettReduction(result * result, modulus, bconst);
@@ -1859,37 +1853,14 @@ namespace Eduard
             }
             else
             {
-                Data data = exponent.data;
-                uint temp = 0;
-
-                for (int i = 0; i < data.Used - 1; i++)
+                for (int j = bits - 1; j >= 0; j--)
                 {
-                    temp = data[i];
+                    result = BarrettReduction(result * result, modulus, bconst);
 
-                    for (int j = 0; j < 32; j++)
-                    {
-                        if ((temp & 1) == 1)
-                            result = BarrettReduction(result * val, modulus, bconst);
-
-                        val = BarrettReduction(val * val, modulus, bconst);
-                        temp >>= 1;
-                    }
-                }
-
-                temp = data[data.Used - 1];
-
-                while (temp != 0)
-                {
-                    if ((temp & 1) == 1)
-                        result = BarrettReduction(result * val, modulus, bconst);
-
-                    val = BarrettReduction(val * val, modulus, bconst);
-                    temp >>= 1;
+                    if (exp.TestBit(j))
+                        result = BarrettReduction(result * tb, modulus, bconst);
                 }
             }
-
-            if (negative && (exponent.data[0] & 0x1) != 0)
-                return -result;
 
             return result;
         }
@@ -2172,9 +2143,6 @@ namespace Eduard
         /// <returns><c>true</c> if <paramref name="obj"/> is a BigInteger and has the same value; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(obj, null))
-                return false;
-
             if (ReferenceEquals(this, obj))
                 return true;
 
@@ -2552,7 +2520,7 @@ namespace Eduard
         /// <param name="radix">The base of the number system (decimal or hexadecimal).</param>
         /// <returns>The string representation of the value in the specified radix.</returns>
         /// <remarks>
-        /// For <see cref="Radix.Decimal"/>, this method delegates to <see cref="ToString"/> which performs <br/>
+        /// For <see cref="Radix.Decimal"/>, this method delegates to <see cref="ToString()"/> which performs <br/>
         /// chunked conversion (9 digits per iteration). For <see cref="Radix.HexaDecimal"/>, this method <br/>
         /// delegates to <see cref="ToHexString"/>.
         /// </remarks>

@@ -128,7 +128,7 @@ namespace Eduard
                     "Barrett reducer modulus not initialized."
                     + " Call SetModulus() or Reduce() first.");
 
-            BigInteger result = Reduce(left * right, field);
+            BigInteger result = Reduce(left * right);
             return result;
         }
 
@@ -156,16 +156,29 @@ namespace Eduard
         }
 
         /// <summary>
-        /// Reduces a value modulo the specified field using Barrett's algorithm. <br/>
-        /// Automatically caches the modulus on first use for subsequent calls.
+        /// Reduces a value modulo the cached field using Barrett's algorithm.
         /// </summary>
         /// <param name="val">The value to reduce.</param>
-        /// <param name="p">The modulus. Cached after first invocation.</param>
-        /// <returns>val mod p in range [0, p-1].</returns>
-        internal static BigInteger Reduce(BigInteger val, BigInteger p)
+        /// <param name="normalize">When true, performs full modular reduction via division.</param>
+        /// <returns>val mod field in range [0, field-1].</returns>
+        /// <remarks>
+        /// When normalize is set, uses direct division to handle arbitrary inputs including negatives.<br/>
+        /// Otherwise, applies Barrett reduction assuming the input is already nearly reduced.
+        /// </remarks>
+        internal static BigInteger Reduce(BigInteger val, bool normalize = false)
         {
-            if (!isEnabled || (isEnabled && field != p)) SetModulus(p);
-            return BigInteger.BarrettReduction(val, p, k);
+            if(normalize)
+            {
+                BigInteger reducedValue = val % field;
+
+                if (reducedValue < 0) 
+                    reducedValue += field;
+
+                return reducedValue;
+            }
+
+            return BigInteger.BarrettReduction(
+                val, field, k);
         }
     }
 }
