@@ -41,21 +41,26 @@ namespace Eduard
 
             for (int x = 1; x < root; x++)
             {
+                long x2 = (long)x * x;
+                long x24 = x2 << 2;
+                long x23 = x24 - x2;
+
                 for (int y = 1; y < root; y++)
                 {
-                    long k = 4L * x * x + y * y;
+                    long y2 = (long)y * y;
+                    long k = x24 + y2;
 
                     if ((k < limit) && ((k % 12 == 1) || (k % 12 == 5)))
                         sieve[k] ^= 1;
 
-                    k = 3L * x * x + y * y;
+                    k = x23 + y2;
 
                     if ((k < limit) && (k % 12 == 7))
                         sieve[k] ^= 1;
 
                     if (x > y)
                     {
-                        k = 3L * x * x - y * y;
+                        k = x23 - y2;
 
                         if ((k < limit) && (k % 12 == 11))
                             sieve[k] ^= 1;
