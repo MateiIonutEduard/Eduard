@@ -8,7 +8,7 @@ namespace Eduard.BenchTests.BigInt
         [Params(8, 16, 32, 64, 128, 256, 512, 1024, 1152, 1280, 1408, 1536, 1664, 1792, 1920, 2048)]
         public int words;
 
-        private BigInteger left, field;
+        private BigInteger left;
         private BigInteger right;
 
         [GlobalSetup]
