@@ -33,9 +33,10 @@ namespace Eduard
             GenPrimeList(limit);
         }
 
-        private void GenPrimeList(int limit)
+#if USE_BENCHMARKING
+        public static int[] GenPrimeListStandard(int limit)
         {
-            list = new List<int>();
+            var list = new List<int>();
             int root = (int)Math.Sqrt(limit) + 1;
             bool[] sieve = new bool[limit];
 
@@ -54,6 +55,127 @@ namespace Eduard
                     if (x > y)
                     {
                         k = 3L * x * x - y * y;
+
+                        if ((k < limit) && (k % 12 == 11))
+                            sieve[k] = !sieve[k];
+                    }
+                }
+            }
+
+            sieve[2] = true;
+            sieve[3] = true;
+
+            for (int n = 5; n <= root; n++)
+            {
+                if (sieve[n])
+                {
+                    int square = n * n;
+
+                    for (int t = square; t < limit; t += square)
+                        sieve[t] = false;
+                }
+            }
+
+            list.Add(2);
+
+            for (int k = 3; k < limit; k += 2)
+            {
+                if (sieve[k])
+                    list.Add(k);
+            }
+
+            return list.ToArray();
+        }
+
+        public static int[] GenPrimeListOptimized(int limit)
+        {
+            var list = new List<int>();
+            int root = (int)Math.Sqrt(limit) + 1;
+            bool[] sieve = new bool[limit];
+
+            for (int x = 1; x < root; x++)
+            {
+                long x2 = (long)x * x;
+                long x24 = x2 << 2;
+                long x23 = x24 - x2;
+
+                for (int y = 1; y < root; y++)
+                {
+                    long y2 = (long)y * y;
+                    long k = x24 + y2;
+
+                    if ((k < limit) && ((k % 12 == 1) || (k % 12 == 5)))
+                        sieve[k] = !sieve[k];
+
+                    k = x23 + y2;
+
+                    if ((k < limit) && (k % 12 == 7))
+                        sieve[k] = !sieve[k];
+
+                    if (x > y)
+                    {
+                        k = x23 - y2;
+
+                        if ((k < limit) && (k % 12 == 11))
+                            sieve[k] = !sieve[k];
+                    }
+                }
+            }
+
+            sieve[2] = true;
+            sieve[3] = true;
+
+            for (int n = 5; n <= root; n++)
+            {
+                if (sieve[n])
+                {
+                    int square = n * n;
+
+                    for (int t = square; t < limit; t += square)
+                        sieve[t] = false;
+                }
+            }
+
+            list.Add(2);
+
+            for (int k = 3; k < limit; k += 2)
+            {
+                if (sieve[k])
+                    list.Add(k);
+            }
+
+            return list.ToArray();
+        }
+#endif
+
+        private void GenPrimeList(int limit)
+        {
+            list = new List<int>();
+            int root = (int)Math.Sqrt(limit) + 1;
+            bool[] sieve = new bool[limit];
+
+            for (int x = 1; x < root; x++)
+            {
+                long x2 = (long)x * x;
+                long x24 = x2 << 2;
+                long x23 = x24 - x2;
+
+                for (int y = 1; y < root; y++)
+                {
+                    long y2 = (long)y * y;
+                    long k = x24 + y2;
+
+                    if ((k < limit) && ((k % 12 == 1) || (k % 12 == 5)))
+                        sieve[k] = !sieve[k];
+
+                    k = x23 + y2;
+
+                    if ((k < limit) && (k % 12 == 7))
+                        sieve[k] = !sieve[k];
+
+                    if (x > y)
+                    {
+                        k = x23 - y2;
 
                         if ((k < limit) && (k % 12 == 11))
                             sieve[k] = !sieve[k];

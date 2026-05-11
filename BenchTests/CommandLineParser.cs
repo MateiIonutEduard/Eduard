@@ -18,6 +18,7 @@ namespace BenchTests
                     "--bigint", "-b",
                     "--polynomials", "-p",
                     "--curves", "-c",
+                    "--misc", "-m",
                     "--run-all", "-a",
                     "--help", "-h"
                 };

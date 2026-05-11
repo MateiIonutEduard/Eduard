@@ -7,6 +7,7 @@ using BenchmarkDotNet.Configs;
 using Eduard.BenchTests.Curves;
 using Eduard.BenchTests.BigInt;
 using Eduard.BenchTests.Poly;
+using Eduard.BenchTests.Misc;
 #else
 using System;
 #endif
@@ -36,6 +37,9 @@ namespace BenchTests
             if (parser.HasCommand("--curves", "-c"))
                 RunCurveBenchmarks(config, parser.GetTestIndices("--curves", "-c"));
 
+            if (parser.HasCommand("--misc", "-m"))
+                RunMiscellaneousBenchmarks(config, parser.GetTestIndices("--misc", "-m"));
+
             if (parser.HasCommand("--run-all", "-a"))
                 RunAllBenchmarks(config);
 #else
@@ -55,6 +59,7 @@ namespace BenchTests
             Console.WriteLine("  --bigint, -b [indices]  Execute BigInt arithmetic benchmarks");
             Console.WriteLine("  --polynomials, -p [indices] Execute polynomial operation benchmarks");
             Console.WriteLine("  --curves, -c [indices]  Execute elliptic curve cryptography benchmarks");
+            Console.WriteLine("  --misc, -m [indices]  Execute miscellaneous benchmarks");
             Console.WriteLine("  --run-all, -a           Execute complete benchmark suite");
             Console.WriteLine("  --help, -h              Display this help information");
             Console.WriteLine();
@@ -77,6 +82,9 @@ namespace BenchTests
             Console.WriteLine("    1 - Twisted Edwards Curves (Edwards25519, Edwards448)");
             Console.WriteLine("    2 - Montgomery Curves (Curve25519, Curve448)");
             Console.WriteLine("    3 - Weierstrass Curves (NIST P-192 to P-521, Wei25519, Wei448)");
+            Console.WriteLine();
+            Console.WriteLine("  Miscellaneous:");
+            Console.WriteLine("    1 - Atkin Sieve (General)");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  dotnet run -- --bigint 1 3          # Run BigInt tests 1 and 3");
@@ -179,6 +187,35 @@ namespace BenchTests
             Console.WriteLine("\n+ Polynomial benchmark suite completed successfully.");
         }
 
+        static void RunMiscellaneousBenchmarks(IConfig config, HashSet<int> testIndices)
+        {
+            var tests = new List<(int index, Action<IConfig> run)>
+            {
+                (1, (cfg) => {
+                    Console.WriteLine("\n[1/1] Atkin Sieve (Optimizations)");
+                    Console.WriteLine("       Benchmark smart optimizations of Atkin's Sieve");
+                    BenchmarkRunner.Run<SieveBenchmark>(cfg);
+                })
+            };
+
+            var selected = tests.Where(t => testIndices.Contains(t.index)).ToList();
+
+            if (!selected.Any())
+            {
+                Console.WriteLine("No valid test indices specified for Miscellaneous benchmarks.");
+                Console.WriteLine("Available indices: 1");
+                return;
+            }
+
+            Console.WriteLine("\nMiscellaneous Benchmarks");
+            Console.WriteLine("─────────────────────");
+
+            foreach (var test in selected)
+                test.run(config);
+
+            Console.WriteLine("\n+ Miscellaneous benchmark suite completed successfully.");
+        }
+
         static void RunCurveBenchmarks(IConfig config, HashSet<int> testIndices)
         {
             var tests = new List<(int index, Action<IConfig> run)>
@@ -236,6 +273,10 @@ namespace BenchTests
             Console.WriteLine("\nPhase 3: Elliptic Curve Cryptography");
             Console.WriteLine("─────────────────────────────────────");
             RunCurveBenchmarks(config, new HashSet<int> { 1, 2, 3 });
+
+            Console.WriteLine("\nPhase 4: Miscellaneous Benchmarks");
+            Console.WriteLine("────────────────────────");
+            RunMiscellaneousBenchmarks(config, new HashSet<int> { 1 });
 
             Console.WriteLine("\n+ Complete benchmark suite finished successfully.");
             Console.WriteLine($"  Completion time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
