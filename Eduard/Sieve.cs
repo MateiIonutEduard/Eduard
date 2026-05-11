@@ -91,7 +91,7 @@ namespace Eduard
         {
             var list = new List<int>();
             int root = (int)Math.Sqrt(limit) + 1;
-            bool[] sieve = new bool[limit];
+            byte[] sieve = new byte[limit];
 
             for (int x = 1; x < root; x++)
             {
@@ -103,36 +103,37 @@ namespace Eduard
                 {
                     long y2 = (long)y * y;
                     long k = x24 + y2;
+                    int kmod = (int)(k % 12);
 
-                    if ((k < limit) && ((k % 12 == 1) || (k % 12 == 5)))
-                        sieve[k] = !sieve[k];
+                    if ((k < limit) && (kmod == 1 || kmod == 5))
+                        sieve[k] ^= 1;
 
                     k = x23 + y2;
 
-                    if ((k < limit) && (k % 12 == 7))
-                        sieve[k] = !sieve[k];
+                    if (k < limit && kmod == 7)
+                        sieve[k] ^= 1;
 
                     if (x > y)
                     {
                         k = x23 - y2;
 
-                        if ((k < limit) && (k % 12 == 11))
-                            sieve[k] = !sieve[k];
+                        if (k < limit && kmod == 11)
+                            sieve[k] ^= 1;
                     }
                 }
             }
 
-            sieve[2] = true;
-            sieve[3] = true;
+            sieve[2] = 1;
+            sieve[3] = 1;
 
             for (int n = 5; n <= root; n++)
             {
-                if (sieve[n])
+                if (sieve[n] == 1)
                 {
                     int square = n * n;
 
                     for (int t = square; t < limit; t += square)
-                        sieve[t] = false;
+                        sieve[t] = 0;
                 }
             }
 
@@ -140,7 +141,7 @@ namespace Eduard
 
             for (int k = 3; k < limit; k += 2)
             {
-                if (sieve[k])
+                if (sieve[k] == 1)
                     list.Add(k);
             }
 
@@ -152,7 +153,7 @@ namespace Eduard
         {
             list = new List<int>();
             int root = (int)Math.Sqrt(limit) + 1;
-            bool[] sieve = new bool[limit];
+            byte[] sieve = new byte[limit];
 
             for (int x = 1; x < root; x++)
             {
@@ -164,36 +165,37 @@ namespace Eduard
                 {
                     long y2 = (long)y * y;
                     long k = x24 + y2;
+                    int kmod = (int)(k % 12);
 
-                    if ((k < limit) && ((k % 12 == 1) || (k % 12 == 5)))
-                        sieve[k] = !sieve[k];
+                    if ((k < limit) && (kmod == 1 || kmod == 5))
+                        sieve[k] ^= 1;
 
                     k = x23 + y2;
 
-                    if ((k < limit) && (k % 12 == 7))
-                        sieve[k] = !sieve[k];
+                    if (k < limit && kmod == 7)
+                        sieve[k] ^= 1;
 
                     if (x > y)
                     {
                         k = x23 - y2;
 
-                        if ((k < limit) && (k % 12 == 11))
-                            sieve[k] = !sieve[k];
+                        if (k < limit && kmod == 11)
+                            sieve[k] ^= 1;
                     }
                 }
             }
 
-            sieve[2] = true;
-            sieve[3] = true;
+            sieve[2] = 1;
+            sieve[3] = 1;
 
             for (int n = 5; n <= root; n++)
             {
-                if (sieve[n])
+                if (sieve[n] == 1)
                 {
                     int square = n * n;
 
                     for (int t = square; t < limit; t += square)
-                        sieve[t] = false;
+                        sieve[t] = 0;
                 }
             }
 
@@ -201,7 +203,7 @@ namespace Eduard
 
             for (int k = 3; k < limit; k += 2)
             {
-                if (sieve[k])
+                if (sieve[k] == 1)
                     list.Add(k);
             }
         }
