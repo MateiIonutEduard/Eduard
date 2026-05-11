@@ -37,7 +37,7 @@ namespace Eduard
         {
             list = new List<int>();
             int root = (int)Math.Sqrt(limit) + 1;
-            byte[] sieve = new byte[limit];
+            byte[] sieve = new byte[limit + 1];
 
             for (int x = 1; x < root; x++)
             {
@@ -63,8 +63,11 @@ namespace Eduard
                 }
             }
 
-            sieve[2] = 1;
-            sieve[3] = 1;
+            if(limit >= 2) 
+                sieve[2] = 1;
+
+            if (limit >= 3) 
+                sieve[3] = 1;
 
             for (int n = 5; n <= root; n++)
             {
@@ -79,7 +82,7 @@ namespace Eduard
 
             list.Add(2);
 
-            for (int k = 3; k < limit; k += 2)
+            for (int k = 3; k <= limit; k += 2)
             {
                 if (sieve[k] == 1)
                     list.Add(k);
