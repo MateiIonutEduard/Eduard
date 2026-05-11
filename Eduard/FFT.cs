@@ -440,7 +440,7 @@ namespace Eduard
                 uint root = p - 1;
 
                 for (j = 1; j < logn; j++)
-                    root = CoreMath.ModSquareRoot(root, p);
+                    root = CoreMath.ModSqrt(root, p);
 
                 roots[i][0] = root;
 

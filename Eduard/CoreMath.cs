@@ -11,7 +11,7 @@ namespace Eduard
     /// Implements constant-time-safe modular addition, subtraction, multiplication, exponentiation, <br/>
     /// square root (Tonelli-Shanks), and inverse algorithms over 32-bit unsigned integers.
     /// </remarks>
-    internal class CoreMath
+    public class CoreMath
     {
         /// <summary>
         /// Computes (a + b) mod m with conditional subtraction.
@@ -20,7 +20,7 @@ namespace Eduard
         /// <param name="b">Second operand in [0, m-1].</param>
         /// <param name="m">Modulus.</param>
         /// <returns>Sum modulo m.</returns>
-        internal static uint AddMod(uint a, uint b, uint m)
+        public static uint AddMod(uint a, uint b, uint m)
         {
             long s = (long)a + b;
             if (s >= m) s -= m;
@@ -34,7 +34,7 @@ namespace Eduard
         /// <param name="b">Second operand in [0, m-1].</param>
         /// <param name="m">Modulus.</param>
         /// <returns>Difference modulo m.</returns>
-        internal static uint DiffMod(uint a, uint b, uint m)
+        public static uint DiffMod(uint a, uint b, uint m)
         {
             long s = (long)a - b;
             if (s < 0) s += m;
@@ -50,7 +50,7 @@ namespace Eduard
         /// <param name="m">Modulus.</param>
         /// <param name="rem">Receives (a*b + c) % m.</param>
         /// <returns>Quotient (a*b + c) / m.</returns>
-        internal static uint MultAdd(uint a, uint b, uint c, uint m, ref uint rem)
+        public static uint MultAdd(uint a, uint b, uint c, uint m, ref uint rem)
         {
             uint q;
             ulong p = (ulong)a * b + c;
@@ -66,7 +66,7 @@ namespace Eduard
         /// <param name="n">Exponent.</param>
         /// <param name="m">Modulus.</param>
         /// <returns>x^n mod m.</returns>
-        internal static uint ModPow(uint x, uint n, uint m)
+        public static uint ModPow(uint x, uint n, uint m)
         {
             ulong res = 1;
             ulong t = x;
@@ -86,7 +86,7 @@ namespace Eduard
         /// <summary>
         /// Computes (x * y) mod n using 64-bit intermediate.
         /// </summary>
-        internal static uint MultMod(uint x, uint y, uint n)
+        public static uint MultMod(uint x, uint y, uint n)
         {
             ulong val = (ulong)x * y;
             val %= n;
@@ -101,7 +101,7 @@ namespace Eduard
         /// <param name="c">Addend.</param>
         /// <param name="rem">Receives low 32 bits of result.</param>
         /// <returns>High 32 bits of result (carry word).</returns>
-        internal static uint MultDiv(uint a, uint b, uint c, ref uint rem)
+        public static uint MultDiv(uint a, uint b, uint c, ref uint rem)
         {
             ulong res = ((ulong)a * b) + c;
             uint mask = 0xFFFFFFFF;
@@ -120,7 +120,7 @@ namespace Eduard
         /// Handles m = 3 mod 4, m = 5 mod 8, and general case via Tonelli-Shanks.<br/>
         /// Returns 0 when no square root exists or when m is detected as composite.
         /// </remarks>
-        internal static uint ModSquareRoot(uint x, uint m)
+        public static uint ModSqrt(uint x, uint m)
         {
             uint z, y, v, w, t, q;
             int i, e, n, r;
@@ -211,7 +211,7 @@ namespace Eduard
         /// <param name="val">Value to invert.</param>
         /// <param name="field">Modulus.</param>
         /// <returns>Inverse such that (val * result) % field = 1.</returns>
-        internal static uint Inverse(uint val, uint field)
+        public static uint Inverse(uint val, uint field)
         {
             long b0 = field, t, q;
             long x0 = 0, x1 = 1;
