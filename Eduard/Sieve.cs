@@ -30,6 +30,11 @@ namespace Eduard
                 throw new ArgumentOutOfRangeException(nameof(limit),
                     "Limit must be at least 2 to generate primes.");
 
+            GenPrimeList(limit);
+        }
+
+        private void GenPrimeList(int limit)
+        {
             list = new List<int>();
             int root = (int)Math.Sqrt(limit) + 1;
             bool[] sieve = new bool[limit];
@@ -38,17 +43,17 @@ namespace Eduard
             {
                 for (int y = 1; y < root; y++)
                 {
-                    int k = 4 * x * x + y * y;
+                    long k = 4L * x * x + y * y;
 
                     if ((k < limit) && ((k % 12 == 1) || (k % 12 == 5)))
                         sieve[k] = !sieve[k];
 
-                    k = 3 * x * x + y * y;
+                    k = 3L * x * x + y * y;
                     if ((k < limit) && (k % 12 == 7))
                         sieve[k] = !sieve[k];
                     if (x > y)
                     {
-                        k = 3 * x * x - y * y;
+                        k = 3L * x * x - y * y;
 
                         if ((k < limit) && (k % 12 == 11))
                             sieve[k] = !sieve[k];
