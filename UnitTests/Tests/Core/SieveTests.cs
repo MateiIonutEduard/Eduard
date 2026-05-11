@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Eduard.Tests.Core
 {
-    [Collection("Sequential")]
     public class SieveTests
     {
         #region Constructor and Basic Properties
@@ -172,6 +171,14 @@ namespace Eduard.Tests.Core
             var sieve = new Sieve(50);
             var ex = Assert.Throws<ArgumentOutOfRangeException>(() => sieve[-1]);
             Assert.Contains("Index", ex.Message);
+        }
+
+        [Fact]
+        public void Indexer_ZeroIndex_ThrowsArgumentOutOfRange()
+        {
+            var sieve = new Sieve();
+            Assert.Throws<ArgumentOutOfRangeException>(() => 
+                sieve[0]);
         }
 
         [Fact]
