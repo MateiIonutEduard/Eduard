@@ -1069,6 +1069,7 @@ namespace Eduard.Security
         /// <returns>The derivative polynomial.</returns>
         public static Polynomial Differentiate(Polynomial poly, BigInteger field)
         {
+            if (poly.degree == 0) return 0;
             Polynomial diff = new Polynomial(poly.degree - 1);
 
             for (int k = 1; k <= poly.degree; k++)
