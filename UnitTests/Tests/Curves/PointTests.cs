@@ -3,7 +3,6 @@ using Eduard.Security.Primitives;
 
 namespace Eduard.Tests.Curves
 {
-    [Collection("Sequential")]
     public class PointTests
     {
         #region Affine Point Tests (ECPoint)
