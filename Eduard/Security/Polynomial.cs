@@ -120,16 +120,16 @@ namespace Eduard.Security
 
         internal void Update()
         {
-            List<BigInteger> list = new List<BigInteger>();
-            list.AddRange(coeffs);
+            int newDegree = degree;
 
-            while (list[degree] == 0 && list.Count > 1 && degree != 0)
-                degree--;
+            while (newDegree > 0 && coeffs[newDegree] == 0)
+                newDegree--;
 
-            coeffs = new BigInteger[degree + 1];
-
-            for (int i = 0; i <= degree; i++)
-                coeffs[i] = list[i];
+            if (newDegree != degree)
+            {
+                degree = newDegree;
+                Array.Resize(ref coeffs, degree + 1);
+            }
         }
 
         /// <summary>
