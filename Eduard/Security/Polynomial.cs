@@ -81,13 +81,11 @@ namespace Eduard.Security
         {
             degree = coeffs.Length - 1;
             this.coeffs = new BigInteger[degree + 1];
-            List<BigInteger> list = new List<BigInteger>();
-
-            list.AddRange(coeffs);
-            list.Reverse();
 
             for (int i = 0; i <= degree; i++)
-                this.coeffs[i] = BarrettReducer.Reduce(list[i], true);
+                this.coeffs[i] = BarrettReducer.Reduce(coeffs[degree - i], true);
+
+            Update();
         }
 
         /// <summary>
