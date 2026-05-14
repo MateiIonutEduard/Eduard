@@ -186,17 +186,11 @@ namespace Eduard.Security
             if (left.IsZero || right.IsZero)
                 return 0;
 
-            if(left.IsOne)
-            {
-                var res = new Polynomial(right);
-                return res;
-            }
+            if (left.IsOne) 
+                return right;
 
-            if(right.IsOne)
-            {
-                var res = new Polynomial(left);
-                return res;
-            }
+            if (right.IsOne) 
+                return left;
 
             return (left == right) ? Square(left) 
                 : Multiply(left, right);
@@ -270,8 +264,9 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Reduce(Polynomial x, Polynomial m)
         {
-            if (m.degree == 0 && m.coeffs[0] == 0)
-                throw new DivideByZeroException("Modulus polynomial cannot be zero.");
+            if (m.IsZero)
+                throw new DivideByZeroException(
+                    "Modulus polynomial cannot be zero.");
 
             int degm = m.degree;
             int n = x.degree;
@@ -329,8 +324,9 @@ namespace Eduard.Security
         /// </remarks>
         public static void SetPolyMod(Polynomial poly)
         {
-            if (poly.degree == 0 && poly.coeffs[0] == 0)
-                throw new DivideByZeroException("Modulus polynomial cannot be zero.");
+            if (poly.IsZero)
+                throw new DivideByZeroException(
+                    "Modulus polynomial cannot be zero.");
 
             int m, n = poly.degree;
 
@@ -523,11 +519,8 @@ namespace Eduard.Security
                 throw new DivideByZeroException(
                     "Polynomial divisor cannot be zero.");
 
-            if (left.degree < right.degree)
-            {
-                var res = new Polynomial(left);
-                return res;
-            }
+            if (left.degree < right.degree) 
+                return left;
 
             if (right.degree == 0)
                 return 0;
@@ -812,17 +805,11 @@ namespace Eduard.Security
         {
             Polynomial a, b;
 
-            if (left == 0 && right != 0)
-            {
-                a = new Polynomial(right);
-                return a;
-            }
+            if (left == 0 && right != 0) 
+                return right;
 
-            if (left != 0 && right == 0)
-            {
-                a = new Polynomial(left);
-                return a;
-            }
+            if (left != 0 && right == 0) 
+                return left;
 
             if (left == 1 || right == 1)
                 return 1;
@@ -1020,12 +1007,7 @@ namespace Eduard.Security
         /// <returns>Polynomial truncated to degree n-1.</returns>
         public static Polynomial Modxn(Polynomial poly, int degn)
         {
-            if (poly.degree < degn)
-            {
-                var res = new Polynomial(poly);
-                return res;
-            }
-
+            if (poly.degree < degn) return poly;
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k < degn; k++)
@@ -1047,12 +1029,7 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Modxn_l(Polynomial poly, int degn)
         {
-            if (poly.degree < degn)
-            {
-                var res = new Polynomial(poly);
-                return res;
-            }
-
+            if (poly.degree < degn) return poly;
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k + degn <= poly.degree; k++)
