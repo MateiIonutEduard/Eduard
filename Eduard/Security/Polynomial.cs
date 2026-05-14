@@ -8,10 +8,10 @@ namespace Eduard.Security
     /// Represents univariate polynomials with coefficients in a prime field.
     /// </summary>
     /// <remarks>
-    /// All polynomial operations are performed modulo a prime field set via SetField().<br/>
-    /// Supports addition, subtraction, multiplication, division, modulus, GCD, exponentiation,<br/>
-    /// root finding, and FFT-based fast algorithms for large polynomials.<br/>
-    /// Coefficients are stored in descending order (constant term last).
+    /// All polynomial operations are performed modulo a prime field set via SetField(). <br/>
+    /// Supports addition, subtraction, multiplication, division, modulus, GCD, exponentiation, <br/>
+    /// root finding, and FFT-based fast algorithms for large polynomials. <br/>
+    /// Coefficients are stored in ascending order (constant term at index 0).
     /// </remarks>
 #if !USE_PROFILER
     [DebuggerStepThrough]
@@ -39,8 +39,8 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="degree">The degree of the polynomial.</param>
         /// <remarks>
-        /// Creates a zero polynomial of the specified degree.<br/>
-        /// All coefficients are initialized to zero. Use this constructor<br/> 
+        /// Creates a zero polynomial of the specified degree. <br/>
+        /// All coefficients are initialized to zero. Use this constructor <br/> 
         /// when building polynomials coefficient by coefficient.
         /// </remarks>
         public Polynomial(int degree)
@@ -57,7 +57,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="poly">The polynomial to copy.</param>
         /// <remarks>
-        /// Creates a deep copy where modifications to the new instance<br/>
+        /// Creates a deep copy where modifications to the new instance <br/>
         /// do not affect the original polynomial and vice versa.
         /// </remarks>
         public Polynomial(Polynomial poly)
@@ -74,7 +74,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="coeffs">Coefficients in descending order.</param>
         /// <remarks>
-        /// Coefficients are automatically reduced modulo the current field.<br/>
+        /// Coefficients are automatically reduced modulo the current field. <br/>
         /// Example: new Polynomial(3, -5, 6) represents 3*X^2 - 5*X + 6.
         /// </remarks>
         public Polynomial(params BigInteger[] coeffs)
@@ -93,7 +93,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="field">The prime field modulus.</param>
         /// <remarks>
-        /// Initializes Barrett reduction constants and optimizes square root computations<br/>
+        /// Initializes Barrett reduction constants and optimizes square root computations <br/>
         /// based on field properties. Must be called before any polynomial operations.
         /// </remarks>
         /// <exception cref="ArgumentException">
@@ -137,8 +137,9 @@ namespace Eduard.Security
         /// <param name="right">The second polynomial.</param>
         /// <returns>The sum polynomial reduced modulo the field.</returns>
         /// <remarks>
-        /// Performs coefficient-wise addition with modular reduction.<br/>
-        /// The result degree is automatically trimmed to remove leading <br/>zero coefficients.
+        /// Performs coefficient-wise addition with modular reduction. <br/>
+        /// The result degree is automatically trimmed to remove leading <br/>
+        /// zero coefficients.
         /// </remarks>
         public static Polynomial operator +(Polynomial left, Polynomial right)
         {
@@ -177,7 +178,7 @@ namespace Eduard.Security
         /// <param name="right">Right operand.</param>
         /// <returns>Product polynomial reduced modulo the field.</returns>
         /// <remarks>
-        /// Automatically selects between schoolbook or FFT multiplication<br/>
+        /// Automatically selects between schoolbook or FFT multiplication <br/>
         /// based on polynomial degrees for optimal performance.
         /// </remarks>
         public static Polynomial operator *(Polynomial left, Polynomial right)
@@ -248,8 +249,8 @@ namespace Eduard.Security
         /// <returns>The remainder of x divided by m.</returns>
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         /// <remarks>
-        /// Automatically selects between classical division and FFT-based reduction<br/>
-        /// based on polynomial degrees. For large polynomials meeting the FFT threshold,<br/>
+        /// Automatically selects between classical division and FFT-based reduction <br/>
+        /// based on polynomial degrees. For large polynomials meeting the FFT threshold, <br/>
         /// uses optimized transform-based algorithm with precomputed reciprocals.
         /// </remarks>
         public static Polynomial Reduce(Polynomial x, Polynomial m)
@@ -307,8 +308,8 @@ namespace Eduard.Security
         /// <param name="poly">The modulus polynomial.</param>
         /// <exception cref="DivideByZeroException">Thrown when modulus polynomial is zero.</exception>
         /// <remarks>
-        /// Precomputes reciprocal and other FFT parameters to accelerate subsequent<br/>
-        /// modular reductions. Only takes effect when polynomial degree meets the<br/>
+        /// Precomputes reciprocal and other FFT parameters to accelerate subsequent <br/>
+        /// modular reductions. Only takes effect when polynomial degree meets the <br/>
         /// FFT threshold. Called automatically by Reduce() when beneficial.
         /// </remarks>
         public static void SetPolyMod(Polynomial poly)
@@ -520,9 +521,8 @@ namespace Eduard.Security
         /// <param name="modulus">The modulus polynomial.</param>
         /// <returns>The product polynomial reduced modulo the modulus.</returns>
         /// <remarks>
-        /// Combines multiplication and reduction in a single operation.<br/>
-        /// Equivalent to (left * right) % modulus. Automatically selects between<br/>
-        /// schoolbook or FFT-based algorithms based on polynomial degrees.
+        /// Combines multiplication and reduction in a single operation. Equivalent to (left * right) % modulus. <br/>
+        /// Automatically selects between schoolbook or FFT-based algorithms based on polynomial degrees.
         /// </remarks>
         public static Polynomial MultMod(Polynomial left, Polynomial right, Polynomial modulus)
         {
@@ -540,8 +540,8 @@ namespace Eduard.Security
         /// <exception cref="ArithmeticException">Thrown when both base and exponent are zero (0^0 is undefined).</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when exponent is negative.</exception>
         /// <remarks>
-        /// Implements binary exponentiation (square-and-multiply).<br/>
-        /// For modular exponentiation, use <see cref="Pow(Polynomial, BigInteger, Polynomial)"/>.
+        /// Implements binary exponentiation (square-and-multiply). For modular <br/>
+        /// exponentiation, use <see cref="Pow(Polynomial, BigInteger, Polynomial)"/>.
         /// </remarks>
         public static Polynomial Pow(Polynomial val, int exponent)
         {
@@ -781,8 +781,8 @@ namespace Eduard.Security
         /// <param name="right">Second polynomial.</param>
         /// <returns>A monic polynomial representing the GCD of the inputs.</returns>
         /// <remarks>
-        /// Uses Euclidean algorithm for polynomial GCD.<br/>
-        /// The result is normalized to be monic (leading coefficient = 1).
+        /// Uses Euclidean algorithm for polynomial GCD. The result
+        /// is normalized to be monic (leading coefficient = 1).
         /// </remarks>
         public static Polynomial Gcd(Polynomial left, Polynomial right)
         {
@@ -1031,8 +1031,8 @@ namespace Eduard.Security
         /// <returns>The polynomial A(X) such that poly * A = 1 (mod X^n).</returns>
         /// <remarks>
         /// Implements Newton's method for polynomial inversion: given an initial approximation <br/>
-        /// modulo X^1, each iteration doubles the precision. Complexity is O(n log n).
-        /// Used internally<br/> for FFT-based division and modular reduction algorithms.
+        /// modulo X^1, each iteration doubles the precision. Complexity is O(n log n). Used internally <br/>
+        /// for FFT-based division and modular reduction algorithms.
         /// </remarks>
         public static Polynomial Invmodxn(Polynomial poly, int degn)
         {
@@ -1056,8 +1056,8 @@ namespace Eduard.Security
         /// <returns>The leading coefficient, or 0 if the polynomial is zero.</returns>
         /// <remarks>
         /// For a non-zero polynomial, returns the coefficient of the highest-degree term. <br/>
-        /// For the zero polynomial, returns 0. Used internally for normalization
-        /// and monic <br/> polynomial operations.
+        /// For the zero polynomial, returns 0. Used internally for normalization and monic <br/>
+        /// polynomial operations.
         /// </remarks>
         internal BigInteger Min()
         {
@@ -1098,7 +1098,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="left">The first polynomial to compare.</param>
         /// <param name="right">The second polynomial to compare.</param>
-        /// <returns>true if the polynomials have identical coefficients; otherwise false.</returns>
+        /// <returns><c>true</c> if the polynomials have identical coefficients; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// Two polynomials are considered equal if they have the same <br/>
         /// coefficients for all terms, ignoring any trailing zero coefficients. <br/>
@@ -1114,7 +1114,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="left">The first polynomial to compare.</param>
         /// <param name="right">The second polynomial to compare.</param>
-        /// <returns>true if the polynomials differ in any coefficient; otherwise false.</returns>
+        /// <returns><c>true</c> if the polynomials differ in any coefficient; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// Returns the logical negation of the equality operator.
         /// </remarks>
@@ -1127,10 +1127,10 @@ namespace Eduard.Security
         /// Determines whether the current polynomial is equal to another polynomial.
         /// </summary>
         /// <param name="other">The polynomial to compare with the current polynomial.</param>
-        /// <returns>true if the polynomials have identical coefficients; otherwise false.</returns>
+        /// <returns><c>true</c> if the polynomials have identical coefficients; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// Performs coefficient-wise comparison modulo the current field.<br/>
-        /// Two polynomials are considered equal if they have the same coefficients<br/>
+        /// Performs coefficient-wise comparison modulo the current field. <br/>
+        /// Two polynomials are considered equal if they have the same coefficients <br/>
         /// for all terms up to the maximum degree, treating missing terms as zero.
         /// </remarks>
         public bool Equals(Polynomial other)
@@ -1153,7 +1153,7 @@ namespace Eduard.Security
         /// Determines whether the specified object is equal to the current polynomial.
         /// </summary>
         /// <param name="obj">The object to compare with the current polynomial.</param>
-        /// <returns>true if the specified object is a polynomial with identical coefficients; otherwise false.</returns>
+        /// <returns><c>true</c> if the specified object is a polynomial with identical coefficients; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// Performs coefficient-wise comparison modulo the current field. <br/>
         /// Null objects or non-polynomial types return false.
@@ -1174,9 +1174,10 @@ namespace Eduard.Security
         /// <returns>The coefficient at the specified degree, or 0 if index exceeds polynomial degree.</returns>
         /// <exception cref="IndexOutOfRangeException">Thrown when index is negative.</exception>
         /// <remarks>
-        /// Returns 0 for indices greater than the polynomial degree, <br/>treating missing higher-degree
-        /// terms as zero coefficients. <br/>This simplifies polynomial arithmetic by allowing
-        /// access <br/>beyond the current degree without bounds checking.
+        /// Returns 0 for indices greater than the polynomial degree, <br/>
+        /// treating missing higher-degree terms as zero coefficients. <br/>
+        /// This simplifies polynomial arithmetic by allowing access <br/>
+        /// beyond the current degree without bounds checking.
         /// </remarks>
         public BigInteger GetCoeff(int index)
         {
@@ -1222,7 +1223,7 @@ namespace Eduard.Security
         /// </summary>
         /// <returns>A 32-bit signed integer hash code.</returns>
         /// <remarks>
-        /// The hash code is derived from the internal coefficient array.<br/>
+        /// The hash code is derived from the internal coefficient array. <br/>
         /// Two equal polynomials will produce the same hash code.
         /// </remarks>
         public override int GetHashCode()
