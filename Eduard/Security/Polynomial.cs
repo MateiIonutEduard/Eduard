@@ -1322,16 +1322,21 @@ namespace Eduard.Security
         /// </remarks>
         public override int GetHashCode()
         {
-            if (IsZero) 
-                return 0;
-
             unchecked
             {
                 int hash = 17;
-                hash = hash * 31 + degree.GetHashCode();
+                int hashDegree = degree;
 
-                for (int i = 0; i <= degree; i++)
-                    hash = hash * 31 + coeffs[i].GetHashCode();
+                if (!ReferenceEquals(coeffs, null))
+                {
+                    while (hashDegree > 0 && coeffs[hashDegree] == 0)
+                        hashDegree--;
+                }
+
+                hash = hash * 31 + hashDegree.GetHashCode();
+
+                for (int i = 0; i <= hashDegree; i++)
+                    hash = hash * 31 + GetCoeff(i).GetHashCode();
 
                 return hash;
             }
