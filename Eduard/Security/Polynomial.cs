@@ -1199,6 +1199,46 @@ namespace Eduard.Security
         }
 
         /// <summary>
+        /// Gets a value indicating whether the polynomial is the zero polynomial.
+        /// </summary>
+        /// <remarks>
+        /// The zero polynomial serves as the additive identity in polynomial arithmetic.
+        /// </remarks>
+        private bool IsZero
+        {
+            get
+            {
+                if (ReferenceEquals(coeffs, null))
+                    return true;
+
+                if (degree > 0)
+                    return false;
+
+                return (coeffs[0] == 0);
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the polynomial is the constant polynomial 1.
+        /// </summary>
+        /// <remarks>
+        /// The one polynomial serves as the multiplicative identity in polynomial arithmetic.
+        /// </remarks>
+        private bool IsOne
+        {
+            get
+            {
+                if (ReferenceEquals(coeffs, null))
+                    return false;
+
+                if (degree > 0)
+                    return false;
+
+                return (coeffs[0] == 1);
+            }
+        }
+
+        /// <summary>
         /// Implicitly converts an integer to a constant polynomial.
         /// </summary>
         /// <param name="val">The integer value.</param>
