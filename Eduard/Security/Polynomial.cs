@@ -793,10 +793,16 @@ namespace Eduard.Security
             Polynomial a, b;
 
             if (left == 0 && right != 0)
-                return right;
+            {
+                a = new Polynomial(right);
+                return a;
+            }
 
             if (left != 0 && right == 0)
-                return left;
+            {
+                a = new Polynomial(left);
+                return a;
+            }
 
             if (left == 1 || right == 1)
                 return 1;
