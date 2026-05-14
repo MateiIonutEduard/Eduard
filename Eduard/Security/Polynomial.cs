@@ -1071,14 +1071,20 @@ namespace Eduard.Security
         }
 
         /// <summary>
-        /// Computes the formal derivative of a polynomial.
+        /// Computes the formal derivative of a polynomial over the current finite field.
         /// </summary>
-        /// <param name="poly">Input polynomial.</param>
-        /// <param name="field">Field modulus.</param>
-        /// <returns>The derivative polynomial.</returns>
-        public static Polynomial Differentiate(Polynomial poly, BigInteger field)
+        /// <param name="poly">The polynomial to differentiate.</param>
+        /// <returns>The derivative polynomial reduced modulo the current field.</returns>
+        /// <remarks>
+        /// Applies the standard power rule: the derivative of c*X^k is (k mod field)*c*X^(k-1). <br/>
+        /// Constant polynomials return zero. The result degree is one less than the input degree.
+        /// </remarks>
+        public static Polynomial Differentiate(Polynomial poly)
         {
-            if (poly.degree == 0) return 0;
+            if (poly.degree == 0) 
+                return 0;
+
+            if (poly.degree == 1) return poly.coeffs[1];
             Polynomial diff = new Polynomial(poly.degree - 1);
 
             for (int k = 1; k <= poly.degree; k++)
