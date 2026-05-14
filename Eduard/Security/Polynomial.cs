@@ -186,11 +186,8 @@ namespace Eduard.Security
             if (left.IsZero || right.IsZero)
                 return 0;
 
-            if (left.IsOne) 
-                return right;
-
-            if (right.IsOne) 
-                return left;
+            if (left.IsOne) return right;
+            if (right.IsOne) return left;
 
             return (left == right) ? Square(left) 
                 : Multiply(left, right);
@@ -1216,7 +1213,7 @@ namespace Eduard.Security
         /// <remarks>
         /// The zero polynomial serves as the additive identity in polynomial arithmetic.
         /// </remarks>
-        private bool IsZero
+        public bool IsZero
         {
             get
             {
@@ -1239,7 +1236,7 @@ namespace Eduard.Security
         /// <remarks>
         /// The one polynomial serves as the multiplicative identity in polynomial arithmetic.
         /// </remarks>
-        private bool IsOne
+        public bool IsOne
         {
             get
             {
