@@ -183,8 +183,23 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial operator *(Polynomial left, Polynomial right)
         {
-            if (left == right) return Square(left);
-            else return Multiply(left, right);
+            if (left.IsZero || right.IsZero)
+                return 0;
+
+            if(left.IsOne)
+            {
+                var res = new Polynomial(right);
+                return res;
+            }
+
+            if(right.IsOne)
+            {
+                var res = new Polynomial(left);
+                return res;
+            }
+
+            return (left == right) ? Square(left) 
+                : Multiply(left, right);
         }
 
         private static Polynomial Multiply(Polynomial left, Polynomial right)
