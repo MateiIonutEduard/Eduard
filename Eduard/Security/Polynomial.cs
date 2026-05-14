@@ -434,6 +434,9 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Mulxn(Polynomial poly, int words)
         {
+            if (poly.IsZero) 
+                return 0;
+
             int newDegree = poly.coeffs.Length + words - 1;
             Polynomial result = new Polynomial(newDegree);
             int k;
@@ -455,8 +458,9 @@ namespace Eduard.Security
         /// <remarks>Returns only the quotient; use % operator for remainder.</remarks>
         public static Polynomial operator /(Polynomial left, Polynomial right)
         {
-            if (right.degree == 0 && right.coeffs[0] == 0)
-                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
+            if (right.IsZero)
+                throw new DivideByZeroException(
+                    "Polynomial divisor cannot be zero.");
 
             if (left.degree < right.degree)
                 return 0;
@@ -515,8 +519,9 @@ namespace Eduard.Security
         /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
         public static Polynomial operator %(Polynomial left, Polynomial right)
         {
-            if (right.degree == 0 && right.coeffs[0] == 0)
-                throw new DivideByZeroException("Polynomial divisor cannot be zero.");
+            if (right.IsZero)
+                throw new DivideByZeroException(
+                    "Polynomial divisor cannot be zero.");
 
             if (left.degree < right.degree)
             {
@@ -609,7 +614,7 @@ namespace Eduard.Security
             Polynomial rb = nb % modulus;
             Polynomial result = 1;
 
-            if(modulus.degree == 0 && modulus.coeffs[0] == 0)
+            if(modulus.IsZero)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -750,7 +755,7 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus, bool prepareModulus = true)
         {
-            if (modulus.degree == 0 && modulus.coeffs[0] == 0)
+            if (modulus.IsZero)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -858,13 +863,15 @@ namespace Eduard.Security
         public BigInteger Horner(BigInteger X)
         {
             BigInteger field = BarrettReducer.GetModulus();
-            BigInteger sum = coeffs[0];
-            BigInteger val = 1;
 
             if (X < 0 || X >= field)
                 throw new ArgumentOutOfRangeException(
                     nameof(X), "Evaluation point must" +
                     " be in range [0, field-1].");
+
+            if (IsZero) return 0;
+            BigInteger sum = coeffs[0];
+            BigInteger val = 1;
 
             for (int k = 1; k <= degree; k++)
             {
