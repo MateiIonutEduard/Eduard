@@ -1192,13 +1192,15 @@ namespace Eduard.Security
         /// </remarks>
         public BigInteger GetCoeff(int index)
         {
-            if (index > degree)
+            if (index < 0)
+                throw new IndexOutOfRangeException(
+                    "Index cannot be negative.");
+
+            if (ReferenceEquals(coeffs, null))
                 return 0;
-            else
-                if (index >= 0 && index <= degree)
-                return coeffs[index];
-            else
-                throw new IndexOutOfRangeException("Index out of range.");
+
+            return index <= degree ? 
+                coeffs[index] : 0;
         }
 
         /// <summary>
@@ -1288,6 +1290,9 @@ namespace Eduard.Security
         /// </remarks>
         public override int GetHashCode()
         {
+            if (IsZero) 
+                return 0;
+
             unchecked
             {
                 int hash = 17;
