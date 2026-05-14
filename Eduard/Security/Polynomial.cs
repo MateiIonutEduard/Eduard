@@ -1020,7 +1020,12 @@ namespace Eduard.Security
         /// <returns>Polynomial truncated to degree n-1.</returns>
         public static Polynomial Modxn(Polynomial poly, int degn)
         {
-            if (poly.degree < degn) return poly;
+            if (poly.degree < degn)
+            {
+                var res = new Polynomial(poly);
+                return res;
+            }
+
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k < degn; k++)
@@ -1042,7 +1047,12 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Modxn_l(Polynomial poly, int degn)
         {
-            if (poly.degree < degn) return poly;
+            if (poly.degree < degn)
+            {
+                var res = new Polynomial(poly);
+                return res;
+            }
+
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k + degn <= poly.degree; k++)
