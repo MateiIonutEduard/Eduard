@@ -470,7 +470,9 @@ namespace Eduard.Security
             int m = left.degree;
             int n = right.degree;
 
-            BigInteger inv = BarrettReducer.InvMod(right.coeffs[right.degree]);
+            BigInteger lastCoeff = right.coeffs[right.degree];
+            BigInteger inv = BarrettReducer.InvMod(lastCoeff);
+
             quo = new Polynomial(m - n);
             rem = new Polynomial(left);
             
@@ -478,8 +480,11 @@ namespace Eduard.Security
             {
                 quo.coeffs[k] = BarrettReducer.MultMod(rem.coeffs[n + k], inv);
 
-                for(int j = n + k; j >= k; j--)
-                    rem.coeffs[j] = BarrettReducer.SubMod(rem.coeffs[j], BarrettReducer.MultMod(quo.coeffs[k], right.coeffs[j - k]));
+                for (int j = n + k; j >= k; j--)
+                {
+                    BigInteger product = BarrettReducer.MultMod(quo.coeffs[k], right.coeffs[j - k]);
+                    rem.coeffs[j] = BarrettReducer.SubMod(rem.coeffs[j], product);
+                }
             }
 
             quo.Update();
