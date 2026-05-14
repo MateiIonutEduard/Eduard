@@ -1143,6 +1143,9 @@ namespace Eduard.Security
         /// </remarks>
         public bool Equals(Polynomial other)
         {
+            if (IsZero) return other.IsZero;
+            if (other.IsZero) return IsZero;
+
             if (this.degree != other.degree)
                 return false;
 
@@ -1211,10 +1214,13 @@ namespace Eduard.Security
                 if (ReferenceEquals(coeffs, null))
                     return true;
 
-                if (degree > 0)
-                    return false;
+                for (int i = 0; i <= degree; i++)
+                {
+                    if (coeffs[i] != 0)
+                        return false;
+                }
 
-                return (coeffs[0] == 0);
+                return true;
             }
         }
 
@@ -1231,10 +1237,16 @@ namespace Eduard.Security
                 if (ReferenceEquals(coeffs, null))
                     return false;
 
-                if (degree > 0)
+                if (coeffs[0] != 1)
                     return false;
 
-                return (coeffs[0] == 1);
+                for (int i = 1; i <= degree; i++)
+                {
+                    if (coeffs[i] != 0)
+                        return false;
+                }
+
+                return true;
             }
         }
 
