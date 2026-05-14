@@ -288,13 +288,16 @@ namespace Eduard.Security
                 FFT.FastPolyMod(G, R);
             }
 
-            int deg = degm - 1;
-            Polynomial res = new Polynomial(deg);
+            int newDegree = degm - 1;
 
-            for (int i = 0; i <= deg; i++)
+            while (newDegree > 0 && R[newDegree] == 0)
+                newDegree--;
+
+            Polynomial res = new Polynomial(newDegree);
+
+            for (int i = 0; i <= newDegree; i++)
                 res.coeffs[i] = R[i];
 
-            res.Update();
             return res;
         }
 
