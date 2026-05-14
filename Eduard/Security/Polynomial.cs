@@ -66,7 +66,7 @@ namespace Eduard.Security
             coeffs = new BigInteger[degree + 1];
 
             for (int i = 0; i < coeffs.Length; i++)
-                coeffs[i] = poly.coeffs[i];
+                coeffs[i] = poly.GetCoeff(i);
         }
 
         /// <summary>
@@ -143,11 +143,17 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial operator +(Polynomial left, Polynomial right)
         {
-            int max = (left.degree > right.degree) ? left.degree : right.degree;
-            Polynomial result = new Polynomial(max);
+            int maxDegree = Math.Max(left.degree, right.degree);
+            Polynomial result = new Polynomial(maxDegree);
 
-            for (int i = 0; i <= max; i++)
-                result.coeffs[i] = BarrettReducer.AddMod(left.GetCoeff(i), right.GetCoeff(i));
+            for (int i = 0; i <= maxDegree; i++)
+            {
+                BigInteger leftCoeff = left.GetCoeff(i);
+                BigInteger rightCoeff = right.GetCoeff(i);
+
+                result.coeffs[i] = BarrettReducer.AddMod(
+                    leftCoeff, rightCoeff);
+            }
 
             result.Update();
             return result;
@@ -161,11 +167,17 @@ namespace Eduard.Security
         /// <returns>The difference polynomial reduced modulo the field.</returns>
         public static Polynomial operator -(Polynomial left, Polynomial right)
         {
-            int max = (left.degree > right.degree) ? left.degree : right.degree;
-            Polynomial result = new Polynomial(max);
+            int maxDegree = Math.Max(left.degree, right.degree);
+            Polynomial result = new Polynomial(maxDegree);
 
-            for (int i = 0; i <= max; i++)
-                result.coeffs[i] = BarrettReducer.SubMod(left.GetCoeff(i), right.GetCoeff(i));
+            for (int i = 0; i <= maxDegree; i++)
+            {
+                BigInteger leftCoeff = left.GetCoeff(i);
+                BigInteger rightCoeff = right.GetCoeff(i);
+
+                result.coeffs[i] = BarrettReducer.SubMod(
+                    leftCoeff, rightCoeff);
+            }
 
             result.Update();
             return result;
@@ -195,14 +207,14 @@ namespace Eduard.Security
 
         private static Polynomial Multiply(Polynomial left, Polynomial right)
         {
-            int min = Math.Min(left.degree, right.degree);
+            int minDegree = Math.Min(left.degree, right.degree);
 
 #if !USE_BENCHMARKING
             int FFT_POLY_MULT_THRESHOLD = (int)Threshold.POLY_FFT_MULT_THRESHOLD;
 #else
             int FFT_POLY_MULT_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_FFT_MULT);
 #endif
-            if (min >= FFT_POLY_MULT_THRESHOLD)
+            if (minDegree >= FFT_POLY_MULT_THRESHOLD)
             {
                 int deg = left.degree + right.degree;
                 BigInteger[] coeffs = FFT.FastPolyMult(left.coeffs, right.coeffs);
