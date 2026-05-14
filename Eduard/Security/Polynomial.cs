@@ -419,20 +419,14 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Mulxn(Polynomial poly, int words)
         {
-            BigInteger[] coeffs = new BigInteger[poly.coeffs.Length + words];
+            int newDegree = poly.coeffs.Length + words - 1;
+            Polynomial result = new Polynomial(newDegree);
+            int k;
 
-            for(int k = 0; k < coeffs.Length; k++)
-            {
-                if (k < words)
-                    coeffs[k] = 0;
-                else
-                    coeffs[k] = poly.coeffs[k - words];
-            }
+            for(k = 0; k <= newDegree; k++)
+                result.coeffs[k] = (k < words) ? 
+                    0 : poly.coeffs[k - words];
 
-            Polynomial result = new Polynomial();
-            result.coeffs = coeffs;
-
-            result.degree = coeffs.Length - 1;
             return result;
         }
 
