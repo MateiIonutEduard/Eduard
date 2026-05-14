@@ -444,18 +444,20 @@ namespace Eduard.Security
                 throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             if (left.degree < right.degree)
-                return new Polynomial(0);
+                return 0;
 
             if(right.degree == 0)
             {
-                BigInteger vn = BarrettReducer.InvMod(right.coeffs[right.degree]);
-                List <BigInteger> words = new List<BigInteger>();
+                BigInteger lastCoeff = right.coeffs[right.degree];
+                BigInteger vn = BarrettReducer.InvMod(lastCoeff);
 
-                for (int i = 0; i <= left.degree; i++)
-                    words.Add(BarrettReducer.MultMod(left.coeffs[i], vn));
+                int degree = left.degree, i;
+                Polynomial res = new Polynomial(degree);
 
-                words.Reverse();
-                return new Polynomial(words.ToArray());
+                for (i = 0; i <= degree; i++)
+                    res.coeffs[i] = BarrettReducer.MultMod(left.coeffs[i], vn);
+
+                return res;
             }
 
             Polynomial quo, rem;
@@ -497,10 +499,13 @@ namespace Eduard.Security
                 throw new DivideByZeroException("Polynomial divisor cannot be zero.");
 
             if (left.degree < right.degree)
-                return left;
+            {
+                var res = new Polynomial(left);
+                return res;
+            }
 
             if (right.degree == 0)
-                return new Polynomial(0);
+                return 0;
 
             Polynomial quo, rem;
             Divide(left, right, out quo, out rem);
