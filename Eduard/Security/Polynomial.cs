@@ -970,13 +970,12 @@ namespace Eduard.Security
         public static Polynomial Divxn(Polynomial poly, int degn)
         {
             if (poly.degree < degn) return 0;
-            Polynomial result = new Polynomial();
-            result.coeffs = new BigInteger[poly.degree - degn + 1];
+            int newDegree = poly.degree - degn;
+            Polynomial result = new Polynomial(newDegree);
 
             for (int k = degn; k <= poly.degree; k++)
                 result.coeffs[k - degn] = poly.GetCoeff(k);
 
-            result.degree = poly.degree - degn;
             result.Update();
             return result;
         }
@@ -990,13 +989,11 @@ namespace Eduard.Security
         public static Polynomial Modxn(Polynomial poly, int degn)
         {
             if (poly.degree < degn) return poly;
-            Polynomial result = new Polynomial();
-            result.coeffs = new BigInteger[degn];
+            Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k < degn; k++)
                 result.coeffs[k] = poly.GetCoeff(k);
 
-            result.degree = degn - 1;
             result.Update();
             return result;
         }
@@ -1017,7 +1014,8 @@ namespace Eduard.Security
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k + degn <= poly.degree; k++)
-                result.coeffs[k] = BarrettReducer.AddMod(poly.GetCoeff(k), poly.GetCoeff(k + degn));
+                result.coeffs[k] = BarrettReducer.AddMod(
+                    poly.GetCoeff(k), poly.GetCoeff(k + degn));
 
             result.Update();
             return result;
