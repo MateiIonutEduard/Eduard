@@ -1178,14 +1178,12 @@ namespace Eduard.Security
             if (IsZero) return other.IsZero;
             if (other.IsZero) return IsZero;
 
-            if (this.degree != other.degree)
-                return false;
+            int maxDegree = Math.Max(
+                this.degree, other.degree);
 
-            int degree = other.degree;
-
-            for (int i = 0; i <= degree; i++)
+            for (int i = 0; i <= maxDegree; i++)
             {
-                if (this.coeffs[i] != other.coeffs[i])
+                if (GetCoeff(i) != other.GetCoeff(i))
                     return false;
             }
 
