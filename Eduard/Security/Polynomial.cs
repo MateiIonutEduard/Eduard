@@ -341,10 +341,11 @@ namespace Eduard.Security
 
             if (n < FFT_POLY_MOD_THRESHOLD) return;
             Polynomial h = new Polynomial(poly);
-            h.Reverse();
 
+            h = Polynomial.Reverse(h);
             h = Invmodxn(h, n);
-            h.Reverse();
+
+            h = Polynomial.Reverse(h);
             m = h.degree;
 
             if (m < n - 1) 
@@ -362,13 +363,16 @@ namespace Eduard.Security
             FFT.SetPolyMod(n, rf, f);
         }
 
-        private void Reverse()
+        private static Polynomial Reverse(Polynomial poly)
         {
-            List<BigInteger> list = new List<BigInteger>();
-            list.AddRange(coeffs);
+            int degree = poly.coeffs.Length - 1;
+            var res = new Polynomial(degree);
+            int k;
 
-            list.Reverse();
-            this.coeffs = list.ToArray();
+            for (k = 0; k <= degree; k++)
+                res.coeffs[k] = poly.coeffs[degree - k];
+
+            return res;
         }
 
         private static Polynomial SchoolbookMult(Polynomial left, Polynomial right)
@@ -708,7 +712,8 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right)
         {
-            Polynomial poly = new Polynomial(left);
+            if (left == 0) return 0;
+            Polynomial poly = left;
             Polynomial res = 0, temp = 1;
 
             for (int k = 0; k <= poly.degree; k++)
@@ -760,7 +765,8 @@ namespace Eduard.Security
             int POLY_MOD_COMPOSE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER);
 #endif
 
-            Polynomial poly = new Polynomial(left);
+            if (left == 0) return 0;
+            Polynomial poly = left;
             Polynomial res = 0, temp = 1;
 
             if (modulus.degree >= POLY_MOD_COMPOSE_THRESHOLD)
