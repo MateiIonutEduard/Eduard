@@ -1127,6 +1127,9 @@ namespace Eduard.Security
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when degree n is less than 1.
         /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when polynomial is zero or constant term is zero.
+        /// </exception>
         /// <remarks>
         /// Implements Newton's method for polynomial inversion: given an initial approximation <br/>
         /// modulo X^1, each iteration doubles the precision. Complexity is O(n log n). Used internally <br/>
@@ -1139,8 +1142,19 @@ namespace Eduard.Security
                     nameof(degn), "Degree n cannot"
                     + " be less than 1.");
 
-            BigInteger field = BarrettReducer.GetModulus();
-            BigInteger lastCoeff = BarrettReducer.InvMod(poly.GetCoeff(0));
+            if (poly == 0)
+                throw new ArgumentException(
+                    "Polynomial cannot be zero.",
+                    nameof(poly));
+
+            BigInteger constantTerm = poly.GetCoeff(0);
+
+            if (constantTerm == 0)
+                throw new ArgumentException(
+                    "Constant term cannot"
+                    + " be zero.", nameof(poly));
+
+            BigInteger lastCoeff = BarrettReducer.InvMod(constantTerm);
             int k = 0;
 
             Polynomial result = new Polynomial(lastCoeff);
