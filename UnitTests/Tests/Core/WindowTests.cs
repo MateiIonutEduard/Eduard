@@ -128,6 +128,189 @@ namespace Eduard.Tests.Core
 
         #endregion
 
+        #region Sliding Window Strong Tests
+
+        [Fact]
+        public void Window_SequentialExtraction_ConsumesAllBits()
+        {
+            var rand = RandomNumberGenerator.Create();
+            var sizes = new[] { 256, 384, 521, 448 };
+
+            foreach (int bitLength in sizes)
+            {
+                var exp = new BigInteger(bitLength, rand);
+                int bits = exp.GetBits();
+
+                int i = bits - 1;
+                int totalBitsConsumed = 0;
+
+                while (i >= 0)
+                {
+                    int ubits = 0;
+                    int tbits = 0;
+
+                    int result = WindowUtil.Window(exp, 
+                        i, ref ubits, ref tbits, 5);
+
+                    if (exp.TestBit(i))
+                    {
+                        Assert.NotEqual(0, result);
+                        Assert.True((result & 1) != 0);
+                        Assert.True(ubits >= 1);
+                    }
+                    else
+                    {
+                        Assert.Equal(0, result);
+                        Assert.Equal(1, ubits);
+                        Assert.Equal(0, tbits);
+                    }
+
+                    Assert.True(tbits >= 0);
+                    totalBitsConsumed += ubits;
+                    i -= ubits;
+
+                    if (tbits > 0)
+                    {
+                        totalBitsConsumed += tbits;
+                        i -= tbits;
+                    }
+                }
+
+                Assert.Equal(bits, totalBitsConsumed);
+            }
+        }
+
+        [Fact]
+        public void Window_CryptographicPrimes_ValidWindows()
+        {
+            var primes = new Dictionary<string, BigInteger>();
+
+            primes["P-256"] = BigInteger.Pow(2, 256) - BigInteger.Pow(2, 224) +
+                BigInteger.Pow(2, 192) + BigInteger.Pow(2, 96) - 1;
+            primes["Ed25519"] = BigInteger.Pow(2, 255) - 19;
+
+            primes["P-384"] = BigInteger.Pow(2, 384) - BigInteger.Pow(2, 128) -
+                BigInteger.Pow(2, 96) + BigInteger.Pow(2, 32) - 1;
+            primes["P-521"] = BigInteger.Pow(2, 521) - 1;
+
+            primes["Ed448"] = BigInteger.Pow(2, 448) - 
+                BigInteger.Pow(2, 224) - 1;
+
+            foreach (var kvp in primes)
+            {
+                var p = kvp.Value;
+                int bits = p.GetBits();
+
+                for (int i = bits - 1; i >= 0; i--)
+                {
+                    int ubits = 0;
+                    int tbits = 0;
+
+                    int result = WindowUtil.Window(p, 
+                        i, ref ubits, ref tbits, 5);
+
+                    if (p.TestBit(i))
+                    {
+                        Assert.NotEqual(0, result);
+                        Assert.True((result & 1) != 0);
+                        Assert.True(result >= 1);
+
+                        Assert.True(result <= 31);
+                        Assert.True(ubits >= 1);
+                    }
+                    else
+                    {
+                        Assert.Equal(0, result);
+                        Assert.Equal(1, ubits);
+                        Assert.Equal(0, tbits);
+                    }
+
+                    Assert.True(tbits >= 0);
+                }
+            }
+        }
+
+        [Fact]
+        public void Window_MaximumWindowSize_Boundary()
+        {
+            BigInteger exp = 31;
+            int ubits = 0;
+            int tbits = 0;
+
+            int result = WindowUtil.Window(exp,
+                4, ref ubits, ref tbits, 5);
+
+            Assert.Equal(31, result);
+            Assert.Equal(5, ubits);
+            Assert.Equal(0, tbits);
+
+            exp = 63;
+            ubits = 0;
+            tbits = 0;
+
+            result = WindowUtil.Window(exp,
+                5, ref ubits, ref tbits, 5);
+
+            Assert.Equal(31, result);
+            Assert.Equal(5, ubits);
+            Assert.Equal(0, tbits);
+
+            exp = 24;
+            ubits = 0;
+            tbits = 0;
+
+            result = WindowUtil.Window(exp,
+                4, ref ubits, ref tbits, 5);
+
+            Assert.Equal(3, result);
+            Assert.Equal(2, ubits);
+            Assert.Equal(2, tbits);
+        }
+
+        [Fact]
+        public void Window_RandomExponents_ResultOddAndInRange()
+        {
+            var rand = RandomNumberGenerator.Create();
+            var sizes = new[] { 128, 192, 256, 320 };
+
+            foreach (int bitLength in sizes)
+            {
+                var exp = new BigInteger(bitLength, rand);
+                int bits = exp.GetBits();
+
+                for (int i = bits - 1; i >= 0; i -= 32)
+                {
+                    int ubits = 0;
+                    int tbits = 0;
+
+                    int result = WindowUtil.Window(exp, 
+                        i, ref ubits, ref tbits, 5);
+
+                    if (exp.TestBit(i))
+                    {
+                        Assert.NotEqual(0, result);
+                        Assert.True((result & 1) != 0);
+
+                        Assert.True(result >= 1);
+                        Assert.True(result <= 31);
+
+                        Assert.True(ubits >= 1);
+                        Assert.True(ubits <= i + 1);
+                    }
+                    else
+                    {
+                        Assert.Equal(0, result);
+                        Assert.Equal(1, ubits);
+                        Assert.Equal(0, tbits);
+                    }
+
+                    Assert.True(tbits >= 0);
+                }
+            }
+        }
+
+        #endregion
+
         #region NAF Fractional Sliding Window Tests
 
         [Fact]
