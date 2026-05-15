@@ -39,12 +39,19 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="degree">The degree of the polynomial.</param>
         /// <remarks>
-        /// Creates a zero polynomial of the specified degree. <br/>
-        /// All coefficients are initialized to zero. Use this constructor <br/> 
-        /// when building polynomials coefficient by coefficient.
+        /// Creates a zero polynomial of the specified degree. All coefficients <br/>
+        /// are initialized to zero. Use this constructor when building polynomials <br/>
+        /// coefficient by coefficient.
         /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when degree is negative.
+        /// </exception>
         public Polynomial(int degree)
         {
+            if (degree < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(degree), "Degree cannot be negative.");
+
             this.degree = degree;
             coeffs = new BigInteger[degree + 1];
 
@@ -77,8 +84,24 @@ namespace Eduard.Security
         /// Coefficients are automatically reduced modulo the current field. <br/>
         /// Example: new Polynomial(3, -5, 6) represents 3*X^2 - 5*X + 6.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when coefficient array is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when coefficient array is empty.
+        /// </exception>
         public Polynomial(params BigInteger[] coeffs)
         {
+            if (ReferenceEquals(coeffs, null))
+                throw new ArgumentNullException(
+                    nameof(coeffs), "Coefficient" 
+                    + " array cannot be null.");
+
+            if (coeffs.Length == 0)
+                throw new ArgumentException(
+                    "Coefficient array cannot" 
+                    + " be empty.", nameof(coeffs));
+
             degree = coeffs.Length - 1;
             this.coeffs = new BigInteger[degree + 1];
 
