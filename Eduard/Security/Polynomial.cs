@@ -708,9 +708,8 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right)
         {
-            Polynomial poly = left;
-            Polynomial res = 0;
-            Polynomial temp = 1;
+            Polynomial poly = new Polynomial(left);
+            Polynomial res = 0, temp = 1;
 
             for (int k = 0; k <= poly.degree; k++)
             {
@@ -761,9 +760,8 @@ namespace Eduard.Security
             int POLY_MOD_COMPOSE_THRESHOLD = PerfTuner.GetThreshold(PerfEntry.POLY_DEGREE_FAST_HORNER);
 #endif
 
-            Polynomial poly = left;
-            Polynomial res = 0;
-            Polynomial temp = 1;
+            Polynomial poly = new Polynomial(left);
+            Polynomial res = 0, temp = 1;
 
             if (modulus.degree >= POLY_MOD_COMPOSE_THRESHOLD)
             {

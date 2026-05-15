@@ -413,7 +413,7 @@ namespace Eduard.Security
         public BigInteger F(BigInteger X, BigInteger Y)
         {
             Polynomial poly = F(Y);
-            return poly.Horner(X);
+            return Polynomial.Horner(poly, X);
         }
 
         /// <summary>

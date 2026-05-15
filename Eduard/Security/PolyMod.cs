@@ -297,7 +297,10 @@ namespace Eduard.Security
         /// Thrown when evaluation point is outside the valid field range [0, field-1].
         /// </exception>
         public BigInteger F(BigInteger X)
-        { return poly.Horner(X); }
+        {
+            var res = Polynomial.Horner(poly, X);
+            return res;
+        }
 
         /// <summary>
         /// Sets the modulus polynomial for the ring Fp[X]/(M(X)).
