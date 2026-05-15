@@ -268,5 +268,30 @@ namespace Eduard.Tests.Core
         }
 
         #endregion
+
+        #region Combined Consistency & Edge Cases
+
+        [Fact]
+        public void Window_And_NAFWindow_HandlesLargeExponents()
+        {
+            var exp = BigInteger.Pow(2, 255) - 19;
+            int ubits = 0, tbits = 0;
+
+            int win = WindowUtil.Window(exp, index: 255, 
+                ref ubits, ref tbits, size: 5);
+
+            Assert.True(win >= 0);
+            Assert.Equal(1, ubits);
+            Assert.True(tbits >= 0);
+
+            var exp3 = exp * 3;
+            ubits = tbits = 0;
+
+            int nafWin = WindowUtil.NAFWindow(exp, exp3, 
+                index: 255, ref ubits, ref tbits, size: 5);
+            Assert.True(nafWin == 0 || (nafWin & 1) != 0);
+        }
+
+        #endregion
     }
 }
