@@ -477,7 +477,10 @@ namespace Eduard.Security
                 Polynomial res = new Polynomial(degree);
 
                 for (i = 0; i <= degree; i++)
-                    res.coeffs[i] = BarrettReducer.MultMod(left.coeffs[i], vn);
+                {
+                    BigInteger leftCoeff = left.GetCoeff(i);
+                    res.coeffs[i] = BarrettReducer.MultMod(leftCoeff, vn);
+                }
 
                 return res;
             }
@@ -1077,26 +1080,6 @@ namespace Eduard.Security
 
             result = Modxn(result, degn);
             return result;
-        }
-
-        /// <summary>
-        /// Returns the leading coefficient (the highest-degree non-zero coefficient).
-        /// </summary>
-        /// <returns>The leading coefficient, or 0 if the polynomial is zero.</returns>
-        /// <remarks>
-        /// For a non-zero polynomial, returns the coefficient of the highest-degree term. <br/>
-        /// For the zero polynomial, returns 0. Used internally for normalization and monic <br/>
-        /// polynomial operations.
-        /// </remarks>
-        internal BigInteger Min()
-        {
-            for(int k = coeffs.Length - 1; k >= 0; k--)
-            {
-                if (coeffs[k] != 0)
-                    return coeffs[k];
-            }
-
-            return 0;
         }
 
         /// <summary>
