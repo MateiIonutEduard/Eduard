@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace Eduard.Security
 {
     /// <summary>
-    /// Represents an element of a polynomial quotient ring Fp[X]/(M(X)) with automatic reduction.<br/>
+    /// Represents an element of a polynomial quotient ring Fp[X]/(M(X)) with automatic reduction. <br/>
     /// Provides arithmetic operations in the ring using the specified modulus polynomial.
     /// </summary>
 #if !USE_PROFILER
@@ -63,7 +63,9 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="index">The degree of the term (0 = constant term).</param>
         /// <returns>The coefficient at the specified degree.</returns>
-        /// <exception cref="IndexOutOfRangeException">Thrown when index is negative.</exception>
+        /// <exception cref="IndexOutOfRangeException">
+        /// Thrown when index is negative.
+        /// </exception>
         public BigInteger GetCoeff(int index)
         { return poly.GetCoeff(index); }
 
@@ -190,7 +192,7 @@ namespace Eduard.Security
         /// Thrown when the ring modulus is zero.
         /// </exception>
         /// <remarks>
-        /// Implements Brent-Kung algorithm for polynomial modular composition.<br/>
+        /// Implements Brent-Kung algorithm for polynomial modular composition. <br/>
         /// Critical for isogeny evaluation in CSIDH/SIKE and Frobenius endomorphisms.
         /// </remarks>
         public static PolyMod Compose(PolyMod left, PolyMod right)
@@ -311,9 +313,8 @@ namespace Eduard.Security
         /// Thrown when modulus polynomial is zero.
         /// </exception>
         /// <remarks>
-        /// Precomputes FFT parameters for efficient reduction when applicable.<br/>
-        /// The modulus should typically be irreducible for field applications,<br/>
-        /// but any non-zero polynomial is accepted for general quotient rings.
+        /// Precomputes FFT parameters for efficient reduction when applicable. The modulus should typically <br/>
+        /// be irreducible for field applications, but any non-zero polynomial is accepted for general quotient rings.
         /// </remarks>
         public static void SetModulus(Polynomial modulus)
         {
@@ -343,7 +344,7 @@ namespace Eduard.Security
         /// Checks equality with another ring element.
         /// </summary>
         /// <param name="other">The ring element to compare.</param>
-        /// <returns>true if the underlying polynomials are equal; otherwise false.</returns>
+        /// <returns><c>true</c> if the underlying polynomials are equal; otherwise <c>false</c>.</returns>
         public bool Equals(PolyMod other)
         { return poly.Equals(other.poly); }
 
@@ -351,7 +352,7 @@ namespace Eduard.Security
         /// Determines whether the specified object is equal to the current ring element.
         /// </summary>
         /// <param name="obj">The object to compare.</param>
-        /// <returns>true if the object is a PolyMod with equal polynomial; otherwise false.</returns>
+        /// <returns><c>true</c> if the object is a PolyMod with equal polynomial; otherwise <c>false</c>.</returns>
         public override bool Equals(object obj)
         { return poly.Equals(obj); }
 
@@ -367,7 +368,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="left">Left operand.</param>
         /// <param name="right">Right operand.</param>
-        /// <returns>true if the ring elements are equal; otherwise false.</returns>
+        /// <returns><c>true</c> if the ring elements are equal; otherwise <c>false</c>.</returns>
         public static bool operator ==(PolyMod left, PolyMod right)
         { return (left.poly == right.poly); }
 
@@ -376,7 +377,7 @@ namespace Eduard.Security
         /// </summary>
         /// <param name="left">Left operand.</param>
         /// <param name="right">Right operand.</param>
-        /// <returns>true if the ring elements are not equal; otherwise false.</returns>
+        /// <returns><c>true</c> if the ring elements are not equal; otherwise <c>false</c>.</returns>
         public static bool operator !=(PolyMod left, PolyMod right)
         { return (left.poly != right.poly); }
 
