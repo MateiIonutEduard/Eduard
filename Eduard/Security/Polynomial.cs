@@ -195,12 +195,6 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial operator *(Polynomial left, Polynomial right)
         {
-            if (left.IsZero || right.IsZero)
-                return 0;
-
-            if (left.IsOne) return right;
-            if (right.IsOne) return left;
-
             return (left == right) ? Square(left) 
                 : Multiply(left, right);
         }
@@ -273,7 +267,7 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Reduce(Polynomial x, Polynomial m)
         {
-            if (m.IsZero)
+            if (m == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -333,7 +327,7 @@ namespace Eduard.Security
         /// </remarks>
         public static void SetPolyMod(Polynomial poly)
         {
-            if (poly.IsZero)
+            if (poly == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -439,7 +433,7 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Mulxn(Polynomial poly, int words)
         {
-            if (poly.IsZero) 
+            if (poly == 0) 
                 return 0;
 
             int newDegree = poly.coeffs.Length + words - 1;
@@ -463,7 +457,7 @@ namespace Eduard.Security
         /// <remarks>Returns only the quotient; use % operator for remainder.</remarks>
         public static Polynomial operator /(Polynomial left, Polynomial right)
         {
-            if (right.IsZero)
+            if (right == 0)
                 throw new DivideByZeroException(
                     "Polynomial divisor cannot be zero.");
 
@@ -524,7 +518,7 @@ namespace Eduard.Security
         /// <exception cref="DivideByZeroException">Thrown when divisor is zero.</exception>
         public static Polynomial operator %(Polynomial left, Polynomial right)
         {
-            if (right.IsZero)
+            if (right == 0)
                 throw new DivideByZeroException(
                     "Polynomial divisor cannot be zero.");
 
@@ -616,7 +610,7 @@ namespace Eduard.Security
             Polynomial rb = nb % modulus;
             Polynomial result = 1;
 
-            if(modulus.IsZero)
+            if(modulus == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -757,7 +751,7 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Compose(Polynomial left, Polynomial right, Polynomial modulus, bool prepareModulus = true)
         {
-            if (modulus.IsZero)
+            if (modulus == 0)
                 throw new DivideByZeroException(
                     "Modulus polynomial cannot be zero.");
 
@@ -851,12 +845,13 @@ namespace Eduard.Security
         /// <summary>
         /// Evaluates the polynomial at a given point using Horner's method.
         /// </summary>
+        /// <param name="poly">The polynomial to evaluate.</param>
         /// <param name="X">The point to evaluate at.</param>
         /// <returns>The value of the polynomial at X modulo the field.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when evaluation point is outside the valid field range [0, field-1].
         /// </exception>
-        public BigInteger Horner(BigInteger X)
+        public static BigInteger Horner(Polynomial poly, BigInteger X)
         {
             BigInteger field = BarrettReducer.GetModulus();
 
@@ -865,14 +860,18 @@ namespace Eduard.Security
                     nameof(X), "Evaluation point must" +
                     " be in range [0, field-1].");
 
-            if (IsZero) return 0;
-            BigInteger sum = coeffs[0];
+            if (poly == 0) return 0;
+            BigInteger sum = poly.coeffs[0];
+
+            int degree = poly.degree;
             BigInteger val = 1;
 
             for (int k = 1; k <= degree; k++)
             {
                 val = BarrettReducer.MultMod(val, X);
-                BigInteger test = BarrettReducer.MultMod(val, coeffs[k]);
+                BigInteger coeff = poly.coeffs[k];
+
+                BigInteger test = BarrettReducer.MultMod(val, coeff);
                 sum = BarrettReducer.AddMod(sum, test);
             }
 
@@ -1161,9 +1160,6 @@ namespace Eduard.Security
         /// </remarks>
         public bool Equals(Polynomial other)
         {
-            if (IsZero) return other.IsZero;
-            if (other.IsZero) return IsZero;
-
             int maxDegree = Math.Max(
                 this.degree, other.degree);
 
@@ -1217,55 +1213,6 @@ namespace Eduard.Security
 
             return index <= degree ? 
                 coeffs[index] : 0;
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the polynomial is the zero polynomial.
-        /// </summary>
-        /// <remarks>
-        /// The zero polynomial serves as the additive identity in polynomial arithmetic.
-        /// </remarks>
-        public bool IsZero
-        {
-            get
-            {
-                if (ReferenceEquals(coeffs, null))
-                    return true;
-
-                for (int i = 0; i <= degree; i++)
-                {
-                    if (coeffs[i] != 0)
-                        return false;
-                }
-
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the polynomial is the constant polynomial 1.
-        /// </summary>
-        /// <remarks>
-        /// The one polynomial serves as the multiplicative identity in polynomial arithmetic.
-        /// </remarks>
-        public bool IsOne
-        {
-            get
-            {
-                if (ReferenceEquals(coeffs, null))
-                    return false;
-
-                if (coeffs[0] != 1)
-                    return false;
-
-                for (int i = 1; i <= degree; i++)
-                {
-                    if (coeffs[i] != 0)
-                        return false;
-                }
-
-                return true;
-            }
         }
 
         /// <summary>
