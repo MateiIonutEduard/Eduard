@@ -1043,8 +1043,21 @@ namespace Eduard.Security
         /// <param name="poly">The input polynomial.</param>
         /// <param name="degn">The exponent n (number of coefficients to keep).</param>
         /// <returns>Polynomial truncated to degree n-1.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when degree n is less than 1.
+        /// </exception>
+        /// <remarks>
+        /// Computes poly mod X^n by retaining only coefficients of degree 0 through n-1. <br/>
+        /// This implements truncation in the power series ring F[[X]]/(X^n). Used internally <br/>
+        /// for Newton iteration in polynomial inversion and FFT-based division algorithms.
+        /// </remarks>
         public static Polynomial Modxn(Polynomial poly, int degn)
         {
+            if (degn < 1)
+                throw new ArgumentOutOfRangeException(
+                    nameof(degn), "Degree n cannot"
+                    + " be less than 1.");
+
             if (poly.degree < degn) return poly;
             Polynomial result = new Polynomial(degn - 1);
 
@@ -1061,12 +1074,20 @@ namespace Eduard.Security
         /// <param name="poly">The input polynomial.</param>
         /// <param name="degn">The exponent n (modulus is X^n - 1).</param>
         /// <returns>Polynomial reduced modulo X^n - 1 with degree less than n.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when degree n is less than 1.
+        /// </exception>
         /// <remarks>
-        /// Reduces poly modulo X^n - 1 by adding coefficient k to coefficient (k mod n).<br/>
+        /// Reduces poly modulo X^n - 1 by adding coefficient k to coefficient (k mod n). <br/>
         /// This implements cyclic convolution and is used in NTT-based algorithms.
         /// </remarks>
         public static Polynomial Modxn_l(Polynomial poly, int degn)
         {
+            if (degn < 1)
+                throw new ArgumentOutOfRangeException(
+                    nameof(degn), "Degree n cannot"
+                    + " be less than 1.");
+
             if (poly.degree < degn) return poly;
             Polynomial result = new Polynomial(degn - 1);
 
@@ -1084,6 +1105,9 @@ namespace Eduard.Security
         /// <param name="poly">The polynomial to invert (constant term must be invertible).</param>
         /// <param name="degn">The exponent n (inverse is computed modulo X^n).</param>
         /// <returns>The polynomial A(X) such that poly * A = 1 (mod X^n).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when degree n is less than 1.
+        /// </exception>
         /// <remarks>
         /// Implements Newton's method for polynomial inversion: given an initial approximation <br/>
         /// modulo X^1, each iteration doubles the precision. Complexity is O(n log n). Used internally <br/>
@@ -1091,9 +1115,14 @@ namespace Eduard.Security
         /// </remarks>
         public static Polynomial Invmodxn(Polynomial poly, int degn)
         {
-            int k = 0;
+            if (degn < 1)
+                throw new ArgumentOutOfRangeException(
+                    nameof(degn), "Degree n cannot"
+                    + " be less than 1.");
+
             BigInteger field = BarrettReducer.GetModulus();
             BigInteger lastCoeff = BarrettReducer.InvMod(poly.GetCoeff(0));
+            int k = 0;
 
             Polynomial result = new Polynomial(lastCoeff);
             while ((1 << k) < degn) k++;
