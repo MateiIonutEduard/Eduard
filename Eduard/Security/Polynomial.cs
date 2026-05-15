@@ -453,23 +453,31 @@ namespace Eduard.Security
         /// Multiplies a polynomial by X^n, shifting coefficients upward.
         /// </summary>
         /// <param name="poly">The input polynomial.</param>
-        /// <param name="words">The exponent n (number of shifts).</param>
+        /// <param name="degn">The exponent n (number of shifts).</param>
         /// <returns>Polynomial result of multiplying by X^n (coefficients shifted up by n).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when shift amount is negative.
+        /// </exception>
         /// <remarks>
         /// Used internally for polynomial arithmetic and FFT-based algorithms.
         /// </remarks>
-        public static Polynomial Mulxn(Polynomial poly, int words)
+        public static Polynomial Mulxn(Polynomial poly, int degn)
         {
-            if (poly == 0) 
+            if (degn < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(degn), "Shift amount cannot"
+                    + " be negative.");
+
+            if (poly == 0)
                 return 0;
 
-            int newDegree = poly.coeffs.Length + words - 1;
+            int newDegree = poly.coeffs.Length + degn - 1;
             Polynomial result = new Polynomial(newDegree);
             int k;
 
             for(k = 0; k <= newDegree; k++)
-                result.coeffs[k] = (k < words) ? 
-                    0 : poly.coeffs[k - words];
+                result.coeffs[k] = (k < degn) ? 
+                    0 : poly.coeffs[k - degn];
 
             return result;
         }
@@ -1024,8 +1032,19 @@ namespace Eduard.Security
         /// <param name="poly">The input polynomial.</param>
         /// <param name="degn">The exponent n (number of shifts).</param>
         /// <returns>Polynomial result of dividing by X^n (coefficients shifted down by n).</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when shift amount is negative.
+        /// </exception>
+        /// <remarks>
+        /// Used internally for polynomial arithmetic and FFT-based algorithms.
+        /// </remarks>
         public static Polynomial Divxn(Polynomial poly, int degn)
         {
+            if (degn < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(degn), "Shift amount cannot"
+                    + " be negative.");
+
             if (poly.degree < degn) return 0;
             int newDegree = poly.degree - degn;
             Polynomial result = new Polynomial(newDegree);
