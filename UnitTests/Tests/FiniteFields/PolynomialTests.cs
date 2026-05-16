@@ -681,5 +681,204 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Solve (Degree 1 and 2)
+
+        [Fact]
+        public void Solve_Degree1_ReturnsRoot()
+        {
+            Polynomial.SetField(17);
+            Polynomial p = new Polynomial(3, 6);
+
+            List<BigInteger> roots = new List<BigInteger>();
+            int ret = Polynomial.Solve(p, ref roots);
+
+            Assert.True(ret == 1);
+            Assert.True(roots.Count == 1);
+            Assert.True(roots[0] == 15);
+        }
+
+        [Fact]
+        public void Solve_Degree2_NoRoots_ReturnsMinusOne()
+        {
+            Polynomial.SetField(17);
+            Polynomial p = new Polynomial(1, 0, 3);
+
+            List<BigInteger> roots = new List<BigInteger>();
+            int ret = Polynomial.Solve(p, ref roots);
+
+            Assert.True(ret == -1);
+            Assert.True(roots.Count == 0);
+        }
+
+        [Fact]
+        public void Solve_Degree2_HasRoots_ReturnsTwo()
+        {
+            Polynomial.SetField(17);
+            Polynomial p = new Polynomial(1, 0, 15);
+
+            List<BigInteger> roots = new List<BigInteger>();
+            int ret = Polynomial.Solve(p, ref roots);
+
+            Assert.True(ret == 1);
+            Assert.True(roots.Count == 2);
+
+            Assert.True(roots.Contains(6));
+            Assert.True(roots.Contains(11));
+        }
+
+        #endregion
+
+        #region FindRoots (Higher Degree)
+
+        [Fact]
+        public void FindRoots_PolynomialWithRoots_FindsAll()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 14, 3, 14, 8);
+
+            List<BigInteger> roots = new List<BigInteger>();
+            p.FindRoots(ref roots);
+
+            var expectedRoots = new BigInteger[]
+            {
+                BigInteger.Parse("97760724979562125688104076753543978168852176537384239078018327437708905822447"),
+                BigInteger.Parse("14708384506749648925872721302311855803994325867860222177754982456116863041220")
+            };
+
+            Assert.True(roots.Contains(expectedRoots[0]));
+            Assert.True(roots.Contains(expectedRoots[1]));
+            Assert.True(roots.Count == 2);
+        }
+
+        [Fact]
+        public void FindRoots_NoRoots_ReturnsEmpty()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, -2, 14, 0, 3, 7);
+            List<BigInteger> roots = new List<BigInteger>();
+
+            p.FindRoots(ref roots);
+            Assert.True(roots.Count == 0);
+        }
+
+        #endregion
+
+        #region Shift and Truncation Operations
+
+        [Fact]
+        public void Mulxn_ShiftsUp()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 2, 3);
+
+            Polynomial shifted = Polynomial.Mulxn(p, 2);
+            Assert.True(shifted.degree == 4);
+
+            Assert.True(shifted.GetCoeff(4) == 1);
+            Assert.True(shifted.GetCoeff(3) == 2);
+
+            Assert.True(shifted.GetCoeff(2) == 3);
+            Assert.True(shifted.GetCoeff(1) == 0);
+        }
+
+        [Fact]
+        public void Mulxn_NegativeShift_ThrowsArgumentOutOfRange()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => {
+                Polynomial.SetField(P256);
+                Polynomial.Mulxn(1, -1);
+            });
+        }
+
+        [Fact]
+        public void Divxn_ShiftsDown()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(10, 20, 30, 40);
+
+            Polynomial result = Polynomial.Divxn(p, 2);
+            Assert.True(result.degree == 1);
+
+            Assert.True(result.GetCoeff(1) == 10);
+            Assert.True(result.GetCoeff(0) == 20);
+        }
+
+        [Fact]
+        public void Divxn_BeyondDegree_ReturnsZero()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 2);
+            Assert.True(Polynomial.Divxn(p, 5) == 0);
+        }
+
+        [Fact]
+        public void Modxn_TruncatesToDegreeNMinus1()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(5, 4, 3, 2, 1);
+
+            Polynomial trunc = Polynomial.Modxn(p, 2);
+            Assert.True(trunc.degree == 1);
+
+            Assert.True(trunc.GetCoeff(1) == 2);
+            Assert.True(trunc.GetCoeff(0) == 1);
+        }
+
+        [Fact]
+        public void Modxn_Negative_ThrowsArgumentOutOfRange()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+            {
+                Polynomial.SetField(P256);
+                Polynomial.Modxn(1, 0);
+            });
+        }
+
+        [Fact]
+        public void Modxn_l_CyclicReduction()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 2, 3, 4);
+            Polynomial red = Polynomial.Modxn_l(p, 2);
+
+            Assert.True(red.GetCoeff(1) == 4);
+            Assert.True(red.GetCoeff(0) == 6);
+        }
+
+        [Fact]
+        public void Invmodxn_InverseModX2()
+        {
+            Polynomial.SetField(17);
+            Polynomial p = new Polynomial(1, 1);
+
+            Polynomial inv = Polynomial.Invmodxn(p, 2);
+            Assert.True(inv.GetCoeff(0) == 1);
+
+            Assert.True(inv.GetCoeff(1) == 16);
+            Polynomial.SetField(P256);
+        }
+
+        [Fact]
+        public void Invmodxn_ZeroPolynomial_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                Polynomial.SetField(P256);
+                Polynomial.Invmodxn(0, 3);
+            });
+        }
+
+        [Fact]
+        public void Invmodxn_ConstantTermZero_ThrowsArgumentException()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 0);
+
+            Assert.Throws<ArgumentException>(() => 
+                Polynomial.Invmodxn(p, 3));
+        }
+
+        #endregion
     }
 }
