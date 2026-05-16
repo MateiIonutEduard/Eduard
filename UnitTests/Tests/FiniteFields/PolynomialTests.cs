@@ -1,6 +1,7 @@
 ﻿using Eduard.Security;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Eduard.Tests.FiniteFields
@@ -561,6 +562,122 @@ namespace Eduard.Tests.FiniteFields
 
             Assert.True(res.GetCoeff(0) == 15);
             Polynomial.SetField(P256);
+        }
+
+        #endregion
+
+        #region GCD Computation
+
+        [Fact]
+        public void Gcd_One_And_Polynomial_ReturnsOne()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(5, 3);
+            Assert.True(Polynomial.Gcd(p, 1) == 1);
+            Assert.True(Polynomial.Gcd(1, p) == 1);
+        }
+
+        [Fact]
+        public void Gcd_Zero_And_Polynomial_ReturnsPolynomial()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(2, 1);
+            Assert.True(Polynomial.Gcd(p, 0) == p);
+            Assert.True(Polynomial.Gcd(0, p) == p);
+        }
+
+        [Fact]
+        public void Gcd_MonicResult()
+        {
+            Polynomial.SetField(P256);
+            Polynomial a = new Polynomial(2, 0, 8);
+            Polynomial b = new Polynomial(4, 0, 16);
+
+            Polynomial g = Polynomial.Gcd(a, b);
+            Assert.True(g.GetCoeff(g.degree) == 1);
+
+            Assert.True(g.GetCoeff(2) == 1);
+            Assert.True(g.GetCoeff(0) == 4);
+        }
+
+        #endregion
+
+        #region Horner Evaluation
+
+        [Fact]
+        public void Horner_ZeroPolynomial_ReturnsZero()
+        {
+            Polynomial.SetField(P256);
+            Assert.True(Polynomial.Horner(0, 5) == 0);
+        }
+
+        [Fact]
+        public void Horner_Constant_ReturnsConstant()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = 7;
+            Assert.True(Polynomial.Horner(p, 10) == 7);
+        }
+
+        [Fact]
+        public void Horner_Linear_EvaluatesCorrectly()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(3, 2);
+            BigInteger val = Polynomial.Horner(p, 5);
+            Assert.True(val == 17 % P256);
+        }
+
+        [Fact]
+        public void Horner_OutsideFieldRange_ThrowsArgumentOutOfRange()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = 1;
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                Polynomial.Horner(p, P256));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                Polynomial.Horner(p, -1));
+        }
+
+        #endregion
+
+        #region Composition
+
+        [Fact]
+        public void Compose_LinearIntoLinear_ReturnsCorrect()
+        {
+            Polynomial.SetField(P256);
+            Polynomial P = new Polynomial(2, 1);
+
+            Polynomial Q = new Polynomial(3, 0);
+            Polynomial result = Polynomial.Compose(P, Q);
+
+            Assert.True(result.GetCoeff(1) == 6);
+            Assert.True(result.GetCoeff(0) == 1);
+        }
+
+        [Fact]
+        public void Compose_ZeroOuter_ReturnsZero()
+        {
+            Polynomial.SetField(P256);
+            Polynomial Q = new Polynomial(1, 2);
+            Assert.True(Polynomial.Compose(0, Q) == 0);
+        }
+
+        [Fact]
+        public void Compose_Modular_Basic()
+        {
+            Polynomial.SetField(P256);
+            Polynomial P = new Polynomial(1, 1);
+            Polynomial Q = new Polynomial(1, 1);
+
+            Polynomial mod = new Polynomial(1, 0, 1);
+            Polynomial res = Polynomial.Compose(P, Q, mod, false);
+
+            Assert.True(res.GetCoeff(1) == 1);
+            Assert.True(res.GetCoeff(0) == 2);
         }
 
         #endregion
