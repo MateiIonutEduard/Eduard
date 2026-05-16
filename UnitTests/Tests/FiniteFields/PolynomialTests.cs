@@ -880,5 +880,132 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Differentiation
+
+        [Fact]
+        public void Differentiate_Constant_ReturnsZero()
+        {
+            Polynomial.SetField(P256);
+            Assert.True(Polynomial.Differentiate(5) == 0);
+        }
+
+        [Fact]
+        public void Differentiate_Linear_ReturnsConstantCoefficient()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(3, 2);
+            Polynomial d = Polynomial.Differentiate(p);
+
+            Assert.True(d.degree == 0);
+            Assert.True(d.GetCoeff(0) == 3);
+        }
+
+        [Fact]
+        public void Differentiate_Quadratic_Works()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(2, 3, 4);
+            Polynomial d = Polynomial.Differentiate(p);
+
+            Assert.True(d.GetCoeff(1) == 4);
+            Assert.True(d.GetCoeff(0) == 3);
+        }
+
+        #endregion
+
+        #region Equality and HashCode
+
+        [Fact]
+        public void Equality_SameCoefficients_ReturnsTrue()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial a = new Polynomial(1, 2, 3);
+
+            Polynomial b = new Polynomial(1, 2, 3);
+            Assert.True(a == b);
+
+            Assert.False(a != b);
+            Assert.True(a.Equals(b));
+        }
+
+        [Fact]
+        public void Equality_DifferentDegree_ReturnsFalse()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial a = new Polynomial(1, 0);
+            Polynomial b = 1;
+            Assert.False(a == b);
+        }
+
+        [Fact]
+        public void Equality_WithNullObject_ReturnsFalse()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial a = 1;
+            object obj = null;
+            Assert.False(a.Equals(obj));
+        }
+
+        [Fact]
+        public void Equality_WithNonPolynomial_ReturnsFalse()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial a = 1;
+            Assert.False(a.Equals("not a polynomial"));
+        }
+
+        [Fact]
+        public void GetHashCode_SamePolynomial_SameHash()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial a = new Polynomial(3, 2, 1);
+            Polynomial b = new Polynomial(3, 2, 1);
+            Assert.True(a.GetHashCode() == b.GetHashCode());
+        }
+
+        #endregion
+
+        #region Ed25519 Cross‑Check (Critical Operations)
+
+        [Fact]
+        public void Ed25519_BasicArithmetic_Works()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial a = new Polynomial(1, 2);
+
+            Polynomial b = new Polynomial(3, 4);
+            Polynomial sum = a + b;
+
+            Assert.True(sum.GetCoeff(1) == 4);
+            Assert.True(sum.GetCoeff(0) == 6);
+            Polynomial prod = a * b;
+
+            Assert.True(prod.degree == 2);
+            Assert.True(prod.GetCoeff(2) == 3);
+
+            Assert.True(prod.GetCoeff(1) == 10);
+            Assert.True(prod.GetCoeff(0) == 8);
+        }
+
+        [Fact]
+        public void Ed25519_DivisionAndModulus_Works()
+        {
+            Polynomial.SetField(Ed25519);
+            Polynomial num = new Polynomial(1, 3, 2);
+
+            Polynomial den = new Polynomial(1, 1);
+            Polynomial q = num / den;
+
+            Assert.True(q.degree == 1);
+            Assert.True(q.GetCoeff(1) == 1);
+
+            Assert.True(q.GetCoeff(0) == 2);
+            Assert.True((num % den) == 0);
+
+            Polynomial.SetField(P256);
+        }
+
+        #endregion
     }
 }
