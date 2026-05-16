@@ -442,5 +442,127 @@ namespace Eduard.Tests.FiniteFields
         }
 
         #endregion
+
+        #region Exponentiation (int exponent)
+
+        [Fact]
+        public void Pow_ZeroBaseZeroExponent_ThrowsArithmeticException()
+        {
+            Assert.Throws<ArithmeticException>(() => {
+                Polynomial.SetField(P256);
+                Polynomial.Pow(0, 0);
+            });
+        }
+
+        [Fact]
+        public void Pow_NegativeExponent_ThrowsArgumentOutOfRange()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => {
+                Polynomial.SetField(P256);
+                Polynomial.Pow(1, -1);
+            });
+        }
+
+        [Fact]
+        public void Pow_ExponentZero_ReturnsOne()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = 5;
+            Assert.True(Polynomial.Pow(p, 0) == 1);
+        }
+
+        [Fact]
+        public void Pow_ExponentOne_ReturnsInput()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(2, 3);
+            Assert.True(Polynomial.Pow(p, 1) == p);
+        }
+
+        [Fact]
+        public void Pow_SmallExponent_Works()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 1);
+
+            Polynomial p3 = Polynomial.Pow(p, 3);
+            Assert.True(p3.degree == 3);
+
+            Assert.True(p3.GetCoeff(3) == 1);
+            Assert.True(p3.GetCoeff(2) == 3);
+
+            Assert.True(p3.GetCoeff(1) == 3);
+            Assert.True(p3.GetCoeff(0) == 1);
+        }
+
+        #endregion
+
+        #region Modular Exponentiation (BigInteger exponent)
+
+        [Fact]
+        public void PowMod_ModulusZero_ThrowsDivideByZeroException()
+        {
+            Assert.Throws<DivideByZeroException>(() => { 
+                Polynomial.SetField(P256); 
+                Polynomial.Pow(1, 5, 0); }
+            );
+        }
+
+        [Fact]
+        public void PowMod_NegativeExponent_ThrowsArgumentOutOfRange()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => { 
+                Polynomial.SetField(P256); 
+                Polynomial.Pow(1, -1, 1); 
+            });
+        }
+
+        [Fact]
+        public void PowMod_ZeroBaseZeroExponent_ThrowsArithmeticException()
+        {
+            Assert.Throws<ArithmeticException>(() => { 
+                Polynomial.SetField(P256); 
+                Polynomial.Pow(0, 0, 1); 
+            });
+        }
+
+        [Fact]
+        public void PowMod_ExponentZero_ReturnsOne()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = 5;
+
+            Polynomial m = new Polynomial(1, 0, 1);
+            Assert.True(Polynomial.Pow(p, 0, m) == 1);
+        }
+
+        [Fact]
+        public void PowMod_ExponentOne_ReturnsBaseReduced()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, 0, 2);
+            Polynomial m = new Polynomial(1, 0, 1);
+
+            Polynomial result = Polynomial.Pow(p, 1, m);
+            Assert.True(result == p % m);
+        }
+
+        [Fact]
+        public void PowMod_SmallModulus_UsesBinaryMethod()
+        {
+            Polynomial.SetField(17);
+            Polynomial basePoly = new Polynomial(1, 1);
+
+            Polynomial mod = new Polynomial(1, 0, 1);
+            BigInteger exp = 3;
+
+            Polynomial res = Polynomial.Pow(basePoly, exp, mod);
+            Assert.True(res.GetCoeff(1) == 2);
+
+            Assert.True(res.GetCoeff(0) == 15);
+            Polynomial.SetField(P256);
+        }
+
+        #endregion
     }
 }
