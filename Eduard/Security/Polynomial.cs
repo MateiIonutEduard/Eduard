@@ -560,8 +560,11 @@ namespace Eduard.Security
                 throw new DivideByZeroException(
                     "Polynomial divisor cannot be zero.");
 
-            if (left.degree < right.degree) 
-                return left;
+            if (left.degree < right.degree)
+            {
+                var res = new Polynomial(left);
+                return res;
+            }
 
             if (right.degree == 0)
                 return 0;
@@ -846,11 +849,17 @@ namespace Eduard.Security
         {
             Polynomial a, b;
 
-            if (left == 0 && right != 0) 
-                return right;
+            if (left == 0 && right != 0)
+            {
+                a = new Polynomial(right);
+                return a;
+            }
 
-            if (left != 0 && right == 0) 
-                return left;
+            if (left != 0 && right == 0)
+            {
+                a = new Polynomial(left);
+                return a;
+            }
 
             if (left == 1 || right == 1)
                 return 1;
@@ -1077,7 +1086,12 @@ namespace Eduard.Security
                     nameof(degn), "Degree n cannot"
                     + " be less than 1.");
 
-            if (poly.degree < degn) return poly;
+            if (poly.degree < degn)
+            {
+                var res = new Polynomial(poly);
+                return res;
+            }
+
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k < degn; k++)
@@ -1107,7 +1121,12 @@ namespace Eduard.Security
                     nameof(degn), "Degree n cannot"
                     + " be less than 1.");
 
-            if (poly.degree < degn) return poly;
+            if (poly.degree < degn)
+            {
+                var res = new Polynomial(poly);
+                return res;
+            }
+
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k + degn <= poly.degree; k++)
