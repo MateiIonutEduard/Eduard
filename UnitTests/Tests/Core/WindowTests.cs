@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace Eduard.Tests.Core
 {
@@ -133,12 +132,12 @@ namespace Eduard.Tests.Core
         [Fact]
         public void Window_SequentialExtraction_ConsumesAllBits()
         {
-            var rand = RandomNumberGenerator.Create();
-            var sizes = new[] { 256, 384, 521, 448 };
+            var sizes = new[] { 256, 
+                384, 521, 448 };
 
             foreach (int bitLength in sizes)
             {
-                var exp = new BigInteger(bitLength, rand);
+                var exp = SecureRandom.GenRandom(bitLength);
                 int bits = exp.GetBits();
 
                 int i = bits - 1;
@@ -270,12 +269,12 @@ namespace Eduard.Tests.Core
         [Fact]
         public void Window_RandomExponents_ResultOddAndInRange()
         {
-            var rand = RandomNumberGenerator.Create();
-            var sizes = new[] { 128, 192, 256, 320 };
+            var sizes = new[] { 128, 
+                192, 256, 320 };
 
             foreach (int bitLength in sizes)
             {
-                var exp = new BigInteger(bitLength, rand);
+                var exp = SecureRandom.GenRandom(bitLength);
                 int bits = exp.GetBits();
 
                 for (int i = bits - 1; i >= 0; i -= 32)
@@ -480,12 +479,12 @@ namespace Eduard.Tests.Core
         [Fact]
         public void NAFWindow_LargeRandomExponents_ConsistentBitConsumption()
         {
-            var rand = RandomNumberGenerator.Create();
-            var sizes = new[] { 256, 384, 521, 448 };
+            var sizes = new[] { 256, 
+                384, 521, 448 };
 
             foreach (int bitLength in sizes)
             {
-                var exp = new BigInteger(bitLength, rand);
+                var exp = SecureRandom.GenRandom(bitLength);
                 var exp3 = exp * 3;
 
                 int totalBits = bitLength;
