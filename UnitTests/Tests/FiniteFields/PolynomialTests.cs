@@ -46,6 +46,7 @@ namespace Eduard.Tests.FiniteFields
             while (counter > 0)
             {
                 var root = SecureRandom.Range(1, field - 1);
+                result.Add(root);
                 counter--;
             }
 
@@ -1041,6 +1042,97 @@ namespace Eduard.Tests.FiniteFields
             Assert.True((num % den) == 0);
 
             Polynomial.SetField(P256);
+        }
+
+        #endregion
+
+        #region Cryptographic Property Tests
+
+        [Fact]
+        public void FrobeniusEndomorphism_OnSplittingPolynomial_ReturnsIdentity()
+        {
+            Polynomial.SetField(P256);
+            int[] degrees = { 12, 16, 18, 20 };
+            int count = degrees.Length;
+            int k;
+
+            for(k = 0; k < count; k++)
+            {
+                int choosenDegree = degrees[k];
+                var roots = GenRoots(choosenDegree, P256);
+
+                var modulus = GetPolyFromRoots(roots, P256);
+                Polynomial X = new Polynomial(1, 0);
+
+                Polynomial XP = Polynomial.Pow(X, P256, modulus);
+                Assert.Equal(XP, X);
+            }
+        }
+
+        [Fact]
+        public void DistinctDegreeFactorization_OnRandomPolynomials_YieldsValidFactors()
+        {
+            Polynomial.SetField(P256);
+            int[] degrees = { 12, 16, 18, 20 };
+            int count = degrees.Length;
+            int j, k;
+
+            for (j = 0; j < count; j++)
+            {
+                int choosenDegree = degrees[j];
+                var modulus = GetRandomPoly(choosenDegree, P256);
+
+                Polynomial X = new Polynomial(1, 0);
+                Polynomial current = modulus;
+
+                Polynomial product = 1;
+                Polynomial XP = 0;
+
+                bool needReset = true;
+                Polynomial h = 0;
+                int maxK = choosenDegree >> 1;
+
+                for (k = 1; k <= maxK; k++)
+                {
+                    if (needReset)
+                    {
+                        XP = Polynomial.Pow(X, P256, current);
+                        h = X;
+
+                        for (int i = 1; i <= k; i++)
+                            h = Polynomial.Compose(h, XP, current);
+
+                        needReset = false;
+                    }
+                    else if (k == 1)
+                    {
+                        XP = Polynomial.Pow(X, P256, current);
+                        h = XP;
+                    }
+                    else
+                        h = Polynomial.Compose(h, XP, current);
+
+                    Polynomial factor = Polynomial.Gcd(h - X, current);
+                    Assert.True(current % factor == 0, $"Degree {choosenDegree}, " 
+                        + $"k={k}: factor does not divide current modulus");
+
+                    if (factor != 1)
+                    {
+                        Polynomial quotient = current / factor;
+                        Assert.Equal(current, quotient * factor);
+
+                        product *= factor;
+                        current = quotient;
+                        needReset = true;
+
+                        if (current.degree == 0)
+                            break;
+                    }
+                }
+
+                product *= current;
+                Assert.Equal(modulus, product);
+            }
         }
 
         #endregion
