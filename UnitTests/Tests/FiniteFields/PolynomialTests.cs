@@ -1,19 +1,56 @@
-﻿using Eduard.Security;
-using System;
+﻿using System;
+using Eduard.Security;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Eduard.Tests.FiniteFields
 {
     [Collection("Sequential")]
     public class PolynomialTests
     {
-        #region Primes Setup
+        #region Primes Setup and Utilities
 
-        private static readonly BigInteger P256 = BigInteger.Pow(2, 256) - BigInteger.Pow(2, 224) +
+        static readonly BigInteger P256 = BigInteger.Pow(2, 256) - BigInteger.Pow(2, 224) +
                 BigInteger.Pow(2, 192) + BigInteger.Pow(2, 96) - 1;
-        private static readonly BigInteger Ed25519 = BigInteger.Pow(2, 255) - 19;
+        static readonly BigInteger Ed25519 = BigInteger.Pow(2, 255) - 19;
+
+        static Polynomial GetRandomPoly(int degree, BigInteger field)
+        {
+            Polynomial poly = new Polynomial(degree);
+
+            for (int k = 0; k <= degree; k++)
+                poly.coeffs[k] = SecureRandom.Range(0, field - 1);
+
+            return poly;
+        }
+
+        static Polynomial GetPolyFromRoots(List<BigInteger> roots, BigInteger field)
+        {
+            int k, rootsCount = roots.Count;
+            Polynomial result = 1;
+
+            for (k = 1; k < rootsCount; k++)
+            {
+                BigInteger a = field - roots[k];
+                Polynomial Pa = new Polynomial(1, a);
+                result *= Pa;
+            }
+
+            return result;
+        }
+
+        static List<BigInteger> GenRoots(int rootsCount, BigInteger field)
+        {
+            var result = new List<BigInteger>();
+            int counter = rootsCount;
+
+            while (counter > 0)
+            {
+                var root = SecureRandom.Range(1, field - 1);
+                counter--;
+            }
+
+            return result;
+        }
 
         #endregion
 
@@ -723,8 +760,8 @@ namespace Eduard.Tests.FiniteFields
             Assert.True(ret == 1);
             Assert.True(roots.Count == 2);
 
-            Assert.True(roots.Contains(6));
-            Assert.True(roots.Contains(11));
+            Assert.Contains(6, roots);
+            Assert.Contains(11, roots);
         }
 
         #endregion
@@ -746,8 +783,8 @@ namespace Eduard.Tests.FiniteFields
                 BigInteger.Parse("14708384506749648925872721302311855803994325867860222177754982456116863041220")
             };
 
-            Assert.True(roots.Contains(expectedRoots[0]));
-            Assert.True(roots.Contains(expectedRoots[1]));
+            Assert.Contains(expectedRoots[0], roots);
+            Assert.Contains(expectedRoots[1], roots);
             Assert.True(roots.Count == 2);
         }
 
