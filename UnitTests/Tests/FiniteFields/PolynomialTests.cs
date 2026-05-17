@@ -784,7 +784,10 @@ namespace Eduard.Tests.FiniteFields
                 BigInteger.Parse("14708384506749648925872721302311855803994325867860222177754982456116863041220")
             };
 
+            Assert.True(Polynomial.Horner(p, roots[0]) == 0);
+            Assert.True(Polynomial.Horner(p, roots[1]) == 0);
             Assert.Contains(expectedRoots[0], roots);
+
             Assert.Contains(expectedRoots[1], roots);
             Assert.True(roots.Count == 2);
         }
