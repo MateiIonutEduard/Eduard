@@ -1,18 +1,34 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
 
 namespace Eduard
 {
     /// <summary>
-    /// Provides cryptographically secure random number generation for cryptographic operations.
+    /// Provides cryptographically secure random number generation for cryptographic operations. <br/>
+    /// Thread-safe implementation using instance pooling for optimal parallel performance.
     /// </summary>
     public static class SecureRandom
     {
-        static readonly RandomNumberGenerator rand;
-        static readonly object locker = new object();
+        static readonly ConcurrentBag<RandomNumberGenerator> pool = new ConcurrentBag<RandomNumberGenerator>();
+        static readonly int maxPoolSize = Environment.ProcessorCount * 2;
 
-        static SecureRandom()
+        static RandomNumberGenerator Acquire()
         {
-            rand = RandomNumberGenerator.Create();
+            RandomNumberGenerator rand;
+
+            if (pool.TryTake(out rand))
+                return rand;
+
+            return RandomNumberGenerator.Create();
+        }
+
+        static void Release(RandomNumberGenerator rand)
+        {
+            if (pool.Count < maxPoolSize)
+                pool.Add(rand);
+            else
+                rand.Dispose();
         }
 
         /// <summary>
@@ -23,10 +39,15 @@ namespace Eduard
         /// <returns>A probable prime number.</returns>
         public static BigInteger GenProbablePrime(int bits, int trials = 50)
         {
-            lock (locker)
+            RandomNumberGenerator rand = Acquire();
+            try
             {
                 BigInteger prime = BigInteger.GenProbablePrime(rand, bits, trials);
                 return prime;
+            }
+            finally
+            {
+                Release(rand);
             }
         }
 
@@ -38,10 +59,15 @@ namespace Eduard
         /// <returns>A random integer between min and max inclusive.</returns>
         public static BigInteger Range(BigInteger min, BigInteger max)
         {
-            lock (locker)
+            RandomNumberGenerator rand = Acquire();
+            try
             {
                 BigInteger val = BigInteger.RandomInRange(rand, min, max);
                 return val;
+            }
+            finally
+            {
+                Release(rand);
             }
         }
 
@@ -52,10 +78,15 @@ namespace Eduard
         /// <returns>A random integer of exactly <paramref name="n"/> bits.</returns>
         public static BigInteger GenRandom(int n)
         {
-            lock (locker)
+            RandomNumberGenerator rand = Acquire();
+            try
             {
                 BigInteger val = new BigInteger(n, rand);
                 return val;
+            }
+            finally
+            {
+                Release(rand);
             }
         }
 
@@ -67,11 +98,15 @@ namespace Eduard
         public static byte[] GetBytes(int count)
         {
             var bytes = new byte[count];
-
-            lock (locker)
+            RandomNumberGenerator rand = Acquire();
+            try
             {
                 rand.GetBytes(bytes);
                 return bytes;
+            }
+            finally
+            {
+                Release(rand);
             }
         }
     }
