@@ -500,7 +500,7 @@ namespace Eduard.Tests.FiniteFields
             Assert.True(evalAt2.coeffs[1] == (2 * 2) % P256);
 
             Assert.True(evalAt2.coeffs[2] == 1);
-            Assert.True(evalAt2.degree == 2);
+            Assert.True(evalAt2.Degree == 2);
         }
 
         [Fact]
@@ -530,7 +530,7 @@ namespace Eduard.Tests.FiniteFields
             var zero = BivariatePolynomial.Zero;
             var univariate = zero.F(123);
 
-            Assert.True(univariate.degree == 0);
+            Assert.True(univariate.Degree == 0);
             Assert.True(univariate.coeffs[0] == 0);
         }
 

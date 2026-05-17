@@ -19,12 +19,15 @@ namespace Eduard.Security
     public struct Polynomial : IEquatable<Polynomial>
     {
         /// <summary>
-        /// The degree of the polynomial (highest exponent with non-zero coefficient).
+        /// Gets the degree of the polynomial (highest exponent with non-zero coefficient).
         /// </summary>
         /// <remarks>
         /// Automatically updated when coefficients change. A zero polynomial has degree 0.
         /// </remarks>
-        public int degree;
+        public int Degree 
+        {  
+            get { return degree; } 
+        }
 
         /// <summary>
         /// The coefficients of the polynomial in ascending order (constant term at index 0).
@@ -33,6 +36,7 @@ namespace Eduard.Security
         /// Coefficients are always reduced modulo the current field. Automatically sized to degree + 1.
         /// </remarks>
         public BigInteger[] coeffs;
+        private int degree;
 
         /// <summary>
         /// Initializes a new polynomial instance with all coefficients set to zero.
@@ -560,8 +564,11 @@ namespace Eduard.Security
                 throw new DivideByZeroException(
                     "Polynomial divisor cannot be zero.");
 
-            if (left.degree < right.degree) 
-                return left;
+            if (left.degree < right.degree)
+            {
+                var res = new Polynomial(left);
+                return res;
+            }
 
             if (right.degree == 0)
                 return 0;
@@ -846,11 +853,17 @@ namespace Eduard.Security
         {
             Polynomial a, b;
 
-            if (left == 0 && right != 0) 
-                return right;
+            if (left == 0 && right != 0)
+            {
+                a = new Polynomial(right);
+                return a;
+            }
 
-            if (left != 0 && right == 0) 
-                return left;
+            if (left != 0 && right == 0)
+            {
+                a = new Polynomial(left);
+                return a;
+            }
 
             if (left == 1 || right == 1)
                 return 1;
@@ -1077,7 +1090,12 @@ namespace Eduard.Security
                     nameof(degn), "Degree n cannot"
                     + " be less than 1.");
 
-            if (poly.degree < degn) return poly;
+            if (poly.degree < degn)
+            {
+                var res = new Polynomial(poly);
+                return res;
+            }
+
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k < degn; k++)
@@ -1107,7 +1125,12 @@ namespace Eduard.Security
                     nameof(degn), "Degree n cannot"
                     + " be less than 1.");
 
-            if (poly.degree < degn) return poly;
+            if (poly.degree < degn)
+            {
+                var res = new Polynomial(poly);
+                return res;
+            }
+
             Polynomial result = new Polynomial(degn - 1);
 
             for (int k = 0; k + degn <= poly.degree; k++)

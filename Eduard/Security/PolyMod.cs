@@ -205,7 +205,7 @@ namespace Eduard.Security
             Polynomial C = 0, T = 1;
             int i, j, ik, L;
 
-            int n = mod.degree;
+            int n = mod.Degree;
             int k = (int)Math.Sqrt(n + 1);
 
             if (k * k < n + 1) k++;
