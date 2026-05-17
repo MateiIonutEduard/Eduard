@@ -62,7 +62,7 @@ namespace Eduard.Tests.FiniteFields
         {
             Polynomial.SetField(P256);
             Polynomial p = new Polynomial(3);
-            Assert.True(p.degree == 3);
+            Assert.True(p.Degree == 3);
             Assert.True(p.coeffs.Length == 4);
 
             for (int i = 0; i <= 3; i++)
@@ -83,7 +83,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial.SetField(P256);
             Polynomial p = new Polynomial(3, 5, 7);
 
-            Assert.True(p.degree == 2);
+            Assert.True(p.Degree == 2);
             Assert.True(p.GetCoeff(2) == 3);
 
             Assert.True(p.GetCoeff(1) == 5);
@@ -134,7 +134,7 @@ namespace Eduard.Tests.FiniteFields
         {
             Polynomial.SetField(P256);
             Polynomial p = 42;
-            Assert.True(p.degree == 0);
+            Assert.True(p.Degree == 0);
             Assert.True(p.GetCoeff(0) == 42);
         }
 
@@ -207,7 +207,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial b = new Polynomial(2, 0, 3);
             Polynomial sum = a + b;
 
-            Assert.True(sum.degree == 2);
+            Assert.True(sum.Degree == 2);
             Assert.True(sum.GetCoeff(2) == 2);
 
             Assert.True(sum.GetCoeff(1) == 5);
@@ -306,7 +306,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial b = new Polynomial(1, 1);
             Polynomial prod = a * b;
 
-            Assert.True(prod.degree == 2);
+            Assert.True(prod.Degree == 2);
             Assert.True(prod.GetCoeff(2) == 1);
 
             Assert.True(prod.GetCoeff(1) == 2);
@@ -365,7 +365,7 @@ namespace Eduard.Tests.FiniteFields
             b.coeffs[0] = 1; b.coeffs[8] = 1;
             Polynomial prod = a * b;
 
-            Assert.True(prod.degree == 16);
+            Assert.True(prod.Degree == 16);
             Assert.True(prod.GetCoeff(16) == 1);
 
             Assert.True(prod.GetCoeff(8) == 2);
@@ -414,7 +414,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial den = new Polynomial(1, 1);
 
             Polynomial q = num / den;
-            Assert.True(q.degree == 1);
+            Assert.True(q.Degree == 1);
 
             Assert.True(q.GetCoeff(1) == 1);
             Assert.True(q.GetCoeff(0) == 2);
@@ -442,7 +442,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial den = new Polynomial(1, 4);
 
             Polynomial rem = num % den;
-            Assert.True(rem.degree < den.degree);
+            Assert.True(rem.Degree < den.Degree);
 
             Assert.True(rem.GetCoeff(0) == 11);
             Polynomial.SetField(P256);
@@ -525,7 +525,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial p = new Polynomial(1, 1);
 
             Polynomial p3 = Polynomial.Pow(p, 3);
-            Assert.True(p3.degree == 3);
+            Assert.True(p3.Degree == 3);
 
             Assert.True(p3.GetCoeff(3) == 1);
             Assert.True(p3.GetCoeff(2) == 3);
@@ -632,7 +632,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial b = new Polynomial(4, 0, 16);
 
             Polynomial g = Polynomial.Gcd(a, b);
-            Assert.True(g.GetCoeff(g.degree) == 1);
+            Assert.True(g.GetCoeff(g.Degree) == 1);
 
             Assert.True(g.GetCoeff(2) == 1);
             Assert.True(g.GetCoeff(0) == 4);
@@ -814,7 +814,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial p = new Polynomial(1, 2, 3);
 
             Polynomial shifted = Polynomial.Mulxn(p, 2);
-            Assert.True(shifted.degree == 4);
+            Assert.True(shifted.Degree == 4);
 
             Assert.True(shifted.GetCoeff(4) == 1);
             Assert.True(shifted.GetCoeff(3) == 2);
@@ -839,7 +839,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial p = new Polynomial(10, 20, 30, 40);
 
             Polynomial result = Polynomial.Divxn(p, 2);
-            Assert.True(result.degree == 1);
+            Assert.True(result.Degree == 1);
 
             Assert.True(result.GetCoeff(1) == 10);
             Assert.True(result.GetCoeff(0) == 20);
@@ -860,7 +860,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial p = new Polynomial(5, 4, 3, 2, 1);
 
             Polynomial trunc = Polynomial.Modxn(p, 2);
-            Assert.True(trunc.degree == 1);
+            Assert.True(trunc.Degree == 1);
 
             Assert.True(trunc.GetCoeff(1) == 2);
             Assert.True(trunc.GetCoeff(0) == 1);
@@ -938,7 +938,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial p = new Polynomial(3, 2);
             Polynomial d = Polynomial.Differentiate(p);
 
-            Assert.True(d.degree == 0);
+            Assert.True(d.Degree == 0);
             Assert.True(d.GetCoeff(0) == 3);
         }
 
@@ -1022,7 +1022,7 @@ namespace Eduard.Tests.FiniteFields
             Assert.True(sum.GetCoeff(0) == 6);
             Polynomial prod = a * b;
 
-            Assert.True(prod.degree == 2);
+            Assert.True(prod.Degree == 2);
             Assert.True(prod.GetCoeff(2) == 3);
 
             Assert.True(prod.GetCoeff(1) == 10);
@@ -1038,7 +1038,7 @@ namespace Eduard.Tests.FiniteFields
             Polynomial den = new Polynomial(1, 1);
             Polynomial q = num / den;
 
-            Assert.True(q.degree == 1);
+            Assert.True(q.Degree == 1);
             Assert.True(q.GetCoeff(1) == 1);
 
             Assert.True(q.GetCoeff(0) == 2);
@@ -1128,7 +1128,7 @@ namespace Eduard.Tests.FiniteFields
                         current = quotient;
                         needReset = true;
 
-                        if (current.degree == 0)
+                        if (current.Degree == 0)
                             break;
                     }
                 }

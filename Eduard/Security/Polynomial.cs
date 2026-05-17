@@ -19,12 +19,15 @@ namespace Eduard.Security
     public struct Polynomial : IEquatable<Polynomial>
     {
         /// <summary>
-        /// The degree of the polynomial (highest exponent with non-zero coefficient).
+        /// Gets the degree of the polynomial (highest exponent with non-zero coefficient).
         /// </summary>
         /// <remarks>
         /// Automatically updated when coefficients change. A zero polynomial has degree 0.
         /// </remarks>
-        public int degree;
+        public int Degree 
+        {  
+            get { return degree; } 
+        }
 
         /// <summary>
         /// The coefficients of the polynomial in ascending order (constant term at index 0).
@@ -33,6 +36,7 @@ namespace Eduard.Security
         /// Coefficients are always reduced modulo the current field. Automatically sized to degree + 1.
         /// </remarks>
         public BigInteger[] coeffs;
+        private int degree;
 
         /// <summary>
         /// Initializes a new polynomial instance with all coefficients set to zero.
