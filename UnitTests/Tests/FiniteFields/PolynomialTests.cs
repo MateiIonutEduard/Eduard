@@ -411,6 +411,43 @@ namespace Eduard.Tests.FiniteFields
             Assert.True(prod.GetCoeff(0) == 1);
         }
 
+        [Fact]
+        public void Mul_HighDegree_MatchesDivisionCheck()
+        {
+            int[] degrees = { 64, 96, 128, 256, 512 };
+            int k, degreesCount = degrees.Length;
+            Polynomial.SetField(Ed25519);
+
+            for (k = 0; k < degreesCount; k++)
+            {
+                var P = GetRandomPoly(degrees[k], Ed25519);
+                var degreeDelta = (int)SecureRandom.Range(0, degrees[k] >> 2);
+                var Q = GetRandomPoly(degrees[k] + degreeDelta, Ed25519);
+
+                var res = P * Q;
+                var quo = res / Q;
+                Assert.Equal(quo, P);
+                
+            }
+        }
+
+        [Fact]
+        public void Square_HighDegree_MatchesMultiplicationBySelf()
+        {
+            int[] degrees = { 64, 96, 128, 256, 512 };
+            int k, degreesCount = degrees.Length;
+            Polynomial.SetField(Ed25519);
+
+            for(k = 0; k < degreesCount; k++)
+            {
+                var P = GetRandomPoly(degrees[k], Ed25519);
+                var squaredP = P * P;
+
+                var quo = squaredP / P;
+                Assert.Equal(quo, P);
+            }
+        }
+
         #endregion
 
         #region Arithmetic - Division and Modulus
@@ -494,6 +531,31 @@ namespace Eduard.Tests.FiniteFields
             Polynomial a = new Polynomial(1, 1);
             Polynomial b = new Polynomial(1, 1);
             Assert.True(((a * b) % a) == 0);
+        }
+
+        [Fact]
+        public void Reduce_HighDegree_MatchesModuloOperator()
+        {
+            int[] degrees = { 80, 96, 128, 256, 512 };
+            int k, degreesCount = degrees.Length;
+            Polynomial.SetField(Ed25519);
+
+            for (k = 0; k < degreesCount; k++)
+            {
+                int degm = degrees[k];
+                int maxn = 2 * (degm - 1);
+                int minn = degm + 64;
+
+                var remDegree = (int)SecureRandom.Range(minn, maxn);
+                var P = GetRandomPoly(remDegree, Ed25519);
+
+                var M = GetRandomPoly(degrees[k], Ed25519);
+                Polynomial.SetPolyMod(M);
+
+                var R = Polynomial.Reduce(P, M);
+                var rem = P % M;
+                Assert.True(R == rem);
+            }
         }
 
         [Fact]
