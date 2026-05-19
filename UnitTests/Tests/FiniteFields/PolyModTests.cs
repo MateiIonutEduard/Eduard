@@ -1,7 +1,6 @@
-﻿using Eduard.Security;
-using System;
+﻿using System;
+using Eduard.Security;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Eduard.Tests.FiniteFields
 {
@@ -12,7 +11,6 @@ namespace Eduard.Tests.FiniteFields
 
         static readonly BigInteger P256 = BigInteger.Pow(2, 256) - BigInteger.Pow(2, 224) +
                 BigInteger.Pow(2, 192) + BigInteger.Pow(2, 96) - 1;
-        static readonly BigInteger Ed25519 = BigInteger.Pow(2, 255) - 19;
 
         static Polynomial GetRandomPoly(int degree, BigInteger field)
         {
