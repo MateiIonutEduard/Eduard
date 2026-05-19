@@ -28,7 +28,7 @@ namespace Eduard.Tests.FiniteFields
             int k, rootsCount = roots.Count;
             Polynomial result = 1;
 
-            for (k = 1; k < rootsCount; k++)
+            for (k = 0; k < rootsCount; k++)
             {
                 BigInteger a = field - roots[k];
                 Polynomial Pa = new Polynomial(1, a);
@@ -694,16 +694,42 @@ namespace Eduard.Tests.FiniteFields
         }
 
         [Fact]
+        public void Horner_HighDegree_Poly_EvaluatesCorrectly()
+        {
+            Polynomial.SetField(P256);
+            int[] rootsCount = new int[] { 3, 6, 8, 12, 16 };
+
+            int len = rootsCount.Length;
+            int j, k;
+
+            for(j = 0; j < len; j++)
+            {
+                var roots = GenRoots(rootsCount[j], P256);
+                var G = GetPolyFromRoots(roots, P256);
+                int countRoots = roots.Count;
+
+                for(k = 0; k < countRoots; k++)
+                {
+                    var val = Polynomial.Horner(G, roots[k]);
+                    Assert.True(val == 0);
+
+                    var linearPoly = new Polynomial(1, -roots[k]);
+                    G /= linearPoly;
+                }
+            }
+        }
+
+        [Fact]
         public void Horner_OutsideFieldRange_ThrowsArgumentOutOfRange()
         {
             Polynomial.SetField(P256);
-            Polynomial p = 1;
+            Polynomial G = 1;
 
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                Polynomial.Horner(p, P256));
+                Polynomial.Horner(G, P256));
 
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                Polynomial.Horner(p, -1));
+                Polynomial.Horner(G, -1));
         }
 
         #endregion
