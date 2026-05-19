@@ -825,6 +825,20 @@ namespace Eduard.Tests.FiniteFields
         }
 
         [Fact]
+        public void Compose_IdentityPolynomial_IsNeutralElement()
+        {
+            Polynomial.SetField(P256);
+            var P = GetRandomPoly(16, P256);
+            var X = new Polynomial(1, 0);
+
+            var R = Polynomial.Compose(P, X);
+            Assert.True(R == P);
+
+            R = Polynomial.Compose(X, P);
+            Assert.True(R == P);
+        }
+
+        [Fact]
         public void Compose_Modular_Basic()
         {
             Polynomial.SetField(P256);
@@ -836,6 +850,29 @@ namespace Eduard.Tests.FiniteFields
 
             Assert.True(res.GetCoeff(1) == 1);
             Assert.True(res.GetCoeff(0) == 2);
+        }
+
+        [Fact]
+        public void Compose_IdentityNeutral_AndFrobeniusEndomorphism_AreConsistent()
+        {
+            Polynomial.SetField(P256);
+            var M = GetRandomPoly(32, P256);
+
+            var X = new Polynomial(1, 0);
+            var P = Polynomial.Pow(X, P256, M);
+
+            /* check if neutral element for modular composition works */
+            var R = Polynomial.Compose(P, X);
+            Assert.True(R == P);
+
+            R = Polynomial.Compose(X, P);
+            Assert.True(R == P);
+
+            /* check quadratic extension for Frobenius map */
+            R = Polynomial.Compose(P, P, M);
+
+            var XPP = Polynomial.Pow(P, P256, M);
+            Assert.True(R == XPP);
         }
 
         #endregion
