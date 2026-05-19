@@ -1120,6 +1120,28 @@ namespace Eduard.Tests.FiniteFields
         }
 
         [Fact]
+        public void Invmodxn_RandomDegrees_ProductModxnEqualsOne()
+        {
+            Polynomial.SetField(P256);
+            int[] degrees = { 8, 10, 12, 16, 20 };
+            int degreesCount = degrees.Length, k;
+
+            for(k = 0; k < degreesCount; k++)
+            {
+                int currentDegree = degrees[k];
+                int degree = (int)SecureRandom.Range(
+                    1, currentDegree - 1);
+
+                var P = GetRandomPoly(degree, P256);
+                var Q = Polynomial.Invmodxn(P, currentDegree);
+
+                var R = Polynomial.Modxn(P * Q, currentDegree);
+                Assert.True(R == 1);
+            }
+
+        }
+
+        [Fact]
         public void Invmodxn_ZeroPolynomial_ThrowsArgumentException()
         {
             Assert.Throws<ArgumentException>(() =>
