@@ -566,6 +566,17 @@ namespace Eduard.Tests.FiniteFields
         }
 
         [Fact]
+        public void PowMod_ZeroModularBaseZeroExponent_ThrowsArithmeticException()
+        {
+            Assert.Throws<ArithmeticException>(() => {
+                Polynomial.SetField(P256);
+                var modulus = GetRandomPoly(16, P256);
+                var G = new Polynomial(modulus);
+                Polynomial.Pow(G, 0, modulus);
+            });
+        }
+
+        [Fact]
         public void PowMod_ExponentZero_ReturnsOne()
         {
             Polynomial.SetField(P256);
@@ -600,6 +611,29 @@ namespace Eduard.Tests.FiniteFields
 
             Assert.True(res.GetCoeff(0) == 15);
             Polynomial.SetField(P256);
+        }
+
+        [Fact]
+        public void PowMod_LargeModulus_UseSlidingWindowMethod()
+        {
+            Polynomial.SetField(P256);
+            var modulus = GetRandomPoly(16, P256);
+
+            Polynomial X = new Polynomial(1, 0);
+            var XP2 = Polynomial.Pow(X, (P256 - 1) >> 1, modulus);
+
+            var XP = (XP2 * XP2) % modulus;
+            XP = (XP * X) % modulus;
+            var factor = Polynomial.Gcd(XP - X, modulus);
+
+            var remainder = modulus % factor;
+            Assert.True(remainder == 0);
+
+            if (factor != 1)
+            {
+                Polynomial quotient = modulus / factor;
+                Assert.Equal(modulus, quotient * factor);
+            }
         }
 
         #endregion
