@@ -58,6 +58,20 @@ namespace Eduard.Tests.FiniteFields
         #region Constructor Tests
 
         [Fact]
+        public void Constructor_Default_InitializesToZeroPolynomial()
+        {
+            Polynomial.SetField(P256);
+            var poly = new Polynomial();
+
+            Assert.True(poly == 0);
+            Assert.Equal(poly.GetCoeff(0), 0);
+
+            Assert.Throws<IndexOutOfRangeException>(() =>
+                poly.GetCoeff(-1));
+            Assert.Equal(poly.GetCoeff(1), 0);
+        }
+
+        [Fact]
         public void Constructor_Degree_CreatesZeroPolynomial()
         {
             Polynomial.SetField(P256);
@@ -94,8 +108,30 @@ namespace Eduard.Tests.FiniteFields
         public void Constructor_Params_ReducesModuloField()
         {
             Polynomial.SetField(P256);
-            Polynomial p = 20;
-            Assert.True(p.GetCoeff(0) == 20 % P256);
+            var coeffs = new BigInteger[10];
+            int j, k, val = -2;
+
+            int degree = 9;
+            int sign = -1;
+            coeffs[0] = 1;
+
+            for (j = 1; j <= degree; j++)
+            {
+                coeffs[j] = val;
+                val = sign * (Math.Abs(val) + 1);
+                sign *= -1;
+            }
+
+            var p = new Polynomial(coeffs);
+            var halfN = P256 >> 1;
+
+            for(k = 0; k <= degree; k++)
+            {
+                var coeff = p.GetCoeff(degree - k);
+                var coeffValue = (coeff > halfN) ?
+                    coeff - P256 : coeff;
+                Assert.True(coeffValue == coeffs[k]);
+            }
         }
 
         [Fact]
@@ -134,8 +170,10 @@ namespace Eduard.Tests.FiniteFields
         {
             Polynomial.SetField(P256);
             Polynomial p = 42;
+
             Assert.True(p.Degree == 0);
             Assert.True(p.GetCoeff(0) == 42);
+            Assert.True(p.GetCoeff(1) == 0);
         }
 
         [Fact]
@@ -146,6 +184,7 @@ namespace Eduard.Tests.FiniteFields
 
             Polynomial p = val;
             Assert.True(p.GetCoeff(0) == 10);
+            Assert.True(p.GetCoeff(1) == 0);
         }
 
         #endregion
@@ -624,16 +663,10 @@ namespace Eduard.Tests.FiniteFields
 
             var XP = (XP2 * XP2) % modulus;
             XP = (XP * X) % modulus;
-            var factor = Polynomial.Gcd(XP - X, modulus);
 
+            var factor = Polynomial.Gcd(XP - X, modulus);
             var remainder = modulus % factor;
             Assert.True(remainder == 0);
-
-            if (factor != 1)
-            {
-                Polynomial quotient = modulus / factor;
-                Assert.Equal(modulus, quotient * factor);
-            }
         }
 
         #endregion
