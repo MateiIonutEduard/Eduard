@@ -215,8 +215,6 @@ namespace Eduard
                 return false;
 
             int degG = G.Length - 1;
-            BigInteger field = BarrettReducer.GetModulus();
-
             uint[] residues;
             pc = count;
 
@@ -306,11 +304,9 @@ namespace Eduard
                 for (i = 0; i < pc; i++)
                     residues[i] = t[i][j];
 
-                R[j] = garner.GetInteger(residues);
-                BigInteger diff = (G[j] - R[j]) % field;
-
-                if (diff < 0) diff += field;
-                R[j] = diff;
+                BigInteger remCoeff = garner.GetInteger(residues);
+                BigInteger redCoeff = BarrettReducer.Reduce(remCoeff);
+                R[j] = BarrettReducer.SubMod(G[j], redCoeff);
             }
 
             return true;
