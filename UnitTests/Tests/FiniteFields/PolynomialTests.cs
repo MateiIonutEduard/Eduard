@@ -646,24 +646,51 @@ namespace Eduard.Tests.FiniteFields
         public void Horner_ZeroPolynomial_ReturnsZero()
         {
             Polynomial.SetField(P256);
-            Assert.True(Polynomial.Horner(0, 5) == 0);
+            Polynomial G = 0;
+            BigInteger eval = Polynomial.Horner(G, 5);
+            Assert.True(eval == 0);
+        }
+
+        [Fact]
+        public void Horner_OnePolynomial_ReturnOne()
+        {
+            Polynomial.SetField(P256);
+            Polynomial G = 1;
+
+            BigInteger eval = Polynomial.Horner(G, 3);
+            Assert.True(eval == 1);
         }
 
         [Fact]
         public void Horner_Constant_ReturnsConstant()
         {
             Polynomial.SetField(P256);
-            Polynomial p = 7;
-            Assert.True(Polynomial.Horner(p, 10) == 7);
+            Polynomial G = 7;
+            BigInteger eval = Polynomial.Horner(G, 10);
+            Assert.True(eval == 7);
         }
 
         [Fact]
         public void Horner_Linear_EvaluatesCorrectly()
         {
             Polynomial.SetField(P256);
-            Polynomial p = new Polynomial(3, 2);
-            BigInteger val = Polynomial.Horner(p, 5);
-            Assert.True(val == 17 % P256);
+            Polynomial G = new Polynomial(3, 2);
+            BigInteger val = Polynomial.Horner(G, 5);
+            Assert.True(val == (17 % P256));
+        }
+
+        [Fact]
+        public void Horner_Quadratic_EvaluatesCorrectly()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, -11, 24);
+
+            /* check if roots cancel the polynomial equation */
+            BigInteger val = Polynomial.Horner(p, 3);
+            Assert.True(val == 0);
+
+            val = Polynomial.Horner(p, 8);
+            Assert.True(val == 0);
         }
 
         [Fact]
