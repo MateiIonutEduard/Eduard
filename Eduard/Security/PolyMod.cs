@@ -239,7 +239,7 @@ namespace Eduard.Security
                         y[j] = table[j].GetCoeff(L);
                     }
 
-                    t = DotMult(x, y);
+                    t = BarrettReducer.DotMult(x, y);
                     Q.coeffs[L] = t;
                 }
 
@@ -250,20 +250,6 @@ namespace Eduard.Security
             }
 
             return C;
-        }
-
-        private static BigInteger DotMult(BigInteger[] x, BigInteger[] y)
-        {
-            BigInteger res = 0;
-            int i, n = x.Length;
-
-            for (i = 0; i < n; i++)
-            {
-                BigInteger temp = BarrettReducer.MultMod(x[i], y[i]);
-                res = BarrettReducer.AddMod(res, temp);
-            }
-
-            return res;
         }
 
         /// <summary>

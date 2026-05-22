@@ -156,6 +156,30 @@ namespace Eduard
         }
 
         /// <summary>
+        /// Computes the dot product of two vectors modulo the cached field.
+        /// </summary>
+        /// <param name="x">First vector of field elements.</param>
+        /// <param name="y">Second vector of field elements.</param>
+        /// <returns>The sum of element-wise products reduced modulo field.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
+        /// <remarks>
+        /// Assumes both vectors have the same length and all elements are already reduced in [0, field-1].
+        /// </remarks>
+        internal static BigInteger DotMult(BigInteger[] x, BigInteger[] y)
+        {
+            BigInteger res = 0;
+            int i, n = x.Length;
+
+            for (i = 0; i < n; i++)
+            {
+                BigInteger temp = MultMod(x[i], y[i]);
+                res = AddMod(res, temp);
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Reduces a value modulo the cached field using Barrett's algorithm.
         /// </summary>
         /// <param name="val">The value to reduce.</param>
