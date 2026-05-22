@@ -185,6 +185,7 @@ namespace Eduard
         /// <param name="val">The value to reduce.</param>
         /// <param name="normalize">When true, performs full modular reduction via division.</param>
         /// <returns>val mod field in range [0, field-1].</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
         /// <remarks>
         /// When normalize is set, uses direct division to handle arbitrary inputs including negatives.<br/>
         /// Otherwise, applies Barrett reduction assuming the input is already nearly reduced.
