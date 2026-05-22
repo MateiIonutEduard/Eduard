@@ -180,6 +180,45 @@ namespace Eduard
         }
 
         /// <summary>
+        /// Computes modular inverses for all elements in a single batch.
+        /// </summary>
+        /// <param name="b">Values to invert.</param>
+        /// <returns>Array c where c[i] * b[i] = 1 (mod field).</returns>
+        /// <exception cref="InvalidOperationException">Thrown when modulus not initialized.</exception>
+        /// <remarks>
+        /// Uses Montgomery's simultaneous inversion trick. Computes a single inverse and <br/>
+        /// derives all others through multiplications. Assumes all elements are non-zero <br/>
+        /// and already reduced in [0, field-1].
+        /// </remarks>
+        internal static BigInteger[] InvMod(BigInteger[] b)
+        {
+            int n = b.Length;
+            BigInteger[] bp = new BigInteger[n];
+            BigInteger[] c = new BigInteger[n];
+
+            bp[0] = b[0];
+            int j, k;
+
+            for (j = 1; j < n; j++)
+            {
+                BigInteger currentVal = b[j];
+                bp[j] = MultMod(bp[j - 1], currentVal);
+            }
+
+            BigInteger fullN = InvMod(bp[n - 1]);
+
+            for (k = n - 1; k > 0; k--)
+            {
+                BigInteger currentVal = b[k];
+                c[k] = MultMod(fullN, bp[k - 1]);
+                fullN = MultMod(fullN, currentVal);
+            }
+
+            c[0] = fullN;
+            return c;
+        }
+
+        /// <summary>
         /// Reduces a value modulo the cached field using Barrett's algorithm.
         /// </summary>
         /// <param name="val">The value to reduce.</param>
