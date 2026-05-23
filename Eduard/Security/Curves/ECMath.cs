@@ -75,6 +75,23 @@ namespace Eduard.Security.Curves
             return new ECPoint(x, y);
         }
 
+        /// <summary>
+        /// Adds two arrays of affine points pairwise on the Weierstrass elliptic curve.
+        /// </summary>
+        /// <param name="curve">The elliptic curve context containing field parameters.</param>
+        /// <param name="left">First array of points to add.</param>
+        /// <param name="right">Second array of points to add. Receives the results in-place.</param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when either array is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when either array is empty or arrays have different lengths.
+        /// </exception>
+        /// <remarks>
+        /// Uses Montgomery's simultaneous inversion to batch all modular inverses into a <br/>
+        /// single inversion plus 3(n-1) multiplications. Handles point at infinity, doubling, <br/>
+        /// and vertical line cases for each pair independently.
+        /// </remarks>
         public static void Add(EllipticCurve curve, ECPoint[] left, ECPoint[] right)
         {
             if (ReferenceEquals(left, null))
