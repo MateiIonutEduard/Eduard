@@ -77,8 +77,30 @@ namespace Eduard.Security.Curves
 
         public static void Add(EllipticCurve curve, ECPoint[] left, ECPoint[] right)
         {
+            if (ReferenceEquals(left, null))
+                throw new ArgumentNullException(nameof(left));
+
+            if (ReferenceEquals(null, right))
+                throw new ArgumentNullException(nameof(right));
+
             int n = left.Length, k;
+            int rn = right.Length;
             var skip = new byte[n];
+
+            if (n == 0)
+                throw new ArgumentException(
+                    "Point array cannot be empty.",
+                    nameof(left));
+
+            if (rn == 0)
+                throw new ArgumentException(
+                    "Point array cannot be empty.",
+                    nameof(right));
+
+            if (n != rn)
+                throw new ArgumentException(
+                    "Point arrays must have the same length.",
+                    nameof(right));
 
             BigInteger[] A = new BigInteger[n];
             BigInteger[] B = new BigInteger[n];
