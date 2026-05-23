@@ -42,7 +42,6 @@ namespace Eduard.Security.Curves
             BigInteger yDiff = 0;
             BigInteger inv = 0;
 
-
             if (left != right)
             {
                 xDiff = BarrettReducer.SubMod(right.x, left.x);
@@ -74,6 +73,101 @@ namespace Eduard.Security.Curves
             y = BarrettReducer.MultMod(y, lambda);
             y = BarrettReducer.SubMod(y, left.y);
             return new ECPoint(x, y);
+        }
+
+        public static void Add(EllipticCurve curve, ECPoint[] left, ECPoint[] right)
+        {
+            int n = left.Length, k;
+            var skip = new byte[n];
+
+            BigInteger[] A = new BigInteger[n];
+            BigInteger[] B = new BigInteger[n];
+
+            for(k = 0; k < n; k++)
+            {
+                if (left[k] == right[k])
+                {
+                    if (!left[k].isOnCurve)
+                    {
+                        skip[k] = 1;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    BigInteger lx = left[k].x;
+                    BigInteger ly = left[k].y;
+
+                    BigInteger x2 = BarrettReducer.MultMod(lx, lx);
+                    x2 = BarrettReducer.MultMod(3, x2);
+
+                    A[k] = BarrettReducer.AddMod(x2, curve.a);
+                    B[k] = BarrettReducer.AddMod(ly, ly);
+                }
+                else
+                {
+                    if (!left[k].isOnCurve)
+                    {
+                        skip[k] = 2;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    if (!right[k].isOnCurve)
+                    {
+                        skip[k] = 3;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    B[k] = BarrettReducer.SubMod(
+                        right[k].x, left[k].x);
+
+                    if (B[k] == 0)
+                    {
+                        skip[k] = 1;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    A[k] = BarrettReducer.SubMod(
+                        right[k].y, left[k].y);
+                }
+            }
+
+            /* apply Montgomery trick for fast inversion */
+            BigInteger[] C = BarrettReducer.InvMod(B);
+
+            for (k = 0; k < n; k++)
+            {
+                if (skip[k] == 1)
+                {
+                    right[k] = ECPoint.POINT_INFINITY;
+                    continue;
+                }
+
+                if (skip[k] == 2)
+                    continue;
+
+                if (skip[k] == 3)
+                {
+                    BigInteger lx = left[k].x;
+                    BigInteger ly = left[k].y;
+                    right[k] = new ECPoint(lx, ly);
+                    continue;
+                }
+
+                BigInteger m = BarrettReducer.MultMod(A[k], C[k]);
+                BigInteger m2 = BarrettReducer.MultMod(m, m);
+
+                BigInteger dx = BarrettReducer.AddMod(left[k].x, right[k].x);
+                BigInteger x = BarrettReducer.SubMod(m2, dx);
+
+                BigInteger y = BarrettReducer.SubMod(left[k].x, x);
+                y = BarrettReducer.MultMod(y, m);
+
+                y = BarrettReducer.SubMod(y, left[k].y);
+                right[k] = new ECPoint(x, y);
+            }
         }
 
         /// <summary>
