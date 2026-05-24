@@ -53,7 +53,7 @@ namespace Eduard.Security.Primitives
             get { return isOnCurve ? z : 0; }
         }
 
-        private BigInteger x, y, z;
+        internal BigInteger x, y, z;
         internal bool isOnCurve;
 
         /// <summary>

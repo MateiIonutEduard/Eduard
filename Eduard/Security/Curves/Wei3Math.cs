@@ -43,17 +43,17 @@ namespace Eduard.Security.Curves
             if (!left.isOnCurve) return right;
             if (!right.isOnCurve) return left;
 
-            BigInteger B1 = BarrettReducer.MultMod(right.Z, right.Z);
-            BigInteger A1 = BarrettReducer.MultMod(left.X, B1);
+            BigInteger B1 = BarrettReducer.MultMod(right.z, right.z);
+            BigInteger A1 = BarrettReducer.MultMod(left.x, B1);
 
-            BigInteger B2 = BarrettReducer.MultMod(left.Z, left.Z);
-            BigInteger A2 = BarrettReducer.MultMod(right.X, B2);
+            BigInteger B2 = BarrettReducer.MultMod(left.z, left.z);
+            BigInteger A2 = BarrettReducer.MultMod(right.x, B2);
 
-            BigInteger B3 = BarrettReducer.MultMod(B1, right.Z);
-            BigInteger A3 = BarrettReducer.MultMod(left.Y, B3);
+            BigInteger B3 = BarrettReducer.MultMod(B1, right.z);
+            BigInteger A3 = BarrettReducer.MultMod(left.y, B3);
 
-            BigInteger B4 = BarrettReducer.MultMod(B2, left.Z);
-            BigInteger A4 = BarrettReducer.MultMod(right.Y, B4);
+            BigInteger B4 = BarrettReducer.MultMod(B2, left.z);
+            BigInteger A4 = BarrettReducer.MultMod(right.y, B4);
 
             BigInteger A5 = BarrettReducer.SubMod(A2, A1);
             BigInteger A6 = BarrettReducer.SubMod(A4, A3);
@@ -74,7 +74,7 @@ namespace Eduard.Security.Curves
             BigInteger B9 = BarrettReducer.MultMod(A6, B8);
             BigInteger Y = BarrettReducer.SubMod(B9, B7);
 
-            BigInteger Z12 = BarrettReducer.MultMod(left.Z, right.Z);
+            BigInteger Z12 = BarrettReducer.MultMod(left.z, right.z);
             BigInteger Z = BarrettReducer.MultMod(A5, Z12);
 
             if (Z == 0) return ECPoint3w.POINT_INFINITY;
@@ -106,8 +106,8 @@ namespace Eduard.Security.Curves
                 return ECPoint3w.POINT_INFINITY;
             BigInteger p = curve.field;
 
-            BigInteger A1 = BarrettReducer.MultMod(jacobianPoint.Y, jacobianPoint.Y);
-            BigInteger B1 = BarrettReducer.MultMod(jacobianPoint.X, A1);
+            BigInteger A1 = BarrettReducer.MultMod(jacobianPoint.y, jacobianPoint.y);
+            BigInteger B1 = BarrettReducer.MultMod(jacobianPoint.x, A1);
 
             BigInteger A2 = BarrettReducer.MultMod(4, B1);
             BigInteger B2 = BarrettReducer.MultMod(A1, A1);
@@ -117,8 +117,8 @@ namespace Eduard.Security.Curves
 
             if (curve.a != p - 3)
             {
-                BigInteger X12 = BarrettReducer.MultMod(jacobianPoint.X, jacobianPoint.X);
-                BigInteger Z12 = BarrettReducer.MultMod(jacobianPoint.Z, jacobianPoint.Z);
+                BigInteger X12 = BarrettReducer.MultMod(jacobianPoint.x, jacobianPoint.x);
+                BigInteger Z12 = BarrettReducer.MultMod(jacobianPoint.z, jacobianPoint.z);
                 BigInteger Z21 = BarrettReducer.MultMod(Z12, Z12);
 
                 BigInteger B3 = BarrettReducer.MultMod(curve.a, Z21);
@@ -128,9 +128,9 @@ namespace Eduard.Security.Curves
             else
             {
                 /* special case when Weierstrass curve parameter a = -3 */
-                BigInteger Z12 = BarrettReducer.MultMod(jacobianPoint.Z, jacobianPoint.Z);
-                BigInteger B3 = BarrettReducer.SubMod(jacobianPoint.X, Z12);
-                BigInteger B4 = BarrettReducer.AddMod(jacobianPoint.X, Z12);
+                BigInteger Z12 = BarrettReducer.MultMod(jacobianPoint.z, jacobianPoint.z);
+                BigInteger B3 = BarrettReducer.SubMod(jacobianPoint.x, Z12);
+                BigInteger B4 = BarrettReducer.AddMod(jacobianPoint.x, Z12);
                 A4 = BarrettReducer.MultMod(B3, B4);
                 A4 = BarrettReducer.MultMod(3, A4);
             }
@@ -144,7 +144,7 @@ namespace Eduard.Security.Curves
             BigInteger B5 = BarrettReducer.MultMod(A4, A6);
             BigInteger Y = BarrettReducer.SubMod(B5, A3);
 
-            BigInteger B6 = BarrettReducer.MultMod(jacobianPoint.Y, jacobianPoint.Z);
+            BigInteger B6 = BarrettReducer.MultMod(jacobianPoint.y, jacobianPoint.z);
             BigInteger Z = BarrettReducer.AddMod(B6, B6);
 
             if (Z == 0) return ECPoint3w.POINT_INFINITY;
@@ -165,7 +165,7 @@ namespace Eduard.Security.Curves
         public static ECPoint3w Negate(EllipticCurve curve, ECPoint3w point)
         {
             if (!point.isOnCurve) return ECPoint3w.POINT_INFINITY;
-            return new ECPoint3w(point.X, curve.field - point.Y, point.Z);
+            return new ECPoint3w(point.x, curve.field - point.y, point.z);
         }
     }
 

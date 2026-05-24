@@ -28,7 +28,7 @@ namespace Eduard.BenchTests.Poly
             int maxDegree = 2 * (degree - 1);
             left = new Polynomial(maxDegree);
 
-            for (int i = 0; i <= left.degree; i++)
+            for (int i = 0; i <= left.Degree; i++)
                 left.coeffs[i] = SecureRandom.Range(1, field - 1);
 
             PerfTuner.SetThreshold(PerfEntry.POLY_FFT_MOD, degree);
