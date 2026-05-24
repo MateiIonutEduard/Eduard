@@ -111,17 +111,17 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public bool Equals(ECPoint other)
         {
-            if (isOnCurve != other.isOnCurve)
+            bool isInfinitySelf = !isOnCurve;
+            bool isInfinityOther = !other.isOnCurve;
+
+            if (isInfinitySelf != isInfinityOther)
                 return false;
 
-            BigInteger tx = isOnCurve ? x : 0;
-            BigInteger ty = isOnCurve ? y : 1;
+            if (isInfinitySelf && isInfinityOther)
+                return true;
 
-            BigInteger ox = other.isOnCurve ? other.x : 0;
-            BigInteger oy = other.isOnCurve ? other.y : 1;
-
-            bool sameXCoord = tx == ox;
-            bool sameYCoord = ty == oy;
+            bool sameXCoord = x == other.x;
+            bool sameYCoord = y == other.y;
             return sameXCoord && sameYCoord;
         }
 
