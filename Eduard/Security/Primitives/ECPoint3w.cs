@@ -43,6 +43,7 @@ namespace Eduard.Security.Primitives
         /// normalized to 1 for affine points after conversion.
         /// </remarks>
         public BigInteger z;
+        internal bool isOnCurve;
 
         /// <summary>
         /// Initializes a new Jacobian projective point with the specified coordinates.
@@ -65,9 +66,21 @@ namespace Eduard.Security.Primitives
                 throw new ArgumentNullException(nameof(z),
                     "The projective Z-coordinate cannot be null.");
 
-            this.x = x;
-            this.y = y;
+            this.x = x; this.y = y;
+            isOnCurve = z != 0;
             this.z = z;
+        }
+
+        /// <summary>
+        /// Gets whether this point is the point at infinity.
+        /// </summary>
+        /// <returns><c>true</c> if the point is at infinity (Z = 0); otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The point at infinity serves as the identity element in the elliptic curve group.
+        /// </remarks>
+        public bool IsInfinity
+        {
+            get { return !isOnCurve; }
         }
 
         /// <summary>
@@ -100,8 +113,8 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public bool Equals(ECPoint3w other)
         {
-            bool isInfinitySelf = z == 0;
-            bool isInfinityOther = other.z == 0;
+            bool isInfinitySelf = !isOnCurve;
+            bool isInfinityOther = !other.isOnCurve;
 
             if (isInfinitySelf != isInfinityOther)
                 return false;
@@ -165,7 +178,7 @@ namespace Eduard.Security.Primitives
         {
             unchecked
             {
-                if (z == 0) return 0;
+                if (!isOnCurve) return 0;
                 int xHash = x.GetHashCode();
                 int yHash = y.GetHashCode();
 

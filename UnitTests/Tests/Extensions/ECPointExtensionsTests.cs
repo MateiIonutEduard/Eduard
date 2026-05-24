@@ -447,7 +447,7 @@ namespace Eduard.Tests.Extensions
         {
             var curve = TwistedEdwardsCurve.GetNamedCurve(
                 TwistedEdwardsCurveType.Edwards25519);
-            var identity = new ECPoint(0, 1);
+            var identity = ECPoint.POINT_INFINITY;
             var extPoint = curve.ToExtendedProjective(identity);
             Assert.Equal(ECPoint4.POINT_INFINITY, extPoint);
         }

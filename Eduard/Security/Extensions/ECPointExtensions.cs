@@ -25,7 +25,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint3w point)
         {
-            if (point == ECPoint3w.POINT_INFINITY || point.z == 0) 
+            if (!point.isOnCurve) 
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
@@ -104,7 +104,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint4 ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if(!point.isOnCurve || (point.x == 0 && point.y == 1)) 
+            if(!point.isOnCurve) 
                 return ECPoint4.POINT_INFINITY;
 
             BigInteger t = BarrettReducer.MultMod(point.x, point.y);
@@ -424,7 +424,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint3w point)
         {
-            if (point == ECPoint3w.POINT_INFINITY || point.z == 0) 
+            if (!point.isOnCurve) 
                 return ECPoint4w.POINT_INFINITY;
 
             BigInteger Z2 = BarrettReducer.MultMod(point.z, point.z);
