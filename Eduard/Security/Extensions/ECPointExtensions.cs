@@ -104,7 +104,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint4 ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if(point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1)) 
+            if(!point.isOnCurve || (point.x == 0 && point.y == 1)) 
                 return ECPoint4.POINT_INFINITY;
 
             BigInteger t = BarrettReducer.MultMod(point.x, point.y);
@@ -166,7 +166,7 @@ namespace Eduard.Security.Extensions
         /// <returns>Homogeneous coordinates (X, Y, Z) with Z = 1.</returns>
         public static ECPoint3 ToProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY || (point.x == 0 && point.y == 1))
+            if (!point.isOnCurve || (point.x == 0 && point.y == 1))
                 return ECPoint3.POINT_INFINITY;
 
             return new ECPoint3(point.x, point.y, 1);
@@ -206,7 +206,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) 
+            if (!point.isOnCurve) 
                 return ECPoint3w.POINT_INFINITY;
 
             ECPoint3w jacobianPoint = new ECPoint3w(point.GetAffineX(),
@@ -316,7 +316,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint5w ToJacobianChudnovsky(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) 
+            if (!point.isOnCurve) 
                 return ECPoint5w.POINT_INFINITY;
 
             ECPoint5w jacobianChudnovskyPoint = new ECPoint5w(point.GetAffineX(), 
@@ -371,7 +371,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint4w ToModifiedJacobian(this EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY) 
+            if (!point.isOnCurve) 
                 return ECPoint4w.POINT_INFINITY;
 
             ECPoint4w modifiedJacobianPoint = new ECPoint4w(

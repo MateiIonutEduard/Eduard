@@ -57,6 +57,18 @@ namespace Eduard.Security.Primitives
         }
 
         /// <summary>
+        /// Gets whether this point is the point at infinity.
+        /// </summary>
+        /// <returns><c>true</c> if the point is at infinity; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The point at infinity serves as the identity element in the elliptic curve group.
+        /// </remarks>
+        public bool IsInfinity
+        {
+            get { return !isOnCurve; }
+        }
+
+        /// <summary>
         /// Gets the point at infinity (additive identity) for elliptic curve groups.
         /// </summary>
         /// <remarks>
