@@ -28,12 +28,12 @@ namespace Eduard.Security.Extensions
             if (!point.isOnCurve) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger inv_Z = BarrettReducer.InvMod(point.Z);
+            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
             BigInteger iZ2 = BarrettReducer.MultMod(inv_Z, inv_Z);
             BigInteger iZ3 = BarrettReducer.MultMod(iZ2, inv_Z);
 
-            BigInteger X = BarrettReducer.MultMod(point.X, iZ2);
-            BigInteger Y = BarrettReducer.MultMod(point.Y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
             return new ECPoint(X, Y);
         }
 
@@ -224,20 +224,13 @@ namespace Eduard.Security.Extensions
         /// <remarks>
         /// Discards the cached aZ^4 value when switching to coordinate systems that don't support it.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when point at infinity has non-zero aZ^4.
-        /// </exception>
         public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint4w point)
         {
-            if (point.Z == 0 && point.aZ4 != 0)
-                throw new InvalidOperationException(
-                    "Point at infinity must have aZ^4 = 0.");
-
             if (!point.isOnCurve) 
                 return ECPoint3w.POINT_INFINITY;
 
-            ECPoint3w jacobianPoint = new ECPoint3w(point.X,
-                point.Y, point.Z);
+            ECPoint3w jacobianPoint = new ECPoint3w(point.x,
+                point.y, point.z);
 
             return jacobianPoint;
         }
@@ -335,25 +328,17 @@ namespace Eduard.Security.Extensions
         /// Recovers affine coordinates as x = X/Z^2, y = Y/Z^3 using a single modular <br/>
         /// inversion. The cached aZ^4 value is discarded during affine recovery.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when point at infinity has non-zero aZ^4.
-        /// </exception>
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint4w point)
         {
-            /* invalid point at infinity */
-            if (point.Z == 0 && point.aZ4 != 0)
-                throw new InvalidOperationException(
-                    "Point at infinity must have aZ^4 = 0.");
-
             if (!point.isOnCurve) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger inv_Z = BarrettReducer.InvMod(point.Z);
+            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
             BigInteger iZ2 = BarrettReducer.MultMod(inv_Z, inv_Z);
             BigInteger iZ3 = BarrettReducer.MultMod(iZ2, inv_Z);
 
-            BigInteger X = BarrettReducer.MultMod(point.X, iZ2);
-            BigInteger Y = BarrettReducer.MultMod(point.Y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
             return new ECPoint(X, Y);
         }
 
@@ -427,12 +412,12 @@ namespace Eduard.Security.Extensions
             if (!point.isOnCurve) 
                 return ECPoint4w.POINT_INFINITY;
 
-            BigInteger Z2 = BarrettReducer.MultMod(point.Z, point.Z);
+            BigInteger Z2 = BarrettReducer.MultMod(point.z, point.z);
             BigInteger Z4 = BarrettReducer.MultMod(Z2, Z2);
             BigInteger aZ4 = BarrettReducer.MultMod(curve.a, Z4);
 
-            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.X, 
-                point.Y, point.Z, aZ4);
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, 
+                point.y, point.z, aZ4);
             return modifiedJacobianPoint;
         }
     }
