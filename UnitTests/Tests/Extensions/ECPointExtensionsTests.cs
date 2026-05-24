@@ -128,12 +128,12 @@ namespace Eduard.Tests.Extensions
             var jcPoint = curve.ToJacobianChudnovsky(G);
             Assert.NotEqual(ECPoint5w.POINT_INFINITY, jcPoint);
 
-            Assert.Equal(G.GetAffineX(), jcPoint.x);
-            Assert.Equal(G.GetAffineY(), jcPoint.y);
+            Assert.Equal(G.GetAffineX(), jcPoint.X);
+            Assert.Equal(G.GetAffineY(), jcPoint.Y);
 
-            Assert.Equal(1, jcPoint.z);
-            Assert.Equal(1, jcPoint.z2);
-            Assert.Equal(1, jcPoint.z3);
+            Assert.Equal(1, jcPoint.Z);
+            Assert.Equal(1, jcPoint.Z2);
+            Assert.Equal(1, jcPoint.Z3);
         }
 
         [Fact]
@@ -173,19 +173,12 @@ namespace Eduard.Tests.Extensions
 
             /* security checks inside constructor */
             Assert.Throws<InvalidOperationException>(() => {
-                var invalidPoint = new ECPoint5w(jcPoint.x,
-                    jcPoint.y, 0, jcPoint.z2, jcPoint.z3);           
-            });
-
-            /* struct mutation outside of constructor */
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                jcPoint.z = 0;
-                var affinePoint = curve.ToAffine(jcPoint);
+                var invalidPoint = new ECPoint5w(jcPoint.X,
+                    jcPoint.Y, 0, jcPoint.Z2, jcPoint.Z3);           
             });
 
             var validPointInfinity = new ECPoint5w(
-                jcPoint.x, jcPoint.y, 0, 0, 0);
+                jcPoint.X, jcPoint.Y, 0, 0, 0);
 
             var affinePoint = curve.ToAffine(validPointInfinity);
             Assert.True(affinePoint == ECPoint.POINT_INFINITY);
@@ -229,10 +222,10 @@ namespace Eduard.Tests.Extensions
             var jacPoint = curve.ToJacobian(jcPoint);
 
             Assert.NotEqual(ECPoint3w.POINT_INFINITY, jacPoint);
-            Assert.Equal(jcPoint.x, jacPoint.X);
+            Assert.Equal(jcPoint.X, jacPoint.X);
 
-            Assert.Equal(jcPoint.y, jacPoint.Y);
-            Assert.Equal(jcPoint.z, jacPoint.Z);
+            Assert.Equal(jcPoint.Y, jacPoint.Y);
+            Assert.Equal(jcPoint.Z, jacPoint.Z);
         }
 
         [Fact]
@@ -286,12 +279,12 @@ namespace Eduard.Tests.Extensions
             BigInteger p = curve.field;
 
             Assert.NotEqual(ECPoint4w.POINT_INFINITY, modJacPoint);
-            Assert.Equal(jcPoint.x, modJacPoint.X);
-            Assert.Equal(jcPoint.y, modJacPoint.Y);
-            Assert.Equal(jcPoint.z, modJacPoint.Z);
+            Assert.Equal(jcPoint.X, modJacPoint.X);
+            Assert.Equal(jcPoint.Y, modJacPoint.Y);
+            Assert.Equal(jcPoint.Z, modJacPoint.Z);
 
             /* verify aZ^4 = a * (Z^2)^2 using precomputed Z^2 */
-            var expectedZ4 = (jcPoint.z2 * jcPoint.z2) % p;
+            var expectedZ4 = (jcPoint.Z2 * jcPoint.Z2) % p;
             var expectedAZ4 = (curve.a * expectedZ4) % p;
             Assert.Equal(expectedAZ4, modJacPoint.aZ4);
         }
