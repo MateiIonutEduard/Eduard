@@ -28,12 +28,12 @@ namespace Eduard.Security.Extensions
             if (!point.isOnCurve) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
+            BigInteger inv_Z = BarrettReducer.InvMod(point.Z);
             BigInteger iZ2 = BarrettReducer.MultMod(inv_Z, inv_Z);
             BigInteger iZ3 = BarrettReducer.MultMod(iZ2, inv_Z);
 
-            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
-            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.X, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.Y, iZ3);
             return new ECPoint(X, Y);
         }
 
@@ -427,12 +427,12 @@ namespace Eduard.Security.Extensions
             if (!point.isOnCurve) 
                 return ECPoint4w.POINT_INFINITY;
 
-            BigInteger Z2 = BarrettReducer.MultMod(point.z, point.z);
+            BigInteger Z2 = BarrettReducer.MultMod(point.Z, point.Z);
             BigInteger Z4 = BarrettReducer.MultMod(Z2, Z2);
             BigInteger aZ4 = BarrettReducer.MultMod(curve.a, Z4);
 
-            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.x, 
-                point.y, point.z, aZ4);
+            ECPoint4w modifiedJacobianPoint = new ECPoint4w(point.X, 
+                point.Y, point.Z, aZ4);
             return modifiedJacobianPoint;
         }
     }

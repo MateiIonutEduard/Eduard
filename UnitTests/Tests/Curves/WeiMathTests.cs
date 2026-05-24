@@ -45,11 +45,11 @@ namespace Eduard.Tests.Curves
             var negP = Wei3Math.Negate(curve, P);
 
             /* Jacobian coordinate checks */
-            Assert.Equal(P.x, negP.x);
-            var expectedNegY = p - P.y;
+            Assert.Equal(P.X, negP.X);
+            var expectedNegY = p - P.Y;
 
-            Assert.Equal(expectedNegY, negP.y);
-            Assert.Equal(P.z, negP.z);
+            Assert.Equal(expectedNegY, negP.Y);
+            Assert.Equal(P.Z, negP.Z);
 
             /* affine consistency */
             var affineNegP = curve.ToAffine(negP);

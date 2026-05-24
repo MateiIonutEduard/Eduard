@@ -28,12 +28,18 @@ namespace Eduard.Security.Primitives
         /// <summary>
         /// The X-coordinate in Jacobian projective representation.
         /// </summary>
-        public BigInteger x;
+        public BigInteger X
+        {
+            get { return isOnCurve ? x : 1; }
+        }
 
         /// <summary>
         /// The Y-coordinate in Jacobian projective representation.
         /// </summary>
-        public BigInteger y;
+        public BigInteger Y
+        {
+            get { return isOnCurve ? y : 1; }
+        }
 
         /// <summary>
         /// The Z-coordinate in Jacobian projective representation.
@@ -42,7 +48,12 @@ namespace Eduard.Security.Primitives
         /// Z = 0 indicates the point at infinity. Otherwise, Z is non-zero <br/> and typically
         /// normalized to 1 for affine points after conversion.
         /// </remarks>
-        public BigInteger z;
+        public BigInteger Z
+        {
+            get { return isOnCurve ? z : 0; }
+        }
+
+        private BigInteger x, y, z;
         internal bool isOnCurve;
 
         /// <summary>
