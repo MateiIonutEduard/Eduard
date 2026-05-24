@@ -22,7 +22,7 @@ namespace Eduard.Tests.Curves
             Assert.Equal(1, infinity.GetAffineY());
 
             /* point at infinity via constructor with flag */
-            var infinity2 = new ECPoint(0, 1, true);
+            var infinity2 = new ECPoint(0, 1, false);
             Assert.Equal(infinity, infinity2);
 
             /* equality: same coordinates */
@@ -112,16 +112,16 @@ namespace Eduard.Tests.Curves
         {
             /* normal point construction */
             var point1 = new ECPoint4w(10, 20, 5, 100);
-            Assert.Equal(10, point1.x);
-            Assert.Equal(20, point1.y);
-            Assert.Equal(5, point1.z);
+            Assert.Equal(10, point1.X);
+            Assert.Equal(20, point1.Y);
+            Assert.Equal(5, point1.Z);
             Assert.Equal(100, point1.aZ4);
 
             /* point at infinity via static property */
             var infinity = ECPoint4w.POINT_INFINITY;
-            Assert.Equal(1, infinity.x);
-            Assert.Equal(1, infinity.y);
-            Assert.Equal(0, infinity.z);
+            Assert.Equal(1, infinity.X);
+            Assert.Equal(1, infinity.Y);
+            Assert.Equal(0, infinity.Z);
             Assert.Equal(0, infinity.aZ4);
 
             /* point at infinity with Z=0 and aZ4=0 (valid) */
@@ -161,12 +161,6 @@ namespace Eduard.Tests.Curves
             /* null comparison */
             Assert.False(point1.Equals(null));
             Assert.False(point1.Equals("not a point"));
-
-            /* invariant violation detection in Equals */
-            var invalidInfinity = new ECPoint4w(0, 0, 0, 0);
-            invalidInfinity.aZ4 = 5;
-            Assert.Throws<InvalidOperationException>(() =>
-                invalidInfinity.Equals(infinity));
         }
 
         #endregion

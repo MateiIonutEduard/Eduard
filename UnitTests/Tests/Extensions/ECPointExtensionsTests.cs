@@ -79,10 +79,10 @@ namespace Eduard.Tests.Extensions
             var modJacPoint = curve.ToModifiedJacobian(G);
             Assert.NotEqual(ECPoint4w.POINT_INFINITY, modJacPoint);
 
-            Assert.Equal(G.GetAffineX(), modJacPoint.x);
-            Assert.Equal(G.GetAffineY(), modJacPoint.y);
+            Assert.Equal(G.GetAffineX(), modJacPoint.X);
+            Assert.Equal(G.GetAffineY(), modJacPoint.Y);
 
-            Assert.Equal(1, modJacPoint.z);
+            Assert.Equal(1, modJacPoint.Z);
             Assert.Equal(curve.a, modJacPoint.aZ4);
         }
 
@@ -113,35 +113,6 @@ namespace Eduard.Tests.Extensions
             var inf = ECPoint4w.POINT_INFINITY;
             var affinePoint = curve.ToAffine(inf);
             Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
-        }
-
-        [Fact]
-        public void ToAffine_FromModifiedJacobianWithZeroZ_ReturnsInfinity()
-        {
-            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
-            var G = curve.GetBasePoint();
-            var modJacPoint = curve.ToModifiedJacobian(G);
-
-            /* test security check inside the constructor */
-            Assert.Throws<InvalidOperationException>(() =>
-            {
-                var invalidPoint = new ECPoint4w(modJacPoint.x,
-                    modJacPoint.y, 0, modJacPoint.aZ4);
-            });
-
-            /* mutate data outside of struct */
-            var invalidPoint = new ECPoint4w(modJacPoint.x,
-                modJacPoint.y, modJacPoint.z, modJacPoint.aZ4);
-            invalidPoint.z = 0;
-
-            /* throw it successfully */
-            Assert.Throws<InvalidOperationException>(() => 
-                curve.ToAffine(invalidPoint));
-
-            /* mutate again to fit point at infinity */
-            invalidPoint.aZ4 = 0;
-            Assert.Equal(invalidPoint, 
-                ECPoint4w.POINT_INFINITY);
         }
 
         #endregion
@@ -234,10 +205,10 @@ namespace Eduard.Tests.Extensions
             var jacPoint = curve.ToJacobian(modJacPoint);
 
             Assert.NotEqual(ECPoint3w.POINT_INFINITY, jacPoint);
-            Assert.Equal(modJacPoint.x, jacPoint.x);
+            Assert.Equal(modJacPoint.X, jacPoint.x);
 
-            Assert.Equal(modJacPoint.y, jacPoint.y);
-            Assert.Equal(modJacPoint.z, jacPoint.z);
+            Assert.Equal(modJacPoint.Y, jacPoint.y);
+            Assert.Equal(modJacPoint.Z, jacPoint.z);
         }
 
         [Fact]
@@ -284,9 +255,9 @@ namespace Eduard.Tests.Extensions
             BigInteger p = curve.field;
 
             Assert.NotEqual(ECPoint4w.POINT_INFINITY, modJacPoint);
-            Assert.Equal(jacPoint.x, modJacPoint.x);
-            Assert.Equal(jacPoint.y, modJacPoint.y);
-            Assert.Equal(jacPoint.z, modJacPoint.z);
+            Assert.Equal(jacPoint.x, modJacPoint.X);
+            Assert.Equal(jacPoint.y, modJacPoint.Y);
+            Assert.Equal(jacPoint.z, modJacPoint.Z);
 
             /* verify aZ^4 is correctly computed */
             var expectedZ2 = (jacPoint.z * jacPoint.z) % p;
@@ -315,9 +286,9 @@ namespace Eduard.Tests.Extensions
             BigInteger p = curve.field;
 
             Assert.NotEqual(ECPoint4w.POINT_INFINITY, modJacPoint);
-            Assert.Equal(jcPoint.x, modJacPoint.x);
-            Assert.Equal(jcPoint.y, modJacPoint.y);
-            Assert.Equal(jcPoint.z, modJacPoint.z);
+            Assert.Equal(jcPoint.x, modJacPoint.X);
+            Assert.Equal(jcPoint.y, modJacPoint.Y);
+            Assert.Equal(jcPoint.z, modJacPoint.Z);
 
             /* verify aZ^4 = a * (Z^2)^2 using precomputed Z^2 */
             var expectedZ4 = (jcPoint.z2 * jcPoint.z2) % p;
@@ -368,7 +339,7 @@ namespace Eduard.Tests.Extensions
         {
             var curve = TwistedEdwardsCurve.GetNamedCurve(
                 TwistedEdwardsCurveType.Edwards25519);
-            var identity = new ECPoint(0, 1);
+            var identity = ECPoint.POINT_INFINITY;
             var projPoint = curve.ToProjective(identity);
             Assert.Equal(ECPoint3.POINT_INFINITY, projPoint);
         }
@@ -774,9 +745,9 @@ namespace Eduard.Tests.Extensions
             var lambda4 = (lambda2 * lambda2) % p;
 
             var scaledPoint = new ECPoint4w(
-                (modJacPoint.x * lambda2) % p,
-                (modJacPoint.y * lambda3) % p,
-                (modJacPoint.z * lambda) % p,
+                (modJacPoint.X * lambda2) % p,
+                (modJacPoint.Y * lambda3) % p,
+                (modJacPoint.Z * lambda) % p,
                 (modJacPoint.aZ4 * lambda4) % p
             );
 

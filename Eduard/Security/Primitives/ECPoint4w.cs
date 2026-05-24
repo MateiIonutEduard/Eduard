@@ -33,12 +33,18 @@ namespace Eduard.Security.Primitives
         /// <summary>
         /// The X-coordinate in modified Jacobian representation.
         /// </summary>
-        public BigInteger x;
+        public BigInteger X 
+        { 
+            get { return isOnCurve ? x : 1; } 
+        }
 
         /// <summary>
         /// The Y-coordinate in modified Jacobian representation.
         /// </summary>
-        public BigInteger y;
+        public BigInteger Y 
+        { 
+            get { return isOnCurve ? y : 1; } 
+        }
 
         /// <summary>
         /// The Z-coordinate in modified Jacobian representation.
@@ -46,7 +52,10 @@ namespace Eduard.Security.Primitives
         /// <remarks>
         /// Z = 0 indicates the point at infinity. For finite points, Z is non-zero.
         /// </remarks>
-        public BigInteger z;
+        public BigInteger Z 
+        { 
+            get { return isOnCurve ? z : 0; } 
+        }
 
         /// <summary>
         /// The pre-computed value aZ^4 where 'a' is the Weierstrass curve parameter.
@@ -55,7 +64,14 @@ namespace Eduard.Security.Primitives
         /// This cached value eliminates redundant computations in point doubling.<br/>
         /// For the point at infinity, this must be 0 to maintain consistency.
         /// </remarks>
-        public BigInteger aZ4;
+        public BigInteger aZ4
+        {
+            get { return isOnCurve ? az4 : 0; }
+        }
+
+        private BigInteger x, y;
+        private BigInteger z, az4;
+        internal bool isOnCurve;
 
         /// <summary>
         /// Initializes a new modified Jacobian point with the specified coordinates.
@@ -94,7 +110,21 @@ namespace Eduard.Security.Primitives
             this.x = x;
             this.y = y;
             this.z = z;
-            this.aZ4 = aZ4;
+
+            isOnCurve = z != 0;
+            this.az4 = aZ4;
+        }
+
+        /// <summary>
+        /// Gets whether this point is the point at infinity.
+        /// </summary>
+        /// <returns><c>true</c> if Z = 0 and aZ^4 = 0; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The point at infinity serves as the identity element in the elliptic curve group.
+        /// </remarks>
+        public bool IsInfinity
+        {
+            get { return !isOnCurve; }
         }
 
         /// <summary>
@@ -131,16 +161,8 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public bool Equals(ECPoint4w other)
         {
-            bool isInfinitySelf = z == 0;
-            bool isInfinityOther = other.z == 0;
-
-            if (isInfinitySelf && aZ4 != 0)
-                throw new InvalidOperationException(
-                    "Current point at infinity has non-zero aZ^4.");
-
-            if (isInfinityOther && other.aZ4 != 0)
-                throw new InvalidOperationException(
-                    "Other point at infinity has non-zero aZ^4.");
+            bool isInfinitySelf = !isOnCurve;
+            bool isInfinityOther = !other.isOnCurve;
 
             if (isInfinitySelf != isInfinityOther)
                 return false;
@@ -150,7 +172,7 @@ namespace Eduard.Security.Primitives
 
             /* compare all coordinates */
             return x == other.x && y == other.y &&
-                   z == other.z && aZ4 == other.aZ4;
+                   z == other.z && az4 == other.az4;
         }
 
         /// <summary>
@@ -201,15 +223,14 @@ namespace Eduard.Security.Primitives
         {
             unchecked
             {
-                if (z == 0 && aZ4 == 0)
-                    return 0;
-
+                if (!isOnCurve) return 0;
                 int hash = 17;
+
                 hash = hash * 31 + x.GetHashCode();
                 hash = hash * 31 + y.GetHashCode();
 
                 hash = hash * 31 + z.GetHashCode();
-                hash = hash * 31 + aZ4.GetHashCode();
+                hash = hash * 31 + az4.GetHashCode();
                 return hash;
             }
         }

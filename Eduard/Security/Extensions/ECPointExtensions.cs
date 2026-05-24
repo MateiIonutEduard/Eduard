@@ -166,7 +166,7 @@ namespace Eduard.Security.Extensions
         /// <returns>Homogeneous coordinates (X, Y, Z) with Z = 1.</returns>
         public static ECPoint3 ToProjective(this TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (!point.isOnCurve || (point.x == 0 && point.y == 1))
+            if (!point.isOnCurve)
                 return ECPoint3.POINT_INFINITY;
 
             return new ECPoint3(point.x, point.y, 1);
@@ -229,15 +229,15 @@ namespace Eduard.Security.Extensions
         /// </exception>
         public static ECPoint3w ToJacobian(this EllipticCurve curve, ECPoint4w point)
         {
-            if (point.z == 0 && point.aZ4 != 0)
+            if (point.Z == 0 && point.aZ4 != 0)
                 throw new InvalidOperationException(
                     "Point at infinity must have aZ^4 = 0.");
 
-            if (point == ECPoint4w.POINT_INFINITY || point.z == 0) 
+            if (!point.isOnCurve) 
                 return ECPoint3w.POINT_INFINITY;
 
-            ECPoint3w jacobianPoint = new ECPoint3w(point.x,
-                point.y, point.z);
+            ECPoint3w jacobianPoint = new ECPoint3w(point.X,
+                point.Y, point.Z);
 
             return jacobianPoint;
         }
@@ -341,19 +341,19 @@ namespace Eduard.Security.Extensions
         public static ECPoint ToAffine(this EllipticCurve curve, ECPoint4w point)
         {
             /* invalid point at infinity */
-            if (point.z == 0 && point.aZ4 != 0)
+            if (point.Z == 0 && point.aZ4 != 0)
                 throw new InvalidOperationException(
                     "Point at infinity must have aZ^4 = 0.");
 
-            if (point == ECPoint4w.POINT_INFINITY || point.z == 0) 
+            if (!point.isOnCurve) 
                 return ECPoint.POINT_INFINITY;
 
-            BigInteger inv_Z = BarrettReducer.InvMod(point.z);
+            BigInteger inv_Z = BarrettReducer.InvMod(point.Z);
             BigInteger iZ2 = BarrettReducer.MultMod(inv_Z, inv_Z);
             BigInteger iZ3 = BarrettReducer.MultMod(iZ2, inv_Z);
 
-            BigInteger X = BarrettReducer.MultMod(point.x, iZ2);
-            BigInteger Y = BarrettReducer.MultMod(point.y, iZ3);
+            BigInteger X = BarrettReducer.MultMod(point.X, iZ2);
+            BigInteger Y = BarrettReducer.MultMod(point.Y, iZ3);
             return new ECPoint(X, Y);
         }
 
