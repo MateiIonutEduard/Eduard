@@ -47,17 +47,9 @@ namespace Eduard.Security.Extensions
         /// Performs: x = X/Z, y = Y/Z. The identity element (0, 1) maps to point at infinity. <br/>
         /// This representation is optimal for unified addition formulas (Hisil et al., ASIACRYPT 2008).
         /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when point at infinity has non-zero T (Z=0 but T != 0).
-        /// </exception>
         public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if (point.z == 0 && point.t != 0)
-                throw new InvalidOperationException(
-                    "Point at infinity must have" 
-                    + " T = 0 when Z = 0.");
-
-            if (point == ECPoint4.POINT_INFINITY || point.z == 0)
+            if (!point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
@@ -150,11 +142,8 @@ namespace Eduard.Security.Extensions
             if(!point.isOnCurve)
                 return ECPoint4.POINT_INFINITY;
 
-            var res = new ECPoint4();
-            res.x = point.x; res.y = point.y;
-
-            /* T is not used in point doubling formula */
-            res.z = point.z; res.t = 0;
+            var res = new ECPoint4(
+                point.x, point.y, 0, point.z);
             return res;
         }
 
@@ -178,17 +167,9 @@ namespace Eduard.Security.Extensions
         /// <param name="curve">The twisted Edwards curve context.</param>
         /// <param name="point">The point in extended coordinates (X, Y, T, Z).</param>
         /// <returns>Homogeneous coordinates (X, Y, Z).</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when point at infinity has non-zero T (Z=0 but T != 0).
-        /// </exception>
         public static ECPoint3 ToProjective(this TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if (point.z == 0 && point.t != 0)
-                throw new InvalidOperationException(
-                    "Point at infinity must have " 
-                    + "T = 0 when Z = 0.");
-
-            if (point == ECPoint4.POINT_INFINITY)
+            if (!point.isOnCurve)
                 return ECPoint3.POINT_INFINITY;
 
             return new ECPoint3(point.x, point.y, point.z);

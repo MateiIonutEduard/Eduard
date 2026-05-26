@@ -109,7 +109,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="left">The first point to compare.</param>
         /// <param name="right">The second point to compare.</param>
-        /// <returns>true if the points represent the same geometric point; otherwise false.</returns>
+        /// <returns><c>true</c> if the points represent the same geometric point; otherwise <c>false</c>.</returns>
         public static bool operator ==(ECPoint3 left, ECPoint3 right)
         {
             return left.Equals(right);
@@ -120,7 +120,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="left">The first point to compare.</param>
         /// <param name="right">The second point to compare.</param>
-        /// <returns>true if the points represent different geometric points; otherwise false.</returns>
+        /// <returns><c>true</c> if the points represent different geometric points; otherwise <c>false</c>.</returns>
         public static bool operator !=(ECPoint3 left, ECPoint3 right)
         {
             return !left.Equals(right);
@@ -151,7 +151,7 @@ namespace Eduard.Security.Primitives
         /// Indicates whether the current point is equal to another projective point.
         /// </summary>
         /// <param name="other">The point to compare with this point.</param>
-        /// <returns>true if the points represent the same geometric point; otherwise false.</returns>
+        /// <returns><c>true</c> if the points represent the same geometric point; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// Two points are considered equal if:
         /// <list type="bullet">
@@ -182,7 +182,7 @@ namespace Eduard.Security.Primitives
         /// Determines whether the specified object is equal to the current projective point.
         /// </summary>
         /// <param name="obj">The object to compare with the current point.</param>
-        /// <returns>true if the object is an ECPoint3 with identical coordinates; otherwise false.</returns>
+        /// <returns><c>true</c> if the object is an ECPoint3 with identical coordinates; otherwise <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
             if (!(obj is ECPoint3))

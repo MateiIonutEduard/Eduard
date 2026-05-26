@@ -387,13 +387,13 @@ namespace Eduard.Tests.Extensions
             BigInteger p = curve.field;
 
             Assert.NotEqual(ECPoint4.POINT_INFINITY, extPoint);
-            Assert.Equal(G.GetAffineX(), extPoint.x);
+            Assert.Equal(G.GetAffineX(), extPoint.X);
 
-            Assert.Equal(G.GetAffineY(), extPoint.y);
-            Assert.Equal(1, extPoint.z);
+            Assert.Equal(G.GetAffineY(), extPoint.Y);
+            Assert.Equal(1, extPoint.Z);
 
             var expectedT = (G.GetAffineX() * G.GetAffineY()) % p;
-            Assert.Equal(expectedT, extPoint.t);
+            Assert.Equal(expectedT, extPoint.T);
         }
 
         [Fact]
@@ -449,21 +449,12 @@ namespace Eduard.Tests.Extensions
             /* test invalid point init via constructor */
             Assert.Throws<InvalidOperationException>(() =>
             {
-                var invalidPoint = new ECPoint4(extPoint.x, 
-                    extPoint.y, extPoint.t, 0);
+                var invalidPoint = new ECPoint4(extPoint.X, 
+                    extPoint.Y, extPoint.T, 0);
             });
 
-            var invalidPoint = new ECPoint4(extPoint.x, 
-                extPoint.y, extPoint.t, extPoint.z);
-
-            /* mutate z coordinate externally */
-            invalidPoint.z = 0;
-
-            Assert.Throws<InvalidOperationException>(() => 
-                curve.ToAffine(invalidPoint));
-
-            var infinity = new ECPoint4(extPoint.x,
-                extPoint.y, 0, 0);
+            var infinity = new ECPoint4(extPoint.X,
+                extPoint.Y, 0, 0);
 
             /* right representation for point at infinity */
             var affinePoint = curve.ToAffine(infinity);
@@ -493,10 +484,10 @@ namespace Eduard.Tests.Extensions
             var expectedT = (projPoint.X * projPoint.Y) % p;
             var expectedZ = (projPoint.Z * projPoint.Z) % p;
 
-            Assert.Equal(expectedX, extPoint.x);
-            Assert.Equal(expectedY, extPoint.y);
-            Assert.Equal(expectedT, extPoint.t);
-            Assert.Equal(expectedZ, extPoint.z);
+            Assert.Equal(expectedX, extPoint.X);
+            Assert.Equal(expectedY, extPoint.Y);
+            Assert.Equal(expectedT, extPoint.T);
+            Assert.Equal(expectedZ, extPoint.Z);
         }
 
         [Fact]
@@ -520,10 +511,10 @@ namespace Eduard.Tests.Extensions
             var copyPoint = curve.GetPointCopy(projPoint);
             Assert.NotEqual(ECPoint4.POINT_INFINITY, copyPoint);
 
-            Assert.Equal(projPoint.X, copyPoint.x);
-            Assert.Equal(projPoint.Y, copyPoint.y);
-            Assert.Equal(projPoint.Z, copyPoint.z);
-            Assert.Equal(0, copyPoint.t);
+            Assert.Equal(projPoint.X, copyPoint.X);
+            Assert.Equal(projPoint.Y, copyPoint.Y);
+            Assert.Equal(projPoint.Z, copyPoint.Z);
+            Assert.Equal(0, copyPoint.T);
         }
 
         [Fact]
@@ -547,9 +538,9 @@ namespace Eduard.Tests.Extensions
             var projPoint = curve.ToProjective(extPoint);
             Assert.NotEqual(ECPoint3.POINT_INFINITY, projPoint);
 
-            Assert.Equal(extPoint.x, projPoint.X);
-            Assert.Equal(extPoint.y, projPoint.Y);
-            Assert.Equal(extPoint.z, projPoint.Z);
+            Assert.Equal(extPoint.X, projPoint.X);
+            Assert.Equal(extPoint.Y, projPoint.Y);
+            Assert.Equal(extPoint.Z, projPoint.Z);
         }
 
         [Fact]

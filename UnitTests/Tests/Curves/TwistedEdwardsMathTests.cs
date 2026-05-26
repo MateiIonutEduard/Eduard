@@ -84,14 +84,14 @@ namespace Eduard.Tests.Curves
             var negP = Ed4Math.Negate(curve, P);
 
             /* extended projective coordinate checks */
-            Assert.Equal(P.y, negP.y);
-            var expectedNegX = p - P.x;
+            Assert.Equal(P.Y, negP.Y);
+            var expectedNegX = p - P.X;
 
-            Assert.Equal(expectedNegX, negP.x);
-            BigInteger expectedNegT = p - P.t;
+            Assert.Equal(expectedNegX, negP.X);
+            BigInteger expectedNegT = p - P.T;
 
-            Assert.Equal(expectedNegT, negP.t);
-            Assert.Equal(P.z, negP.z);
+            Assert.Equal(expectedNegT, negP.T);
+            Assert.Equal(P.Z, negP.Z);
 
             /* affine consistency */
             var affineNegP = curve.ToAffine(negP);

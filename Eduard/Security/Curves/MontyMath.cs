@@ -36,13 +36,13 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Add(MontgomeryCurve curve, ECPoint left, ECPoint right)
         {
-            if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
+            if (!left.isOnCurve && !right.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
-            if (left == ECPoint.POINT_INFINITY)
+            if (!left.isOnCurve)
                 return right;
 
-            if (right == ECPoint.POINT_INFINITY)
+            if (!right.isOnCurve)
                 return left;
 
             BigInteger lambda = -1;
@@ -127,7 +127,7 @@ namespace Eduard.Security.Curves
                     "Scalar multiplier must be non-negative.", 
                     nameof(k));
 
-            if (k == 0 || point == ECPoint.POINT_INFINITY)
+            if (k == 0 || !point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             ECPoint affinePoint = point;
@@ -180,7 +180,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Negate(MontgomeryCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY)
+            if (!point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             return new ECPoint(point.x, curve.field - point.y);

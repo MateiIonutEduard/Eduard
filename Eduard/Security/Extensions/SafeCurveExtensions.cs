@@ -63,7 +63,7 @@ namespace Eduard.Security.Extensions
 
             result = curve.ToAffine(auxPoint);
 
-            return (result != ECPoint.POINT_INFINITY) 
+            return result.isOnCurve 
                 ? PointCheck.EC_VALID : 
                 PointCheck.EC_SMALL_SUBGROUP;
         }
@@ -119,7 +119,7 @@ namespace Eduard.Security.Extensions
 
             result = curve.ToAffine(auxPoint);
 
-            return (result != ECPoint.POINT_INFINITY) 
+            return result.isOnCurve 
                 ? PointCheck.EC_VALID : 
                 PointCheck.EC_SMALL_SUBGROUP;
         }

@@ -278,7 +278,7 @@ namespace Eduard.Tests.Extensions
         {
             var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
             var edwCurve = weiCurve.ToTwistedEdwardsCurve();
-            var point = edwCurve.ToWeierstrassPoint(new ECPoint(0, 1));
+            var point = edwCurve.ToWeierstrassPoint(ECPoint.POINT_INFINITY);
             Assert.Equal(ECPoint.POINT_INFINITY, point);
         }
 
@@ -327,7 +327,7 @@ namespace Eduard.Tests.Extensions
         {
             var weiCurve = EllipticCurve.GetNamedCurve(WeiCurveType.Wei25519);
             var edwCurve = weiCurve.ToTwistedEdwardsCurve();
-            var montyPoint = edwCurve.ToMontgomeryPoint(new ECPoint(0, 1));
+            var montyPoint = edwCurve.ToMontgomeryPoint(ECPoint.POINT_INFINITY);
             Assert.Equal(ECPoint.POINT_INFINITY, montyPoint);
         }
 
