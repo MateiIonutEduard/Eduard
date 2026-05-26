@@ -115,6 +115,27 @@ namespace Eduard.Tests.Extensions
             Assert.Equal(ECPoint.POINT_INFINITY, affinePoint);
         }
 
+        [Fact]
+        public void ToAffine_FromModifiedJacobianWithZeroZ_ReturnsInfinity()
+        {
+            var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
+            var G = curve.GetBasePoint();
+            var modJacPoint = curve.ToModifiedJacobian(G);
+
+            /* test security check inside the constructor */
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var invalidPoint = new ECPoint4w(modJacPoint.X,
+                    modJacPoint.Y, 0, modJacPoint.aZ4);
+            });
+
+            var infinity = new ECPoint4w(modJacPoint.X,
+                modJacPoint.Y, 0, 0);
+
+            Assert.Equal(infinity,
+                ECPoint4w.POINT_INFINITY);
+        }
+
         #endregion
 
         #region Weierstrass Curve — Affine to Jacobian-Chudnovsky Conversions
