@@ -238,15 +238,15 @@ namespace Eduard.Tests.Curves
         {
             /* normal point construction */
             var point1 = new ECPoint3(10, 20, 1);
-            Assert.Equal(10, point1.x);
-            Assert.Equal(20, point1.y);
-            Assert.Equal(1, point1.z);
+            Assert.Equal(10, point1.X);
+            Assert.Equal(20, point1.Y);
+            Assert.Equal(1, point1.Z);
 
             /* point at infinity via static property */
             var infinity = ECPoint3.POINT_INFINITY;
-            Assert.Equal(0, infinity.x);
-            Assert.Equal(1, infinity.y);
-            Assert.Equal(0, infinity.z);
+            Assert.Equal(0, infinity.X);
+            Assert.Equal(1, infinity.Y);
+            Assert.Equal(0, infinity.Z);
 
             /* point at infinity with arbitrary coordinates (Z=0) */
             var infinityAlt = new ECPoint3(999, 888, 0);

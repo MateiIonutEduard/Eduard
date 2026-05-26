@@ -80,7 +80,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint ToAffine(this TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if (point == ECPoint3.POINT_INFINITY || point.z == 0)
+            if (!point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             BigInteger inv_Z = BarrettReducer.InvMod(point.z);
@@ -123,7 +123,7 @@ namespace Eduard.Security.Extensions
         /// </remarks>
         public static ECPoint4 ToExtendedProjective(this TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if (point == ECPoint3.POINT_INFINITY || point.z == 0)
+            if (!point.isOnCurve)
                 return ECPoint4.POINT_INFINITY;
 
             BigInteger xz = BarrettReducer.MultMod(point.x, point.z);
@@ -147,7 +147,7 @@ namespace Eduard.Security.Extensions
         public static ECPoint4 GetPointCopy(this TwistedEdwardsCurve curve, ECPoint3 point)
         {
             /* point at infinity */
-            if(point == ECPoint3.POINT_INFINITY || point.z == 0)
+            if(!point.isOnCurve)
                 return ECPoint4.POINT_INFINITY;
 
             var res = new ECPoint4();

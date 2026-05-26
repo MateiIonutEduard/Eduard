@@ -47,11 +47,11 @@ namespace Eduard.Tests.Curves
             var negP = Ed3Math.Negate(curve, P);
 
             /* homogenous projective coordinate checks */
-            Assert.Equal(P.y, negP.y);
-            var expectedNegX = p - P.x;
+            Assert.Equal(P.Y, negP.Y);
+            var expectedNegX = p - P.X;
 
-            Assert.Equal(expectedNegX, negP.x);
-            Assert.Equal(P.z, negP.z);
+            Assert.Equal(expectedNegX, negP.X);
+            Assert.Equal(P.Z, negP.Z);
 
             /* affine consistency */
             var affineNegP = curve.ToAffine(negP);
