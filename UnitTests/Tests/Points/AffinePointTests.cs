@@ -1,10 +1,10 @@
-﻿using Eduard.Security.Primitives;
-using System;
+﻿using System;
+using Eduard.Security.Primitives;
 using System.Collections.Generic;
 
-namespace Eduard.Tests.Curves
+namespace Eduard.Tests.Points
 {
-    public class PointTests
+    public class AffinePointTests
     {
         #region Constructor Tests
 
@@ -162,7 +162,6 @@ namespace Eduard.Tests.Curves
         {
             var infinity1 = ECPoint.POINT_INFINITY;
             var infinity2 = ECPoint.POINT_INFINITY;
-
             Assert.Equal(infinity1, infinity2);
             Assert.True(infinity1 == infinity2);
         }
@@ -369,7 +368,6 @@ namespace Eduard.Tests.Curves
 
             var point = new ECPoint(x, y);
             Assert.True(point.Equals(point));
-            Assert.True(point == point);
         }
 
         [Fact]
@@ -677,8 +675,8 @@ namespace Eduard.Tests.Curves
             set.Add(p1);
             Assert.Single(set);
 
-            Assert.True(set.Contains(p2));
-            Assert.False(set.Contains(p3));
+            Assert.Contains(p2, set);
+            Assert.DoesNotContain(p3, set);
         }
 
         [Fact]
@@ -693,7 +691,7 @@ namespace Eduard.Tests.Curves
             set.Add(inf1);
 
             Assert.Single(set);
-            Assert.True(set.Contains(inf2));
+            Assert.Contains(inf2, set);
         }
 
         [Fact]
@@ -721,7 +719,7 @@ namespace Eduard.Tests.Curves
             var p2 = new ECPoint(x, y);
 
             list.Add(p1);
-            Assert.True(list.Contains(p2));
+            Assert.Contains(p2, list);
         }
 
         [Fact]
@@ -732,7 +730,7 @@ namespace Eduard.Tests.Curves
             var inf2 = ECPoint.POINT_INFINITY;
 
             list.Add(inf1);
-            Assert.True(list.Contains(inf2));
+            Assert.Contains(inf2, list);
         }
 
         #endregion
