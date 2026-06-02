@@ -563,6 +563,44 @@ namespace Eduard.Tests.Curves
                 ECMath.Add(curve, null, points));
         }
 
+        [Fact]
+        public void AddBatch_MatchesScalarAdd_ForAllBoundaryCases()
+        {
+            var curve = EllipticCurve.GetNamedCurve(
+                WeiCurveType.NistP256);
+
+            ECPoint[] left = new ECPoint[5];
+            ECPoint[] right = new ECPoint[5];
+
+            ECPoint[] sum = new ECPoint[5];
+            int j, k;
+
+            left[0] = ECPoint.POINT_INFINITY;
+            right[0] = curve.GetBasePoint();
+
+            left[1] = curve.GetBasePoint();
+            right[1] = ECPoint.POINT_INFINITY;
+
+            left[2] = ECPoint.POINT_INFINITY;
+            right[2] = ECPoint.POINT_INFINITY;
+
+            left[3] = curve.GetBasePoint();
+            right[3] = left[1];
+
+            left[4] = curve.GetBasePoint();
+            right[4] = ECMath.Negate(curve, 
+                left[4]);
+
+            for (j = 0; j < 5; j++)
+                sum[j] = ECMath.Add(curve,
+                    left[j], right[j]);
+
+            ECMath.Add(curve, left, right);
+
+            for (k = 0; k < 5; k++)
+                Assert.Equal(right[k], sum[k]);
+        }
+
         #endregion
     }
 }
