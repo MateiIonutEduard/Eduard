@@ -564,6 +564,42 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
+        public void AddBatch_MismatchedLengths_ThrowsArgumentException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(
+                WeiCurveType.NistP256);
+
+            ECPoint[] left = new ECPoint[4];
+            ECPoint[] right = new ECPoint[6];
+            int j, k;
+
+            for(j = 0; j < 4; j++)
+            {
+                left[j] = ECPoint.POINT_INFINITY;
+                right[j] = ECPoint.POINT_INFINITY;
+            }
+
+            for (j = 4; j < 6; j++)
+                right[j] = ECPoint.POINT_INFINITY;
+
+            Assert.Throws<ArgumentException>(() =>
+                ECMath.Add(curve, left, right));
+        }
+
+        [Fact]
+        public void AddBatch_EmptyArrays_Succeeds()
+        {
+            var curve = EllipticCurve.GetNamedCurve(
+                WeiCurveType.NistP256);
+
+            ECPoint[] left = new ECPoint[0];
+            ECPoint[] right = new ECPoint[0];
+
+            ECMath.Add(curve, left, right);
+            Assert.True(right.Length == 0);
+        }
+
+        [Fact]
         public void AddBatch_MatchesScalarAdd_ForAllBoundaryCases()
         {
             var curve = EllipticCurve.GetNamedCurve(
