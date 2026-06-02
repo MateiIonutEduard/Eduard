@@ -1,4 +1,5 @@
-﻿using Eduard.Security.Curves;
+﻿using System;
+using Eduard.Security.Curves;
 using Eduard.Security.Extensions;
 using Eduard.Security.Primitives;
 
@@ -315,7 +316,7 @@ namespace Eduard.Tests.Curves
         }
         #endregion
 
-        #region #region Point Addition — All Coordinate Systems
+        #region Point Addition — All Coordinate Systems
         [Fact]
         public void Add_Affine()
         {
@@ -526,6 +527,26 @@ namespace Eduard.Tests.Curves
             var expectedAffineSum = ECMath.Add(curve, randomA, randomB);
             Assert.Equal(expectedAffineSum, affineJcSum);
         }
+        #endregion
+
+        #region Point Multi-Addition - Affine Coordinate System
+
+        [Fact]
+        public void AddBatch_NullLeftArray_ThrowsArgumentNullException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(
+                WeiCurveType.NistP256);
+
+            ECPoint[] points = new ECPoint[5];
+            int j, k;
+
+            for (j = 0; j < points.Length; j++)
+                points[j] = ECPoint.POINT_INFINITY;
+
+            Assert.Throws<ArgumentNullException>(() => 
+                ECMath.Add(curve, points, null));
+        }
+
         #endregion
     }
 }
