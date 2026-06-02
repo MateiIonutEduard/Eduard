@@ -2,13 +2,13 @@ name: Eduard CI Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop, 'release/*' ]
     paths-ignore:
       - '**.md'
       - '.gitignore'
       - 'LICENSE'
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, develop, 'release/*' ]
     paths-ignore:
       - '**.md'
       - '.gitignore'
