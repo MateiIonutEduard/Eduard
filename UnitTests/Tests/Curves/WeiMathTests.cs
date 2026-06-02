@@ -601,6 +601,33 @@ namespace Eduard.Tests.Curves
                 Assert.Equal(right[k], sum[k]);
         }
 
+        [Fact]
+        public void AddBatch_MatchesScalarAdd()
+        {
+            var curve = EllipticCurve.GetNamedCurve(
+                WeiCurveType.NistP256);
+
+            ECPoint[] left = new ECPoint[5];
+            ECPoint[] right = new ECPoint[5];
+
+            ECPoint[] sum = new ECPoint[5];
+            int j, k;
+
+            for (j = 0; j < 5; j++)
+            {
+                left[j] = curve.GetBasePoint();
+                right[j] = curve.GetBasePoint();
+
+                sum[j] = ECMath.Add(curve,
+                    left[j], right[j]);
+            }
+
+            ECMath.Add(curve, left, right);
+
+            for (k = 0; k < 5; k++)
+                Assert.Equal(right[k], sum[k]);
+        }
+
         #endregion
     }
 }
