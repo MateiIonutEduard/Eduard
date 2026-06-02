@@ -1,6 +1,12 @@
 name: Eduard CI Pipeline
 
 on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'LICENSE'
   pull_request:
     branches: [ main, master ]
     paths-ignore:
@@ -13,6 +19,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   SOLUTION_PATH: 'Eduard.sln'
   CONFIGURATION: 'Release'
+  DOTNET_NOLOGO: true
 
 jobs:
   build-and-test:
@@ -22,26 +29,41 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: Setup .NET 10 SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-    
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.fsproj', '**/*.vbproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: Display .NET version
       run: dotnet --version
-    
+
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_PATH }}
-    
+
     - name: Build solution
       run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.CONFIGURATION }} --no-restore
-    
+
     - name: Run xUnit Tests
-      run: dotnet test UnitTests/UnitTests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+      run: dotnet test UnitTests/UnitTests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Upload test results (optional)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ runner.os }}
+        path: '**/TestResults/test-results.trx'
