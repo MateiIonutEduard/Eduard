@@ -8,8 +8,9 @@ namespace Eduard.Tests.Curves
     public class TwistedEdwardsMathTests
     {
         #region Point Negation Tests — All Coordinate Systems
+
         [Fact]
-        public void Negate_Affine()
+        public void Negate_Affine_BasePoint_Properties()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -35,7 +36,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Negate_Projective()
+        public void Negate_Projective_BasePoint_Properties()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -72,7 +73,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Negate_Extended_Projective()
+        public void Negate_ExtendedProjective_BasePoint_Properties()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -110,11 +111,13 @@ namespace Eduard.Tests.Curves
             var inf = ECPoint4.POINT_INFINITY;
             Assert.Equal(inf, Ed4Math.Negate(curve, inf));
         }
+
         #endregion
 
         #region Point Doubling — All Coordinate Systems
+
         [Fact]
-        public void Double_Affine()
+        public void Double_Affine_BasePoint_Properties()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -151,7 +154,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Double_Projective()
+        public void Double_Projective_BasePoint_ConsistentWithAffine()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -198,7 +201,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Double_Extended_Projective()
+        public void Double_ExtendedProjective_BasePoint_ConsistentWithAffine()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -243,11 +246,13 @@ namespace Eduard.Tests.Curves
                 randomPoint, randomPoint);
             Assert.Equal(expectedDoubleR, affineDoubleR);
         }
+
         #endregion
 
-        #region #region Point Addition — All Coordinate Systems
+        #region Point Addition — All Coordinate Systems
+
         [Fact]
-        public void Add_Affine()
+        public void Add_Affine_BasePoint_VerifiesGroupLaws()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -289,7 +294,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Add_Projective()
+        public void Add_Projective_BasePoint_ConsistentWithAffine()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -350,7 +355,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Add_Extended_Projective()
+        public void Add_ExtendedProjective_BasePoint_ConsistentWithAffine()
         {
             TwistedEdwardsCurveType curveType = TwistedEdwardsCurveType.Edwards25519;
             var curve = TwistedEdwardsCurve.GetNamedCurve(curveType);
@@ -409,6 +414,7 @@ namespace Eduard.Tests.Curves
             var expectedAffineSum = TwistedEdwardsMath.Add(curve, randomA, randomB);
             Assert.Equal(expectedAffineSum, affineEProjSum);
         }
+
         #endregion
     }
 }
