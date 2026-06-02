@@ -9,8 +9,9 @@ namespace Eduard.Tests.Curves
     public class WeiMathTests
     {
         #region Point Negation Tests — All Coordinate Systems
+
         [Fact]
-        public void Negate_Affine()
+        public void Negate_Affine_BasePoint_Properties()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
             var p = curve.field;
@@ -35,7 +36,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Negate_Jacobian()
+        public void Negate_Jacobian_BasePoint_Properties()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
             var p = curve.field;
@@ -71,7 +72,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Negate_ModifiedJacobian()
+        public void Negate_ModifiedJacobian_BasePoint_Properties()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
             var p = curve.field;
@@ -107,7 +108,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Negate_JacobianChudnovsky()
+        public void Negate_JacobianChudnovsky_BasePoint_Properties()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
             var p = curve.field;
@@ -141,11 +142,13 @@ namespace Eduard.Tests.Curves
             var inf = ECPoint5w.POINT_INFINITY;
             Assert.Equal(inf, Wei5Math.Negate(curve, inf));
         }
+
         #endregion
 
         #region Point Doubling — All Coordinate Systems
+
         [Fact]
-        public void Double_Affine()
+        public void Double_Affine_BasePoint_Properties()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -181,7 +184,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Double_Jacobian()
+        public void Double_Jacobian_BasePoint_ConsistentWithAffine()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -226,7 +229,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Double_ModifiedJacobian()
+        public void Double_ModifiedJacobian_BasePoint_ConsistentWithAffine()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -271,7 +274,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Double_JacobianChudnovsky()
+        public void Double_JacobianChudnovsky_BasePoint_ConsistentWithAffine()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -314,11 +317,13 @@ namespace Eduard.Tests.Curves
             var expectedDoubleR = ECMath.Add(curve, randomPoint, randomPoint);
             Assert.Equal(expectedDoubleR, affineDoubleR);
         }
+
         #endregion
 
         #region Point Addition — All Coordinate Systems
+
         [Fact]
-        public void Add_Affine()
+        public void Add_Affine_BasePoint_VerifiesGroupLaws()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -359,7 +364,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Add_Jacobian()
+        public void Add_Jacobian_BasePoint_ConsistentWithAffine()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -415,7 +420,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Add_ModifiedJacobian()
+        public void Add_ModifiedJacobian_BasePoint_ConsistentWithAffine()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -472,7 +477,7 @@ namespace Eduard.Tests.Curves
         }
 
         [Fact]
-        public void Add_JacobianChudnovsky()
+        public void Add_JacobianChudnovsky_BasePoint_ConsistentWithAffine()
         {
             var curve = EllipticCurve.GetNamedCurve(WeiCurveType.NistP256);
 
@@ -527,6 +532,7 @@ namespace Eduard.Tests.Curves
             var expectedAffineSum = ECMath.Add(curve, randomA, randomB);
             Assert.Equal(expectedAffineSum, affineJcSum);
         }
+
         #endregion
 
         #region Point Multi-Addition - Affine Coordinate System
