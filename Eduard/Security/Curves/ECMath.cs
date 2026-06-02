@@ -85,12 +85,13 @@ namespace Eduard.Security.Curves
         /// Thrown when either array is null.
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// Thrown when either array is empty or arrays have different lengths.
+        /// Thrown when the two arrays have different lengths.
         /// </exception>
         /// <remarks>
         /// Uses Montgomery's simultaneous inversion to batch all modular inverses into a <br/>
         /// single inversion plus 3(n-1) multiplications. Handles point at infinity, doubling, <br/>
-        /// and vertical line cases for each pair independently.
+        /// and vertical line cases for each pair independently. If both arrays are empty, the <br/>
+        /// method returns immediately without performing any arithmetic.
         /// </remarks>
         public static void Add(EllipticCurve curve, ECPoint[] left, ECPoint[] right)
         {
@@ -100,27 +101,22 @@ namespace Eduard.Security.Curves
             if (ReferenceEquals(null, right))
                 throw new ArgumentNullException(nameof(right));
 
-            int n = left.Length, k;
+            int n = left.Length;
             int rn = right.Length;
-            var skip = new byte[n];
-
-            if (n == 0)
-                throw new ArgumentException(
-                    "Point array cannot be empty.",
-                    nameof(left));
-
-            if (rn == 0)
-                throw new ArgumentException(
-                    "Point array cannot be empty.",
-                    nameof(right));
 
             if (n != rn)
                 throw new ArgumentException(
                     "Point arrays must have the same length.",
                     nameof(right));
 
+            if (n == 0)
+                return;
+
             BigInteger[] A = new BigInteger[n];
             BigInteger[] B = new BigInteger[n];
+
+            var skip = new byte[n];
+            int k;
 
             for(k = 0; k < n; k++)
             {
