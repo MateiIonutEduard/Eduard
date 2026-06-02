@@ -547,6 +547,22 @@ namespace Eduard.Tests.Curves
                 ECMath.Add(curve, points, null));
         }
 
+        [Fact]
+        public void AddBatch_NullRightArray_ThrowsArgumentNullException()
+        {
+            var curve = EllipticCurve.GetNamedCurve(
+                WeiCurveType.NistP256);
+
+            ECPoint[] points = new ECPoint[5];
+            int j, k;
+
+            for (j = 0; j < points.Length; j++)
+                points[j] = ECPoint.POINT_INFINITY;
+
+            Assert.Throws<ArgumentNullException>(() =>
+                ECMath.Add(curve, null, points));
+        }
+
         #endregion
     }
 }
