@@ -2,7 +2,7 @@
 
 **Eduard** is a production-grade cryptographic library written in C#, implementing multi-precision integer arithmetic, finite field operations (restricted to prime fields), univariate polynomials over large prime fields, modular operations using quotient rings, and algebraic operations with bivariate polynomials over 𝔽ₚ. It provides the foundation for specialized algorithms such as Schoof's algorithm, Schoof–Elkies–Atkin (SEA), isogeny-based cryptography, and the cryptographic primitives for point and curve representation, along with the extensions required for efficient implementation of elliptic curve cryptosystems over prime fields. This project was developed independently for scientific research in Number Theory, Algebraic Geometry, and Elliptic Curve Cryptography, and offers a mathematically rigorous foundation for the optimal implementation of protocols, encryption systems, and digital signature schemes based on elliptic curves. The implementation emphasizes mathematical correctness, supported by a comprehensive correctness test suite, and maximum performance, guided by benchmarking and threshold tuning for optimal algorithm selection.
 
-[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE.txt)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/MateiIonutEduard/Eduard/build.yml?branch=master)](https://github.com/MateiIonutEduard/Eduard/actions)
 [![Changelog](https://img.shields.io/badge/changelog-view-lightgreen)](CHANGELOG.md)
 
@@ -51,7 +51,7 @@ The cryptographic framework delivers the following functionality:
 This library was developed as an independent research project and is maintained with the same rigor as an academic artifact. Bug reports and issues are the only accepted form of external contribution.
 
 - **Pull requests are not accepted.** Any pull request will be rejected unconditionally. This project is not open to code contributions from external parties.
-- **Issue Reporting:** Before opening an issue, contact eduardmatei@outlook.com with a clear description of the observed behavior, including reproducible test cases or mathematical counterexamples where applicable.
+- **Issue Reporting:** Before opening an issue, contact eduardmatei@outlook.com with a clear description of the observed behavior, including reproducible test cases or mathematical counter-examples where applicable.
 - **Issue Creation:** After initial acknowledgment, a GitHub issue may be opened. The issue must include a detailed description, expected vs. actual behavior, and steps to reproduce, referencing the relevant mathematical or cryptographic context.
 
 Issues that do not meet these standards may be deferred or declined to preserve the library's correctness and performance guarantees.
@@ -70,10 +70,14 @@ It upholds production-grade software engineering standards throughout.
 
 **Copyright (c) 2020-Present, Matei Ionut-Eduard. All rights reserved.**
 
-This software is proprietary and confidential. Unauthorized copying, distribution, modification, public display, or public performance of this software, via any medium, is strictly prohibited without prior written permission from the copyright holder.
-**Permitted Use:** Access to the source code is granted solely for evaluation, academic and scientific research, and personal study. Researchers in Number Theory, Algebraic Geometry, Cryptography, and related disciplines are expressly permitted to use the Software for non-commercial study, experimentation, benchmarking, and publication.
-**Strictly Prohibited:** Selling, sublicensing, or incorporating this Software into any commercial product or service without a separate commercial license agreement.
-The software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement.
-For licensing inquiries, contact eduardmatei@outlook.com.
+This software is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
+You may freely use this framework as a library in your applications, including
+commercial applications, without being required to disclose your source code.
 
-See [LICENSE.txt](LICENSE.txt) for the full license terms.
+However, extracting, copying, or reimplementing individual algorithmic components
+from this framework constitutes creating a derivative work and is subject to the
+full terms of the LGPL-3.0 license.
+
+For full license text, see the [LICENSE](LICENSE) file in this repository.
+
+For licensing inquiries, contact eduardmatei@outlook.com.
