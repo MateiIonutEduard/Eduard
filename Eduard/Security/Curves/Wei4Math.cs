@@ -44,9 +44,11 @@ namespace Eduard.Security.Curves
         /// <returns>The sum of the two points in modified Jacobian coordinates.</returns>
         public static ECPoint4w Add(EllipticCurve curve, ECPoint4w left, ECPoint4w right)
         {
-            if (left == right) return Doubling(curve, right);
-            if (left == ECPoint4w.POINT_INFINITY) return right;
-            if (right == ECPoint4w.POINT_INFINITY) return left;
+            if (left == right) 
+                return Doubling(curve, right);
+
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
             BigInteger A1 = BarrettReducer.MultMod(left.z, left.z);
             BigInteger A2 = BarrettReducer.MultMod(right.z, right.z);
@@ -102,7 +104,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4w Doubling(EllipticCurve curve, ECPoint4w jacobianPoint)
         {
-            if (jacobianPoint == ECPoint4w.POINT_INFINITY) 
+            if (!jacobianPoint.isOnCurve) 
                 return ECPoint4w.POINT_INFINITY;
 
             BigInteger A1 = BarrettReducer.MultMod(jacobianPoint.x, jacobianPoint.x);
@@ -115,7 +117,7 @@ namespace Eduard.Security.Curves
             BigInteger A4 = BarrettReducer.MultMod(4, B1);
 
             BigInteger B2 = BarrettReducer.MultMod(3, A1);
-            BigInteger A5 = BarrettReducer.AddMod(B2, jacobianPoint.aZ4);
+            BigInteger A5 = BarrettReducer.AddMod(B2, jacobianPoint.az4);
 
             BigInteger A6 = BarrettReducer.MultMod(A5, A5);
             BigInteger Xt = BarrettReducer.AddMod(A4, A4);
@@ -130,7 +132,7 @@ namespace Eduard.Security.Curves
             BigInteger Z = BarrettReducer.AddMod(YZ, YZ);
 
             if (Z == 0) return ECPoint4w.POINT_INFINITY;
-            BigInteger Zt = BarrettReducer.MultMod(A3, jacobianPoint.aZ4);
+            BigInteger Zt = BarrettReducer.MultMod(A3, jacobianPoint.az4);
 
             BigInteger aZ4 = BarrettReducer.AddMod(Zt, Zt);
             return new ECPoint4w(X, Y, Z, aZ4);
@@ -149,8 +151,8 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4w Negate(EllipticCurve curve, ECPoint4w point)
         {
-            if (point == ECPoint4w.POINT_INFINITY) return ECPoint4w.POINT_INFINITY;
-            return new ECPoint4w(point.x, curve.field - point.y, point.z, point.aZ4);
+            if (!point.isOnCurve) return ECPoint4w.POINT_INFINITY;
+            return new ECPoint4w(point.x, curve.field - point.y, point.z, point.az4);
         }
     }
 

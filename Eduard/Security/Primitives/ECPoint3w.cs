@@ -28,12 +28,18 @@ namespace Eduard.Security.Primitives
         /// <summary>
         /// The X-coordinate in Jacobian projective representation.
         /// </summary>
-        public BigInteger x;
+        public BigInteger X
+        {
+            get { return isOnCurve ? x : 1; }
+        }
 
         /// <summary>
         /// The Y-coordinate in Jacobian projective representation.
         /// </summary>
-        public BigInteger y;
+        public BigInteger Y
+        {
+            get { return isOnCurve ? y : 1; }
+        }
 
         /// <summary>
         /// The Z-coordinate in Jacobian projective representation.
@@ -42,7 +48,13 @@ namespace Eduard.Security.Primitives
         /// Z = 0 indicates the point at infinity. Otherwise, Z is non-zero <br/> and typically
         /// normalized to 1 for affine points after conversion.
         /// </remarks>
-        public BigInteger z;
+        public BigInteger Z
+        {
+            get { return isOnCurve ? z : 0; }
+        }
+
+        internal BigInteger x, y, z;
+        internal bool isOnCurve;
 
         /// <summary>
         /// Initializes a new Jacobian projective point with the specified coordinates.
@@ -65,9 +77,21 @@ namespace Eduard.Security.Primitives
                 throw new ArgumentNullException(nameof(z),
                     "The projective Z-coordinate cannot be null.");
 
-            this.x = x;
-            this.y = y;
+            this.x = x; this.y = y;
+            isOnCurve = z != 0;
             this.z = z;
+        }
+
+        /// <summary>
+        /// Gets whether this point is the point at infinity.
+        /// </summary>
+        /// <returns><c>true</c> if the point is at infinity (Z = 0); otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The point at infinity serves as the identity element in the elliptic curve group.
+        /// </remarks>
+        public bool IsInfinity
+        {
+            get { return !isOnCurve; }
         }
 
         /// <summary>
@@ -90,7 +114,7 @@ namespace Eduard.Security.Primitives
         /// Indicates whether the current point is equal to another Jacobian point.
         /// </summary>
         /// <param name="other">The point to compare with this point.</param>
-        /// <returns>true if the points represent the same geometric point; otherwise false.</returns>
+        /// <returns><c>true</c> if the points represent the same geometric point; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// Two points are considered equal if:
         /// <list type="bullet">
@@ -100,8 +124,8 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public bool Equals(ECPoint3w other)
         {
-            bool isInfinitySelf = z == 0;
-            bool isInfinityOther = other.z == 0;
+            bool isInfinitySelf = !isOnCurve;
+            bool isInfinityOther = !other.isOnCurve;
 
             if (isInfinitySelf != isInfinityOther)
                 return false;
@@ -121,7 +145,7 @@ namespace Eduard.Security.Primitives
         /// Determines whether the specified object is equal to the current Jacobian point.
         /// </summary>
         /// <param name="obj">The object to compare with the current point.</param>
-        /// <returns>true if the object is an ECPoint3w with identical coordinates; otherwise false.</returns>
+        /// <returns><c>true</c> if the object is an ECPoint3w with identical coordinates; otherwise <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
             if (!(obj is ECPoint3w))
@@ -136,7 +160,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="left">The first point to compare.</param>
         /// <param name="right">The second point to compare.</param>
-        /// <returns>true if the points have identical projective coordinates; otherwise false.</returns>
+        /// <returns><c>true</c> if the points have identical projective coordinates; otherwise <c>false</c>.</returns>
         public static bool operator ==(ECPoint3w left, ECPoint3w right)
         {
             return left.Equals(right);
@@ -147,7 +171,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="left">The first point to compare.</param>
         /// <param name="right">The second point to compare.</param>
-        /// <returns>true if the points have different projective coordinates; otherwise false.</returns>
+        /// <returns><c>true</c> if the points have different projective coordinates; otherwise <c>false</c>.</returns>
         public static bool operator !=(ECPoint3w left, ECPoint3w right)
         {
             return !left.Equals(right);
@@ -165,7 +189,7 @@ namespace Eduard.Security.Primitives
         {
             unchecked
             {
-                if (z == 0) return 0;
+                if (!isOnCurve) return 0;
                 int xHash = x.GetHashCode();
                 int yHash = y.GetHashCode();
 

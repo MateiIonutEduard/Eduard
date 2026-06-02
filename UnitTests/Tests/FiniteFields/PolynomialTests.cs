@@ -28,7 +28,7 @@ namespace Eduard.Tests.FiniteFields
             int k, rootsCount = roots.Count;
             Polynomial result = 1;
 
-            for (k = 1; k < rootsCount; k++)
+            for (k = 0; k < rootsCount; k++)
             {
                 BigInteger a = field - roots[k];
                 Polynomial Pa = new Polynomial(1, a);
@@ -56,6 +56,20 @@ namespace Eduard.Tests.FiniteFields
         #endregion
 
         #region Constructor Tests
+
+        [Fact]
+        public void Constructor_Default_InitializesToZeroPolynomial()
+        {
+            Polynomial.SetField(P256);
+            var poly = new Polynomial();
+
+            Assert.True(poly == 0);
+            Assert.Equal(poly.GetCoeff(0), 0);
+
+            Assert.Throws<IndexOutOfRangeException>(() =>
+                poly.GetCoeff(-1));
+            Assert.Equal(poly.GetCoeff(1), 0);
+        }
 
         [Fact]
         public void Constructor_Degree_CreatesZeroPolynomial()
@@ -94,8 +108,30 @@ namespace Eduard.Tests.FiniteFields
         public void Constructor_Params_ReducesModuloField()
         {
             Polynomial.SetField(P256);
-            Polynomial p = 20;
-            Assert.True(p.GetCoeff(0) == 20 % P256);
+            var coeffs = new BigInteger[10];
+            int j, k, val = -2;
+
+            int degree = 9;
+            int sign = -1;
+            coeffs[0] = 1;
+
+            for (j = 1; j <= degree; j++)
+            {
+                coeffs[j] = val;
+                val = sign * (Math.Abs(val) + 1);
+                sign *= -1;
+            }
+
+            var p = new Polynomial(coeffs);
+            var halfN = P256 >> 1;
+
+            for(k = 0; k <= degree; k++)
+            {
+                var coeff = p.GetCoeff(degree - k);
+                var coeffValue = (coeff > halfN) ?
+                    coeff - P256 : coeff;
+                Assert.True(coeffValue == coeffs[k]);
+            }
         }
 
         [Fact]
@@ -134,8 +170,10 @@ namespace Eduard.Tests.FiniteFields
         {
             Polynomial.SetField(P256);
             Polynomial p = 42;
+
             Assert.True(p.Degree == 0);
             Assert.True(p.GetCoeff(0) == 42);
+            Assert.True(p.GetCoeff(1) == 0);
         }
 
         [Fact]
@@ -146,6 +184,7 @@ namespace Eduard.Tests.FiniteFields
 
             Polynomial p = val;
             Assert.True(p.GetCoeff(0) == 10);
+            Assert.True(p.GetCoeff(1) == 0);
         }
 
         #endregion
@@ -372,6 +411,43 @@ namespace Eduard.Tests.FiniteFields
             Assert.True(prod.GetCoeff(0) == 1);
         }
 
+        [Fact]
+        public void Mul_HighDegree_MatchesDivisionCheck()
+        {
+            int[] degrees = { 64, 96, 128, 256, 512 };
+            int k, degreesCount = degrees.Length;
+            Polynomial.SetField(Ed25519);
+
+            for (k = 0; k < degreesCount; k++)
+            {
+                var P = GetRandomPoly(degrees[k], Ed25519);
+                var degreeDelta = (int)SecureRandom.Range(0, degrees[k] >> 2);
+                var Q = GetRandomPoly(degrees[k] + degreeDelta, Ed25519);
+
+                var res = P * Q;
+                var quo = res / Q;
+                Assert.Equal(quo, P);
+                
+            }
+        }
+
+        [Fact]
+        public void Square_HighDegree_MatchesMultiplicationBySelf()
+        {
+            int[] degrees = { 64, 96, 128, 256, 512 };
+            int k, degreesCount = degrees.Length;
+            Polynomial.SetField(Ed25519);
+
+            for(k = 0; k < degreesCount; k++)
+            {
+                var P = GetRandomPoly(degrees[k], Ed25519);
+                var squaredP = P * P;
+
+                var quo = squaredP / P;
+                Assert.Equal(quo, P);
+            }
+        }
+
         #endregion
 
         #region Arithmetic - Division and Modulus
@@ -455,6 +531,31 @@ namespace Eduard.Tests.FiniteFields
             Polynomial a = new Polynomial(1, 1);
             Polynomial b = new Polynomial(1, 1);
             Assert.True(((a * b) % a) == 0);
+        }
+
+        [Fact]
+        public void Reduce_HighDegree_MatchesModuloOperator()
+        {
+            int[] degrees = { 80, 96, 128, 256, 512 };
+            int k, degreesCount = degrees.Length;
+            Polynomial.SetField(Ed25519);
+
+            for (k = 0; k < degreesCount; k++)
+            {
+                int degm = degrees[k];
+                int maxn = 2 * (degm - 1);
+                int minn = degm + 64;
+
+                var remDegree = (int)SecureRandom.Range(minn, maxn);
+                var P = GetRandomPoly(remDegree, Ed25519);
+
+                var M = GetRandomPoly(degrees[k], Ed25519);
+                Polynomial.SetPolyMod(M);
+
+                var R = Polynomial.Reduce(P, M);
+                var rem = P % M;
+                Assert.True(R == rem);
+            }
         }
 
         [Fact]
@@ -566,6 +667,17 @@ namespace Eduard.Tests.FiniteFields
         }
 
         [Fact]
+        public void PowMod_ZeroModularBaseZeroExponent_ThrowsArithmeticException()
+        {
+            Assert.Throws<ArithmeticException>(() => {
+                Polynomial.SetField(P256);
+                var modulus = GetRandomPoly(16, P256);
+                var G = new Polynomial(modulus);
+                Polynomial.Pow(G, 0, modulus);
+            });
+        }
+
+        [Fact]
         public void PowMod_ExponentZero_ReturnsOne()
         {
             Polynomial.SetField(P256);
@@ -600,6 +712,23 @@ namespace Eduard.Tests.FiniteFields
 
             Assert.True(res.GetCoeff(0) == 15);
             Polynomial.SetField(P256);
+        }
+
+        [Fact]
+        public void PowMod_LargeModulus_UseSlidingWindowMethod()
+        {
+            Polynomial.SetField(P256);
+            var modulus = GetRandomPoly(16, P256);
+
+            Polynomial X = new Polynomial(1, 0);
+            var XP2 = Polynomial.Pow(X, (P256 - 1) >> 1, modulus);
+
+            var XP = (XP2 * XP2) % modulus;
+            XP = (XP * X) % modulus;
+
+            var factor = Polynomial.Gcd(XP - X, modulus);
+            var remainder = modulus % factor;
+            Assert.True(remainder == 0);
         }
 
         #endregion
@@ -646,37 +775,90 @@ namespace Eduard.Tests.FiniteFields
         public void Horner_ZeroPolynomial_ReturnsZero()
         {
             Polynomial.SetField(P256);
-            Assert.True(Polynomial.Horner(0, 5) == 0);
+            Polynomial G = 0;
+            BigInteger eval = Polynomial.Horner(G, 5);
+            Assert.True(eval == 0);
+        }
+
+        [Fact]
+        public void Horner_OnePolynomial_ReturnOne()
+        {
+            Polynomial.SetField(P256);
+            Polynomial G = 1;
+
+            BigInteger eval = Polynomial.Horner(G, 3);
+            Assert.True(eval == 1);
         }
 
         [Fact]
         public void Horner_Constant_ReturnsConstant()
         {
             Polynomial.SetField(P256);
-            Polynomial p = 7;
-            Assert.True(Polynomial.Horner(p, 10) == 7);
+            Polynomial G = 7;
+            BigInteger eval = Polynomial.Horner(G, 10);
+            Assert.True(eval == 7);
         }
 
         [Fact]
         public void Horner_Linear_EvaluatesCorrectly()
         {
             Polynomial.SetField(P256);
-            Polynomial p = new Polynomial(3, 2);
-            BigInteger val = Polynomial.Horner(p, 5);
-            Assert.True(val == 17 % P256);
+            Polynomial G = new Polynomial(3, 2);
+            BigInteger val = Polynomial.Horner(G, 5);
+            Assert.True(val == (17 % P256));
+        }
+
+        [Fact]
+        public void Horner_Quadratic_EvaluatesCorrectly()
+        {
+            Polynomial.SetField(P256);
+            Polynomial p = new Polynomial(1, -11, 24);
+
+            /* check if roots cancel the polynomial equation */
+            BigInteger val = Polynomial.Horner(p, 3);
+            Assert.True(val == 0);
+
+            val = Polynomial.Horner(p, 8);
+            Assert.True(val == 0);
+        }
+
+        [Fact]
+        public void Horner_HighDegree_Poly_EvaluatesCorrectly()
+        {
+            Polynomial.SetField(P256);
+            int[] rootsCount = new int[] { 3, 6, 8, 12, 16 };
+
+            int len = rootsCount.Length;
+            int j, k;
+
+            for(j = 0; j < len; j++)
+            {
+                var roots = GenRoots(rootsCount[j], P256);
+                var G = GetPolyFromRoots(roots, P256);
+                int countRoots = roots.Count;
+
+                for(k = 0; k < countRoots; k++)
+                {
+                    var val = Polynomial.Horner(G, roots[k]);
+                    Assert.True(val == 0);
+
+                    var linearPoly = new Polynomial(1, -roots[k]);
+                    G /= linearPoly;
+                }
+            }
         }
 
         [Fact]
         public void Horner_OutsideFieldRange_ThrowsArgumentOutOfRange()
         {
             Polynomial.SetField(P256);
-            Polynomial p = 1;
+            Polynomial G = 1;
 
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                Polynomial.Horner(p, P256));
+                Polynomial.Horner(G, P256));
 
             Assert.Throws<ArgumentOutOfRangeException>(() =>
-                Polynomial.Horner(p, -1));
+                Polynomial.Horner(G, -1));
         }
 
         #endregion
@@ -705,6 +887,20 @@ namespace Eduard.Tests.FiniteFields
         }
 
         [Fact]
+        public void Compose_IdentityPolynomial_IsNeutralElement()
+        {
+            Polynomial.SetField(P256);
+            var P = GetRandomPoly(16, P256);
+            var X = new Polynomial(1, 0);
+
+            var R = Polynomial.Compose(P, X);
+            Assert.True(R == P);
+
+            R = Polynomial.Compose(X, P);
+            Assert.True(R == P);
+        }
+
+        [Fact]
         public void Compose_Modular_Basic()
         {
             Polynomial.SetField(P256);
@@ -716,6 +912,29 @@ namespace Eduard.Tests.FiniteFields
 
             Assert.True(res.GetCoeff(1) == 1);
             Assert.True(res.GetCoeff(0) == 2);
+        }
+
+        [Fact]
+        public void Compose_IdentityNeutral_AndFrobeniusEndomorphism_AreConsistent()
+        {
+            Polynomial.SetField(P256);
+            var M = GetRandomPoly(32, P256);
+
+            var X = new Polynomial(1, 0);
+            var P = Polynomial.Pow(X, P256, M);
+
+            /* check if neutral element for modular composition works */
+            var R = Polynomial.Compose(P, X);
+            Assert.True(R == P);
+
+            R = Polynomial.Compose(X, P);
+            Assert.True(R == P);
+
+            /* check quadratic extension for Frobenius map */
+            R = Polynomial.Compose(P, P, M);
+
+            var XPP = Polynomial.Pow(P, P256, M);
+            Assert.True(R == XPP);
         }
 
         #endregion
@@ -898,6 +1117,28 @@ namespace Eduard.Tests.FiniteFields
 
             Assert.True(inv.GetCoeff(1) == 16);
             Polynomial.SetField(P256);
+        }
+
+        [Fact]
+        public void Invmodxn_RandomDegrees_ProductModxnEqualsOne()
+        {
+            Polynomial.SetField(P256);
+            int[] degrees = { 8, 10, 12, 16, 20 };
+            int degreesCount = degrees.Length, k;
+
+            for(k = 0; k < degreesCount; k++)
+            {
+                int currentDegree = degrees[k];
+                int degree = (int)SecureRandom.Range(
+                    1, currentDegree - 1);
+
+                var P = GetRandomPoly(degree, P256);
+                var Q = Polynomial.Invmodxn(P, currentDegree);
+
+                var R = Polynomial.Modxn(P * Q, currentDegree);
+                Assert.True(R == 1);
+            }
+
         }
 
         [Fact]

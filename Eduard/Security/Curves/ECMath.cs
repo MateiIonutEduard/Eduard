@@ -31,17 +31,16 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Add(EllipticCurve curve, ECPoint left, ECPoint right)
         {
-            if (left == ECPoint.POINT_INFINITY)
+            if (!left.isOnCurve)
                 return right;
 
-            if (right == ECPoint.POINT_INFINITY)
+            if (!right.isOnCurve)
                 return left;
 
             BigInteger lambda = -1;
             BigInteger xDiff = 0;
             BigInteger yDiff = 0;
             BigInteger inv = 0;
-
 
             if (left != right)
             {
@@ -77,6 +76,136 @@ namespace Eduard.Security.Curves
         }
 
         /// <summary>
+        /// Adds two arrays of affine points pairwise on the Weierstrass elliptic curve.
+        /// </summary>
+        /// <param name="curve">The elliptic curve context containing field parameters.</param>
+        /// <param name="left">First array of points to add.</param>
+        /// <param name="right">Second array of points to add. Receives the results in-place.</param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown when either array is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the two arrays have different lengths.
+        /// </exception>
+        /// <remarks>
+        /// Uses Montgomery's simultaneous inversion to batch all modular inverses into a <br/>
+        /// single inversion plus 3(n-1) multiplications. Handles point at infinity, doubling, <br/>
+        /// and vertical line cases for each pair independently. If both arrays are empty, the <br/>
+        /// method returns immediately without performing any arithmetic.
+        /// </remarks>
+        public static void Add(EllipticCurve curve, ECPoint[] left, ECPoint[] right)
+        {
+            if (ReferenceEquals(left, null))
+                throw new ArgumentNullException(nameof(left));
+
+            if (ReferenceEquals(null, right))
+                throw new ArgumentNullException(nameof(right));
+
+            int n = left.Length;
+            int rn = right.Length;
+
+            if (n != rn)
+                throw new ArgumentException(
+                    "Point arrays must have the same length.",
+                    nameof(right));
+
+            if (n == 0)
+                return;
+
+            BigInteger[] A = new BigInteger[n];
+            BigInteger[] B = new BigInteger[n];
+
+            var skip = new byte[n];
+            int k;
+
+            for(k = 0; k < n; k++)
+            {
+                if (left[k] == right[k])
+                {
+                    if (!left[k].isOnCurve)
+                    {
+                        skip[k] = 1;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    BigInteger lx = left[k].x;
+                    BigInteger ly = left[k].y;
+
+                    BigInteger x2 = BarrettReducer.MultMod(lx, lx);
+                    x2 = BarrettReducer.MultMod(3, x2);
+
+                    A[k] = BarrettReducer.AddMod(x2, curve.a);
+                    B[k] = BarrettReducer.AddMod(ly, ly);
+                }
+                else
+                {
+                    if (!left[k].isOnCurve)
+                    {
+                        skip[k] = 2;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    if (!right[k].isOnCurve)
+                    {
+                        skip[k] = 3;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    B[k] = BarrettReducer.SubMod(
+                        right[k].x, left[k].x);
+
+                    if (B[k] == 0)
+                    {
+                        skip[k] = 1;
+                        B[k] = 1;
+                        continue;
+                    }
+
+                    A[k] = BarrettReducer.SubMod(
+                        right[k].y, left[k].y);
+                }
+            }
+
+            /* apply Montgomery trick for fast inversion */
+            BigInteger[] C = BarrettReducer.InvMod(B);
+
+            for (k = 0; k < n; k++)
+            {
+                if (skip[k] == 1)
+                {
+                    right[k] = ECPoint.POINT_INFINITY;
+                    continue;
+                }
+
+                if (skip[k] == 2)
+                    continue;
+
+                if (skip[k] == 3)
+                {
+                    BigInteger lx = left[k].x;
+                    BigInteger ly = left[k].y;
+                    right[k] = new ECPoint(lx, ly);
+                    continue;
+                }
+
+                BigInteger m = BarrettReducer.MultMod(A[k], C[k]);
+                BigInteger m2 = BarrettReducer.MultMod(m, m);
+
+                BigInteger dx = BarrettReducer.AddMod(left[k].x, right[k].x);
+                BigInteger x = BarrettReducer.SubMod(m2, dx);
+
+                BigInteger y = BarrettReducer.SubMod(left[k].x, x);
+                y = BarrettReducer.MultMod(y, m);
+
+                y = BarrettReducer.SubMod(y, left[k].y);
+                right[k] = new ECPoint(x, y);
+            }
+        }
+
+        /// <summary>
         /// Performs scalar multiplication on a Weierstrass curve point.
         /// </summary>
         /// <param name="curve">The elliptic curve context.</param>
@@ -105,7 +234,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Multiply(EllipticCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
-            if (k == 0 || point == ECPoint.POINT_INFINITY)
+            if (k == 0 || !point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             string[] pointErrors = new string[]
@@ -265,7 +394,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Negate(EllipticCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY)
+            if (!point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             return new ECPoint(point.x, curve.field - point.y);

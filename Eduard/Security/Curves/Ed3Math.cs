@@ -48,8 +48,8 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3 UnifiedAdd(TwistedEdwardsCurve curve, ECPoint3 left, ECPoint3 right)
         {
-            if (left == ECPoint3.POINT_INFINITY) return right;
-            if (right == ECPoint3.POINT_INFINITY) return left;
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
             BigInteger A1 = BarrettReducer.MultMod(left.z, right.z);
 
             BigInteger A2 = BarrettReducer.MultMod(A1, A1);
@@ -95,7 +95,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3 UnifiedDoubling(TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if (point == ECPoint3.POINT_INFINITY)
+            if (!point.isOnCurve)
                 return ECPoint3.POINT_INFINITY;
 
             BigInteger B1 = BarrettReducer.AddMod(point.x, point.y);
@@ -136,7 +136,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3 Negate(TwistedEdwardsCurve curve, ECPoint3 point)
         {
-            if(point == ECPoint3.POINT_INFINITY) 
+            if(!point.isOnCurve) 
                 return ECPoint3.POINT_INFINITY;
 
             BigInteger x = curve.field - point.x;

@@ -37,7 +37,7 @@ namespace Eduard.Security.Extensions
                     nameof(curve), "The elliptic " + 
                     "curve instance cannot be null.");
 
-            if (point == ECPoint.POINT_INFINITY)
+            if (!point.isOnCurve)
                 throw new ArgumentException(
                     "The point at infinity cannot be compressed "
                     + "or encoded in affine coordinates.",
@@ -99,7 +99,7 @@ namespace Eduard.Security.Extensions
                     "The Twisted Edwards curve instance " + 
                     "cannot be null.");
 
-            if (point == ECPoint.POINT_INFINITY)
+            if (!point.isOnCurve)
                 throw new ArgumentException("The point at " 
                     + "infinity cannot be compressed or " + 
                     "encoded in affine coordinates.", 

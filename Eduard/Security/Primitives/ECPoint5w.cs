@@ -35,12 +35,18 @@ namespace Eduard.Security.Primitives
         /// <summary>
         /// The X-coordinate in Jacobian-Chudnovsky representation.
         /// </summary>
-        public BigInteger x;
+        public BigInteger X
+        {
+            get { return isOnCurve ? x : 1; }
+        }
 
         /// <summary>
         /// The Y-coordinate in Jacobian-Chudnovsky representation.
         /// </summary>
-        public BigInteger y;
+        public BigInteger Y
+        {
+            get { return isOnCurve ? y : 1; }
+        }
 
         /// <summary>
         /// The Z-coordinate in Jacobian-Chudnovsky representation.
@@ -48,7 +54,10 @@ namespace Eduard.Security.Primitives
         /// <remarks>
         /// Z = 0 indicates the point at infinity. For finite points, Z is non-zero.
         /// </remarks>
-        public BigInteger z;
+        public BigInteger Z
+        {
+            get { return isOnCurve ? z : 0; }
+        }
 
         /// <summary>
         /// The pre-computed value Z^2.
@@ -57,7 +66,10 @@ namespace Eduard.Security.Primitives
         /// This cached value eliminates redundant squaring operations.<br/>
         /// Must satisfy z2 = z * z (mod p) for finite points.
         /// </remarks>
-        public BigInteger z2;
+        public BigInteger Z2
+        {
+            get { return isOnCurve ? z2 : 0; }
+        }
 
         /// <summary>
         /// The pre-computed value Z^3.
@@ -66,7 +78,14 @@ namespace Eduard.Security.Primitives
         /// This cached value eliminates redundant cubing operations.<br/>
         /// Must satisfy z3 = z * z * z (mod p) for finite points.
         /// </remarks>
-        public BigInteger z3;
+        public BigInteger Z3
+        {
+            get { return isOnCurve ? z3 : 0; }
+        }
+
+        internal BigInteger x, y, z;
+        internal BigInteger z2, z3;
+        internal bool isOnCurve;
 
         /// <summary>
         /// Initializes a new Jacobian-Chudnovsky point with the specified coordinates.
@@ -111,8 +130,21 @@ namespace Eduard.Security.Primitives
             this.y = y;
             this.z = z;
 
+            isOnCurve = z != 0;
             this.z2 = z2;
             this.z3 = z3;
+        }
+
+        /// <summary>
+        /// Gets whether this point is the point at infinity.
+        /// </summary>
+        /// <returns><c>true</c> if Z = 0, Z^2 = 0, Z^3 = 0; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// The point at infinity serves as the identity element in the elliptic curve group.
+        /// </remarks>
+        public bool IsInfinity
+        {
+            get { return !isOnCurve; }
         }
 
         /// <summary>
@@ -136,10 +168,7 @@ namespace Eduard.Security.Primitives
         /// Indicates whether the current point is equal to another Jacobian-Chudnovsky point.
         /// </summary>
         /// <param name="other">The point to compare with this point.</param>
-        /// <returns>true if the points represent the same geometric point; otherwise false.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if either point violates the invariant (Z=0 but Z^2 != 0 or Z^3 != 0).
-        /// </exception>
+        /// <returns><c>true</c> if the points represent the same geometric point; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// Two points are considered equal if:
         /// <list type="bullet">
@@ -149,17 +178,8 @@ namespace Eduard.Security.Primitives
         /// </remarks>
         public bool Equals(ECPoint5w other)
         {
-            bool isInfinitySelf = z == 0;
-            bool isInfinityOther = other.z == 0;
-
-            /* validate invariants */
-            if (isInfinitySelf && (z2 != 0 || z3 != 0))
-                throw new InvalidOperationException(
-                    "Current point at infinity has non-zero Z^2 or Z^3.");
-
-            if (isInfinityOther && (other.z2 != 0 || other.z3 != 0))
-                throw new InvalidOperationException(
-                    "Other point at infinity has non-zero Z^2 or Z^3.");
+            bool isInfinitySelf = !isOnCurve;
+            bool isInfinityOther = !other.isOnCurve;
 
             /* different infinity status */
             if (isInfinitySelf != isInfinityOther)
@@ -179,7 +199,7 @@ namespace Eduard.Security.Primitives
         /// Determines whether the specified object is equal to the current Jacobian-Chudnovsky point.
         /// </summary>
         /// <param name="obj">The object to compare with the current point.</param>
-        /// <returns>true if the object is an ECPoint5w with identical coordinates; otherwise false.</returns>
+        /// <returns><c>true</c> if the object is an ECPoint5w with identical coordinates; otherwise <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
             if (!(obj is ECPoint5w))
@@ -193,7 +213,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="left">The first point to compare.</param>
         /// <param name="right">The second point to compare.</param>
-        /// <returns>true if the points represent the same geometric point; otherwise false.</returns>
+        /// <returns><c>true</c> if the points represent the same geometric point; otherwise <c>false</c>.</returns>
         public static bool operator ==(ECPoint5w left, ECPoint5w right)
         {
             return left.Equals(right);
@@ -204,7 +224,7 @@ namespace Eduard.Security.Primitives
         /// </summary>
         /// <param name="left">The first point to compare.</param>
         /// <param name="right">The second point to compare.</param>
-        /// <returns>true if the points represent different geometric points; otherwise false.</returns>
+        /// <returns><c>true</c> if the points represent different geometric points; otherwise <c>false</c>.</returns>
         public static bool operator !=(ECPoint5w left, ECPoint5w right)
         {
             return !left.Equals(right);
@@ -223,8 +243,7 @@ namespace Eduard.Security.Primitives
             unchecked
             {
                 /* point at infinity: constant hash regardless of X,Y */
-                if (z == 0 && z2 == 0 && z3 == 0)
-                    return 0;
+                if (!isOnCurve) return 0;
 
                 /* for normal points, combine all coordinates */
                 int hash = 17;

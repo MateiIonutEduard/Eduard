@@ -121,7 +121,7 @@ namespace Eduard.Security.Extensions
             BigInteger p = curve.field;
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
-            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint.POINT_INFINITY;
 
             var roots = new List<BigInteger>();
             Polynomial W = new Polynomial(1, 0, curve.a, curve.b);
@@ -285,7 +285,7 @@ namespace Eduard.Security.Extensions
             BigInteger p = curve.field;
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
-            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint.POINT_INFINITY;
 
             var roots = new List<BigInteger>();
             Polynomial W = new Polynomial(1, 0, curve.a, curve.b);
@@ -426,7 +426,7 @@ namespace Eduard.Security.Extensions
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the Weierstrass curve */
-            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint.POINT_INFINITY;
             BigInteger Bt = BarrettReducer.MultMod(3, curve.B);
             BigInteger B3_inv = BarrettReducer.InvMod(Bt);
 
@@ -545,7 +545,7 @@ namespace Eduard.Security.Extensions
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Weierstrass curve */
-            if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
                 throw new ArgumentException("Exceptional point has no Weierstrass equivalent.");
@@ -656,7 +656,7 @@ namespace Eduard.Security.Extensions
                 throw new ArgumentException("Invalid Montgomery curve parameters.");
 
             /* map the point at infinity on a Montgomery curve to its equivalent on the twisted Edwards curve */
-            if (point == ECPoint.POINT_INFINITY) return ECPoint.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == curve.field - 1)
                 throw new ArgumentException("Exceptional point has no twisted Edwards equivalent.");
@@ -737,7 +737,7 @@ namespace Eduard.Security.Extensions
                 throw new ArgumentException("Invalid twisted Edwards curve parameters.");
 
             /* map the point at infinity on a twisted Edwards curve to its equivalent on the Montgomery curve */
-            if (point.GetAffineX() == 0 && point.GetAffineY() == 1) return ECPoint.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint.POINT_INFINITY;
 
             if (point.GetAffineX() == 0 || point.GetAffineY() == 1)
                 throw new ArgumentException("Exceptional point has no Montgomery equivalent.");

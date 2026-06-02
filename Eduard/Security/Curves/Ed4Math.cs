@@ -44,8 +44,8 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 Add(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ECPoint4.POINT_INFINITY) return right;
-            if (right == ECPoint4.POINT_INFINITY) return left;
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
             if (left == Negate(curve, right))
                 return ECPoint4.POINT_INFINITY;
@@ -74,10 +74,10 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 UnifiedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ECPoint4.POINT_INFINITY) return right;
-            if (right == ECPoint4.POINT_INFINITY) return left;
-            BigInteger A1 = BarrettReducer.MultMod(left.x, right.x);
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
+            BigInteger A1 = BarrettReducer.MultMod(left.x, right.x);
             BigInteger A2 = BarrettReducer.MultMod(left.y, right.y);
             BigInteger B1t = BarrettReducer.MultMod(left.t, right.t);
 
@@ -120,8 +120,8 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 TwistUnifiedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ECPoint4.POINT_INFINITY) return right;
-            if (right == ECPoint4.POINT_INFINITY) return left;
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
             BigInteger B1 = BarrettReducer.SubMod(left.y, left.x);
             BigInteger B2 = BarrettReducer.SubMod(right.y, right.x);
@@ -167,10 +167,10 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 DedicatedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ECPoint4.POINT_INFINITY) return right;
-            if (right == ECPoint4.POINT_INFINITY) return left;
-            BigInteger A1 = BarrettReducer.MultMod(left.x, right.x);
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
+            BigInteger A1 = BarrettReducer.MultMod(left.x, right.x);
             BigInteger A2 = BarrettReducer.MultMod(left.y, right.y);
             BigInteger A3 = BarrettReducer.MultMod(left.z, right.t);
 
@@ -212,8 +212,8 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 TwistDedicatedAdd(TwistedEdwardsCurve curve, ECPoint4 left, ECPoint4 right)
         {
-            if (left == ECPoint4.POINT_INFINITY) return right;
-            if (right == ECPoint4.POINT_INFINITY) return left;
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
             BigInteger B1 = BarrettReducer.SubMod(left.y, left.x);
             BigInteger B2 = BarrettReducer.AddMod(right.y, right.x);
@@ -258,7 +258,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 DedicatedDoubling(TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if (point == ECPoint4.POINT_INFINITY)
+            if (!point.isOnCurve)
                 return ECPoint4.POINT_INFINITY;
 
             BigInteger A1 = BarrettReducer.MultMod(point.x, point.x);
@@ -302,7 +302,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint4 Negate(TwistedEdwardsCurve curve, ECPoint4 point)
         {
-            if(point == ECPoint4.POINT_INFINITY) 
+            if(!point.isOnCurve) 
                 return ECPoint4.POINT_INFINITY;
 
             BigInteger Xp = curve.field - point.x;

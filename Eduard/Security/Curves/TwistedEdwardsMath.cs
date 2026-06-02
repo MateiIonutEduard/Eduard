@@ -63,7 +63,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Multiply(TwistedEdwardsCurve curve, BigInteger k, ECPoint point, ECMode opMode = ECMode.EC_STANDARD_AFFINE, bool securityCheck = false)
         {
-            if (k == 0 || point == ECPoint.POINT_INFINITY)
+            if (k == 0 || !point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             string[] pointErrors = new string[]
@@ -217,13 +217,13 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Add(TwistedEdwardsCurve curve, ECPoint left, ECPoint right)
         {
-            if (left == ECPoint.POINT_INFINITY && right == ECPoint.POINT_INFINITY)
+            if (!left.isOnCurve && !right.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
-            if (left == ECPoint.POINT_INFINITY)
+            if (!left.isOnCurve)
                 return right;
 
-            if (right == ECPoint.POINT_INFINITY)
+            if (!right.isOnCurve)
                 return left;
 
             if (left == Negate(curve, right))
@@ -376,7 +376,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint Negate(TwistedEdwardsCurve curve, ECPoint point)
         {
-            if (point == ECPoint.POINT_INFINITY)
+            if (!point.isOnCurve)
                 return ECPoint.POINT_INFINITY;
 
             return new ECPoint(curve.field - point.x, point.y);

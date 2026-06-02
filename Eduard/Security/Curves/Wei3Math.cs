@@ -40,8 +40,8 @@ namespace Eduard.Security.Curves
         public static ECPoint3w Add(EllipticCurve curve, ECPoint3w left, ECPoint3w right)
         {
             if (left == right) return Doubling(curve, left);
-            if (left == ECPoint3w.POINT_INFINITY) return right;
-            if (right == ECPoint3w.POINT_INFINITY) return left;
+            if (!left.isOnCurve) return right;
+            if (!right.isOnCurve) return left;
 
             BigInteger B1 = BarrettReducer.MultMod(right.z, right.z);
             BigInteger A1 = BarrettReducer.MultMod(left.x, B1);
@@ -102,7 +102,8 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3w Doubling(EllipticCurve curve, ECPoint3w jacobianPoint)
         {
-            if (jacobianPoint == ECPoint3w.POINT_INFINITY) return ECPoint3w.POINT_INFINITY;
+            if (!jacobianPoint.isOnCurve) 
+                return ECPoint3w.POINT_INFINITY;
             BigInteger p = curve.field;
 
             BigInteger A1 = BarrettReducer.MultMod(jacobianPoint.y, jacobianPoint.y);
@@ -163,7 +164,7 @@ namespace Eduard.Security.Curves
         /// </remarks>
         public static ECPoint3w Negate(EllipticCurve curve, ECPoint3w point)
         {
-            if (point == ECPoint3w.POINT_INFINITY) return ECPoint3w.POINT_INFINITY;
+            if (!point.isOnCurve) return ECPoint3w.POINT_INFINITY;
             return new ECPoint3w(point.x, curve.field - point.y, point.z);
         }
     }
