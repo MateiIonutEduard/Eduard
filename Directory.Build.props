@@ -1,0 +1,9 @@
+﻿<Project>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<DefineConstants>$(DefineConstants);USE_BENCHMARKING</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants Condition="$([System.Environment]::ProcessorCount) &gt; 1">$(DefineConstants);USE_MULTICORE</DefineConstants>
+	</PropertyGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿#if RELEASE && USE_BENCHMARKING
+﻿#if USE_BENCHMARKING
 using BenchmarkDotNet.Attributes;
 
 namespace Eduard.BenchTests.BigInt

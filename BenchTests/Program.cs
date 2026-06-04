@@ -1,4 +1,4 @@
-﻿#if RELEASE && USE_BENCHMARKING
+﻿#if USE_BENCHMARKING
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace BenchTests
     {
         static void Main(string[] args)
         {
-#if RELEASE && USE_BENCHMARKING
+#if USE_BENCHMARKING
             if (args.Length == 0 || args.Contains("--help") || args.Contains("-h"))
             {
                 ShowHelp();
@@ -43,7 +43,7 @@ namespace BenchTests
 #endif
         }
 
-#if RELEASE && USE_BENCHMARKING
+#if USE_BENCHMARKING
         static void ShowHelp()
         {
             Console.WriteLine("Eduard Crypto Library - Benchmark Runner");
