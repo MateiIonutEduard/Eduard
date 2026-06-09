@@ -695,6 +695,13 @@ namespace Eduard.Security
                 for (k = 0; k < termsCount; k++)
                     hash = hash * 31 + terms[k].GetHashCode();
 
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
                 return hash;
             }
         }
