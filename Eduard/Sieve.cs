@@ -35,6 +35,7 @@ namespace Eduard
                 throw new ArgumentOutOfRangeException(nameof(limit),
                     "Limit must be at least 2 to generate primes.");
 
+            array = null; length = 0;
             GenPrimeList(limit);
         }
 
