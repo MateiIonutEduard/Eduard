@@ -1362,8 +1362,18 @@ namespace Eduard.Security
                 hash = hash * 31 + hashDegree.GetHashCode();
 
                 for (int i = 0; i <= hashDegree; i++)
-                    hash = hash * 31 + GetCoeff(i).GetHashCode();
+                {
+                    BigInteger coeff = GetCoeff(i);
+                    hash = hash * 31 + coeff.GetHashCode();
+                }
 
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
                 return hash;
             }
         }
