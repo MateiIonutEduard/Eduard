@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Eduard
 {
@@ -103,6 +104,19 @@ namespace Eduard
 
             BigInteger[] res = new BigInteger[degree + 1];
 
+#if USE_MULTICORE
+            Parallel.For(0, degree + 1, (v) =>
+            {
+                uint[] residues = new uint[pc];
+
+                for (int u = 0; u < pc; u++)
+                    residues[u] = t[u][v];
+
+                BigInteger coeff = garner.GetInteger(residues);
+                res[v] = BarrettReducer.Reduce(coeff);
+            });
+#else
+
             for (j = 0; j <= degree; j++)
             {
                 uint[] residues = new uint[pc];
@@ -113,6 +127,7 @@ namespace Eduard
                 BigInteger coeff = garner.GetInteger(residues);
                 res[j] = BarrettReducer.Reduce(coeff); 
             }
+#endif
 
             return res;
         }
