@@ -17,7 +17,6 @@ namespace Eduard
     {
         private uint[] c;
         private uint[] m;
-        private uint[] v;
 
         private BigInteger N;
         private BigInteger halfN;
@@ -49,10 +48,9 @@ namespace Eduard
 
             n = moduli.Length;
             int inversesCount = n * (n - 1) / 2;
-            c = new uint[inversesCount];
 
+            c = new uint[inversesCount];
             m = new uint[n];
-            v = new uint[n];
 
             int k = 0;
             N = 1;
@@ -103,6 +101,7 @@ namespace Eduard
                     + "the number of moduli.", 
                     nameof(residues));
 
+            uint[] v = new uint[n];
             v[0] = residues[0] % m[0];
             if (v[0] < 0) v[0] += m[0];
             int k = 0;
