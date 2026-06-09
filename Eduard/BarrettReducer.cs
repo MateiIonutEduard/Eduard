@@ -31,11 +31,11 @@ namespace Eduard
         /// <summary>
         /// Initializes the reducer with a new modulus and pre-computes its Barrett constant.
         /// </summary>
-        /// <param name="p">The modulus for subsequent reductions.</param>
-        public static void SetModulus(BigInteger p)
+        /// <param name="modulus">The modulus for subsequent reductions.</param>
+        public static void SetModulus(BigInteger modulus)
         {
-            k = BigInteger.BarrettConstant(p);
-            isEnabled = true; field = p;
+            k = BigInteger.BarrettConstant(modulus);
+            isEnabled = true; field = modulus;
         }
 
         /// <summary>
