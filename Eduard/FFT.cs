@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace Eduard
 {
@@ -45,7 +44,7 @@ namespace Eduard
             uint inv, p, maxn;
             int pc, degree;
 
-            newn = 1; 
+            newn = 1;
             logn = 0;
 
             int degx = x.Length - 1;
@@ -59,13 +58,13 @@ namespace Eduard
                 newn <<= 1;
                 logn++;
             }
-            
+
             if (logN < logn)
                 pc = InitFFT(logn, field, field);
             else pc = count;
 
             uint[] buf = new uint[newn];
-            
+
             for (i = 0; i < pc; i++)
             {
                 p = primes[i];
@@ -104,18 +103,6 @@ namespace Eduard
 
             BigInteger[] res = new BigInteger[degree + 1];
 
-#if USE_MULTICORE
-            Parallel.For(0, degree + 1, (v) =>
-            {
-                uint[] residues = new uint[pc];
-
-                for (int u = 0; u < pc; u++)
-                    residues[u] = t[u][v];
-
-                BigInteger coeff = garner.GetInteger(residues);
-                res[v] = BarrettReducer.Reduce(coeff);
-            });
-#else
             for (j = 0; j <= degree; j++)
             {
                 uint[] residues = new uint[pc];
@@ -124,9 +111,8 @@ namespace Eduard
                     residues[i] = t[i][j];
 
                 BigInteger coeff = garner.GetInteger(residues);
-                res[j] = BarrettReducer.Reduce(coeff); 
+                res[j] = BarrettReducer.Reduce(coeff);
             }
-#endif
 
             return res;
         }
@@ -191,18 +177,6 @@ namespace Eduard
 
             BigInteger[] res = new BigInteger[degree + 1];
 
-#if USE_MULTICORE
-            Parallel.For(0, degree + 1, (v) =>
-            {
-                uint[] residues = new uint[pc];
-
-                for (int u = 0; u < pc; u++)
-                    residues[u] = t[u][v];
-
-                BigInteger coeff = garner.GetInteger(residues);
-                res[v] = BarrettReducer.Reduce(coeff);
-            });
-#else
             for (j = 0; j <= degree; j++)
             {
                 uint[] residues = new uint[pc];
@@ -213,7 +187,6 @@ namespace Eduard
                 BigInteger coeff = garner.GetInteger(residues);
                 res[j] = BarrettReducer.Reduce(coeff);
             }
-#endif
 
             return res;
         }
@@ -238,7 +211,7 @@ namespace Eduard
             /* degree of modulus polynomial */
             degn = degree;
 
-            if (degn == 0) 
+            if (degn == 0)
                 return false;
 
             int degG = G.Length - 1;
@@ -261,7 +234,7 @@ namespace Eduard
                 for (j = degn; j <= degG; j++)
                     t[i][j - degn] = (uint)(G[j] % p);
 
-                for (j = degG - degn + 1; j < newn; j++) 
+                for (j = degG - degn + 1; j < newn; j++)
                     t[i][j] = 0;
 
                 DFT(logn, i, t[i]);
@@ -424,7 +397,7 @@ namespace Eduard
             {
                 if (kmask == 0 && m12 > 0)
                     throw new ArithmeticException(
-                        "Insufficient prime candidates" 
+                        "Insufficient prime candidates"
                         + " for FFT initialization.");
                 do
                 {
@@ -437,7 +410,7 @@ namespace Eduard
                 pr++;
             }
 
-            if (logn <= logN && count == pr) 
+            if (logn <= logN && count == pr)
                 return pr;
 
             primes = new uint[pr];
@@ -521,7 +494,7 @@ namespace Eduard
             uint carry1, carry2;
             uint icarry;
 
-            newn = 1; 
+            newn = 1;
             logn = 0;
 
             BigInteger ax = x.Abs();
