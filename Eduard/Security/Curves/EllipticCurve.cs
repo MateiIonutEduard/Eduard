@@ -42,7 +42,7 @@ namespace Eduard.Security.Curves
             BarrettReducer.SetModulus(field);
 
             a = SecureRandom.Range(1, field - 1);
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
 
             BigInteger t1 = BarrettReducer.MultMod(a, a);
             t1 = BarrettReducer.MultMod(t1, a);
@@ -93,7 +93,7 @@ namespace Eduard.Security.Curves
                     "The Weierstrass curve is " +
                     "singular or invalid.");
 
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace Eduard.Security.Curves
 
                 if (BigInteger.Jacobi(t, field) == 1)
                 {
-                    ys = ModSqrtUtil.Sqrt(t, true);
+                    ys = ModularSqrt.Compute(t, true);
                     return new ECPoint(xs, ys);
                 }
 
@@ -305,7 +305,7 @@ namespace Eduard.Security.Curves
                 if (BigInteger.Jacobi(temp, field) == 1)
                 {
                     done = true;
-                    y = ModSqrtUtil.Sqrt(temp);
+                    y = ModularSqrt.Compute(temp);
 
                     BigInteger eval = BarrettReducer.MultMod(y, y);
                     if (temp != eval) done = false;

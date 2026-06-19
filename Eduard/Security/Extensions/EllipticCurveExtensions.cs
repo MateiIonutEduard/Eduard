@@ -86,7 +86,7 @@ namespace Eduard.Security.Extensions
             if (!found)
                 throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = ModSqrtUtil.Sqrt(s, true);
+            BigInteger root = ModularSqrt.Compute(s, true);
             BigInteger t = BarrettReducer.InvMod(root);
             BigInteger A4 = BarrettReducer.MultMod(A1, t);
 
@@ -161,7 +161,7 @@ namespace Eduard.Security.Extensions
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
             if (!found) throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = ModSqrtUtil.Sqrt(s, true);
+            BigInteger root = ModularSqrt.Compute(s, true);
             BigInteger ts = BarrettReducer.InvMod(root);
 
             BigInteger Xp = point.GetAffineX();
@@ -240,7 +240,7 @@ namespace Eduard.Security.Extensions
             if (!found)
                 throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = ModSqrtUtil.Sqrt(s, true);
+            BigInteger root = ModularSqrt.Compute(s, true);
             BigInteger t = BarrettReducer.InvMod(root);
             BigInteger A4 = BarrettReducer.MultMod(A1, t);
 
@@ -325,7 +325,7 @@ namespace Eduard.Security.Extensions
             /* if no 4-torsion point is found (x-coordinate is a root of the 4-division polynomial), the Weierstrass curve is likely not properly parameterized */
             if (!found) throw new ArgumentException("No suitable 4-torsion point found.");
 
-            BigInteger root = ModSqrtUtil.Sqrt(s, true);
+            BigInteger root = ModularSqrt.Compute(s, true);
             BigInteger ts = BarrettReducer.InvMod(root);
 
             BigInteger Xp = point.GetAffineX();
@@ -445,7 +445,7 @@ namespace Eduard.Security.Extensions
 
             if (BigInteger.Jacobi(curve.B, curve.field) == 1)
             {
-                Bt = ModSqrtUtil.Sqrt(curve.B, true);
+                Bt = ModularSqrt.Compute(curve.B, true);
                 BigInteger B32 = BarrettReducer.MultMod(curve.B, Bt);
 
                 X = BarrettReducer.MultMod(X, curve.B);
@@ -586,7 +586,7 @@ namespace Eduard.Security.Extensions
 
             if (BigInteger.Jacobi(B, curve.field) == 1)
             {
-                BigInteger Bt = ModSqrtUtil.Sqrt(B, true);
+                BigInteger Bt = ModularSqrt.Compute(B, true);
                 BigInteger B32 = BarrettReducer.MultMod(B, Bt);
 
                 X = BarrettReducer.MultMod(X, B);
@@ -661,7 +661,7 @@ namespace Eduard.Security.Extensions
             if (point.GetAffineX() == 0 || point.GetAffineY() == curve.field - 1)
                 throw new ArgumentException("Exceptional point has no twisted Edwards equivalent.");
 
-            BigInteger B_root = ModSqrtUtil.Sqrt(curve.B);
+            BigInteger B_root = ModularSqrt.Compute(curve.B);
             BigInteger Xp = point.GetAffineX();
             BigInteger Yp = point.GetAffineY();
 

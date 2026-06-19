@@ -103,14 +103,14 @@ namespace Eduard.Security.Curves
             isComplete = (BigInteger.Jacobi(a, field) == 1
                 && BigInteger.Jacobi(d, field) == -1);
 
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
             computeOnTwist = false;
             kt = aroot = 0;
 
             /* see Hisil et al. (2008) "Twisted Edwards curves revisited." pp. 326-343 */
             if (a == field - 1 && BigInteger.Jacobi(field - a, field) == 1 && isComplete)
             {
-                aroot = ModSqrtUtil.Sqrt(field - a, true);
+                aroot = ModularSqrt.Compute(field - a, true);
                 BigInteger ta = BarrettReducer.MultMod(aroot, aroot);
 
                 BigInteger ma = BarrettReducer.InvMod(ta);
@@ -241,7 +241,7 @@ namespace Eduard.Security.Curves
                 if (BigInteger.Jacobi(temp, field) == 1)
                 {
                     done = true;
-                    x = ModSqrtUtil.Sqrt(temp);
+                    x = ModularSqrt.Compute(temp);
 
                     BigInteger eval = BarrettReducer.MultMod(x, x);
                     if (temp != eval) done = false;

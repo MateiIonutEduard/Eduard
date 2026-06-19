@@ -140,7 +140,7 @@ namespace Eduard.Security
                     "Field modulus must be prime.");
 
             BarrettReducer.SetModulus(field);
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
         }
 
         internal void Update()
@@ -981,7 +981,7 @@ namespace Eduard.Security
                 int jSymbol = BigInteger.Jacobi(delta, field);
                 if (jSymbol == -1) return -1;
 
-                BigInteger root = ModSqrtUtil.Sqrt(delta, true);
+                BigInteger root = ModularSqrt.Compute(delta, true);
                 BigInteger val = BarrettReducer.MultMod(2, poly.coeffs[2]);
 
                 BigInteger inv = val.Inverse(field);
