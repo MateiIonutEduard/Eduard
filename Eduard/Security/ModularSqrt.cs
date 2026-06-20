@@ -22,7 +22,7 @@ namespace Eduard.Security
     /// - m is the bit length of p
     /// </para>
     /// <para>
-    /// The Mueller algorithm finds a suitable parameter by random search and then evaluates
+    /// The Mueller algorithm finds a suitable parameter by random search and then evaluates <br/>
     /// the Lucas V‑sequence to extract the square root. No precomputed tables are required.
     /// </para>
     /// </remarks>
