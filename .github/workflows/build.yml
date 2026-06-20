@@ -36,6 +36,12 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Restore strong name private key
+      env:
+        SNK_BASE64: ${{ secrets.SNK_PRIVATE_KEY }}
+      run: |
+        echo "$SNK_BASE64" | base64 -d > Eduard/Eduard.snk
+
     - name: Setup .NET 10 SDK
       uses: actions/setup-dotnet@v4
       with:
@@ -61,7 +67,7 @@ jobs:
     - name: Run xUnit Tests
       run: dotnet test UnitTests/UnitTests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
-    - name: Upload test results (optional)
+    - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
