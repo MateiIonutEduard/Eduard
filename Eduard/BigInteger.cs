@@ -1367,25 +1367,33 @@ namespace Eduard
                 if (order.TestBit(k))
                 {
                     t1 = BarrettReduction(vk * vk1, val, constant);
-                    t1 += val;
-                    t1 -= P;
-                    if (t1 > val) t1 -= val;
+                    t1 += (val - P);
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk = t1;
+
                     t1 = BarrettReduction(vk1 * vk1, val, constant);
                     t1 += (val - 2);
-                    if (t1 > val) t1 -= val;
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk1 = t1;
                 }
                 else
                 {
                     t1 = BarrettReduction(vk * vk1, val, constant);
-                    t1 += val;
-                    t1 -= P;
-                    if (t1 > val) t1 -= val;
+                    t1 += (val - P);
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk1 = t1;
+
                     t1 = BarrettReduction(vk * vk, val, constant);
                     t1 += (val - 2);
-                    if (t1 > val) t1 -= val;
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk = t1;
                 }
             }
@@ -1393,10 +1401,12 @@ namespace Eduard
             if (vk == 2 || vk == val - 2)
             {
                 BigInteger t1 = BarrettReduction(vk * P, val, constant);
-                BigInteger t2 = vk1 << 1;
-                t1 = t2 - t1;
+                BigInteger t2 = 2 * vk1;
 
-                BigInteger t3 = t1 % val;
+                if (t2 >= val) t2 -= val;
+                BigInteger t3 = val + t2 - t1;
+
+                if (t3 >= val) t3 -= val;
                 if (t3 == 0) return true;
             }
 
@@ -1404,9 +1414,15 @@ namespace Eduard
             {
                 if (vk == 0) return true;
                 if (vk == 2) return false;
-                BigInteger t1 = BarrettReduction(vk * vk, val, constant);
+
+                BigInteger t1 = BarrettReduction(
+                    vk * vk, val, constant);
                 t1 += (val - 2);
-                vk = t1 % val;
+
+                if (t1 >= val) 
+                    t1 -= val;
+
+                vk = t1;
             }
 
             return false;
