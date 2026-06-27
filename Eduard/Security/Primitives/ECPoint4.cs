@@ -167,16 +167,23 @@ namespace Eduard.Security.Primitives
             {
                 /* all points at infinity share the same hash */
                 if (!isOnCurve) return 0;
+                int hash = 17;
 
                 /* combine all coordinates */
-                int xHash = x.GetHashCode();
-                int yHash = y.GetHashCode();
+                hash = hash * 31 + x.GetHashCode();
+                hash = hash * 31 + y.GetHashCode();
 
-                int tHash = t.GetHashCode();
-                int zHash = z.GetHashCode();
+                hash = hash * 31 + t.GetHashCode();
+                hash = hash * 31 + z.GetHashCode();
 
-                return (xHash << 3) ^ (yHash << 2) ^ 
-                    (tHash << 1) ^ zHash;
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
+                return hash;
             }
 
         }

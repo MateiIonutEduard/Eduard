@@ -3,6 +3,8 @@
 **Eduard** is a production-grade cryptographic library written in C#, implementing multi-precision integer arithmetic, finite field operations (restricted to prime fields), univariate polynomials over large prime fields, modular operations using quotient rings, and algebraic operations with bivariate polynomials over 𝔽ₚ. It provides the foundation for specialized algorithms such as Schoof's algorithm, Schoof–Elkies–Atkin (SEA), isogeny-based cryptography, and the cryptographic primitives for point and curve representation, along with the extensions required for efficient implementation of elliptic curve cryptosystems over prime fields. This project was developed independently for scientific research in Number Theory, Algebraic Geometry, and Elliptic Curve Cryptography, and offers a mathematically rigorous foundation for the optimal implementation of protocols, encryption systems, and digital signature schemes based on elliptic curves. The implementation emphasizes mathematical correctness, supported by a comprehensive correctness test suite, and maximum performance, guided by benchmarking and threshold tuning for optimal algorithm selection.
 
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[![NuGet](https://img.shields.io/nuget/v/Eduard.svg)](https://www.nuget.org/packages/Eduard/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Eduard.svg)](https://www.nuget.org/packages/Eduard/)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/MateiIonutEduard/Eduard/build.yml?branch=master)](https://github.com/MateiIonutEduard/Eduard/actions)
 [![Changelog](https://img.shields.io/badge/changelog-view-lightgreen)](CHANGELOG.md)
 

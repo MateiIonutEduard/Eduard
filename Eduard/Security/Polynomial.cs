@@ -140,7 +140,7 @@ namespace Eduard.Security
                     "Field modulus must be prime.");
 
             BarrettReducer.SetModulus(field);
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
         }
 
         internal void Update()
@@ -981,7 +981,7 @@ namespace Eduard.Security
                 int jSymbol = BigInteger.Jacobi(delta, field);
                 if (jSymbol == -1) return -1;
 
-                BigInteger root = ModSqrtUtil.Sqrt(delta, true);
+                BigInteger root = ModularSqrt.Compute(delta, true);
                 BigInteger val = BarrettReducer.MultMod(2, poly.coeffs[2]);
 
                 BigInteger inv = val.Inverse(field);
@@ -1362,8 +1362,18 @@ namespace Eduard.Security
                 hash = hash * 31 + hashDegree.GetHashCode();
 
                 for (int i = 0; i <= hashDegree; i++)
-                    hash = hash * 31 + GetCoeff(i).GetHashCode();
+                {
+                    BigInteger coeff = GetCoeff(i);
+                    hash = hash * 31 + coeff.GetHashCode();
+                }
 
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
                 return hash;
             }
         }

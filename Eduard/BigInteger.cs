@@ -1367,25 +1367,33 @@ namespace Eduard
                 if (order.TestBit(k))
                 {
                     t1 = BarrettReduction(vk * vk1, val, constant);
-                    t1 += val;
-                    t1 -= P;
-                    if (t1 > val) t1 -= val;
+                    t1 += (val - P);
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk = t1;
+
                     t1 = BarrettReduction(vk1 * vk1, val, constant);
                     t1 += (val - 2);
-                    if (t1 > val) t1 -= val;
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk1 = t1;
                 }
                 else
                 {
                     t1 = BarrettReduction(vk * vk1, val, constant);
-                    t1 += val;
-                    t1 -= P;
-                    if (t1 > val) t1 -= val;
+                    t1 += (val - P);
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk1 = t1;
+
                     t1 = BarrettReduction(vk * vk, val, constant);
                     t1 += (val - 2);
-                    if (t1 > val) t1 -= val;
+
+                    if (t1 >= val) 
+                        t1 -= val;
                     vk = t1;
                 }
             }
@@ -1393,10 +1401,12 @@ namespace Eduard
             if (vk == 2 || vk == val - 2)
             {
                 BigInteger t1 = BarrettReduction(vk * P, val, constant);
-                BigInteger t2 = vk1 << 1;
-                t1 = t2 - t1;
+                BigInteger t2 = 2 * vk1;
 
-                BigInteger t3 = t1 % val;
+                if (t2 >= val) t2 -= val;
+                BigInteger t3 = val + t2 - t1;
+
+                if (t3 >= val) t3 -= val;
                 if (t3 == 0) return true;
             }
 
@@ -1404,9 +1414,15 @@ namespace Eduard
             {
                 if (vk == 0) return true;
                 if (vk == 2) return false;
-                BigInteger t1 = BarrettReduction(vk * vk, val, constant);
+
+                BigInteger t1 = BarrettReduction(
+                    vk * vk, val, constant);
                 t1 += (val - 2);
-                vk = t1 % val;
+
+                if (t1 >= val) 
+                    t1 -= val;
+
+                vk = t1;
             }
 
             return false;
@@ -1627,11 +1643,12 @@ namespace Eduard
         /// </remarks>
         public static BigInteger BarrettReduction(BigInteger value, BigInteger modulus, BigInteger constant)
         {
-            int k = modulus.data.Used,
-                    kPlusOne = k + 1,
-                    kMinusOne = k - 1;
+            int k = modulus.data.Used;
+            int kPlusOne = k + 1;
+            int kMinusOne = k - 1;
 
-            int length = value.data.Used - kMinusOne;
+            int n = value.data.Used;
+            int length = n - kMinusOne;
 
             if (length <= 0)
                 length = 1;
@@ -1654,7 +1671,8 @@ namespace Eduard
                 data[j] = q2.data[i];
 
             BigInteger q3 = new BigInteger(data);
-            int lengthToCopy = (value.data.Used > kPlusOne) ? kPlusOne : value.data.Used;
+            int lengthToCopy = (value.data.Used > kPlusOne) 
+                ? kPlusOne : value.data.Used;
             data = new Data(lengthToCopy);
 
             for (int i = 0; i < lengthToCopy; i++)
@@ -1689,7 +1707,7 @@ namespace Eduard
             data = new Data(kPlusOne + 1, kPlusOne + 1);
             data[kPlusOne] = 0x00000001;
 
-            if ((r1.data[r1.data.Length - 1] & 0x80000000) != 0)
+            if (r1.IsNegative)
             {
                 BigInteger val = new BigInteger(data);
                 r1 += val;
@@ -2396,6 +2414,13 @@ namespace Eduard
                 if (IsNegative)
                     hash = ~hash;
 
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
                 return hash;
             }
         }

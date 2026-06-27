@@ -39,8 +39,9 @@ jobs:
     - name: Restore strong name private key
       env:
         SNK_BASE64: ${{ secrets.SNK_PRIVATE_KEY }}
+      shell: pwsh
       run: |
-        echo "$SNK_BASE64" | base64 -d > Eduard/Eduard.snk
+        [IO.File]::WriteAllBytes("Eduard/Eduard.snk", [Convert]::FromBase64String($env:SNK_BASE64))
 
     - name: Setup .NET 10 SDK
       uses: actions/setup-dotnet@v4

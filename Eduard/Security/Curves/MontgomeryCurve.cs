@@ -72,7 +72,7 @@ namespace Eduard.Security.Curves
             BigInteger At = BarrettReducer.AddMod(A, 2);
 
             A24 = BarrettReducer.MultMod(At, t);
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
         }
 
         /// <summary>

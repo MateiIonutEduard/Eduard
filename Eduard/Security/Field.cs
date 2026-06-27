@@ -59,7 +59,7 @@ namespace Eduard.Security
                     "Field modulus must be prime.");
 
             BarrettReducer.SetModulus(field);
-            ModSqrtUtil.InitParams();
+            ModularSqrt.InitParams();
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Eduard.Security
         /// </summary>
         public static Field Sqrt(Field val)
         {
-            BigInteger root = ModSqrtUtil.Sqrt((BigInteger)val, true);
+            BigInteger root = ModularSqrt.Compute((BigInteger)val, true);
             return root;
         }
 

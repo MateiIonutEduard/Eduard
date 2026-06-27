@@ -100,8 +100,23 @@ namespace Eduard.Security
         /// <returns>A 32-bit signed integer hash code.</returns>
         public override int GetHashCode()
         {
-            return HashCode.Combine(
-                coeff, degx, degy);
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + degx;
+
+                hash = hash * 31 + degy;
+                hash = hash * 31 + coeff.GetHashCode();
+
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
+                return hash;
+            }
         }
     }
 }

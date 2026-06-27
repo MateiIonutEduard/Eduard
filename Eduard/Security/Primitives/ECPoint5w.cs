@@ -254,6 +254,14 @@ namespace Eduard.Security.Primitives
 
                 hash = hash * 31 + z2.GetHashCode();
                 hash = hash * 31 + z3.GetHashCode();
+
+                hash ^= hash >> 16;
+                hash *= (int)0x85EBCA6B;
+
+                hash ^= hash >> 13;
+                hash *= (int)0xC2B2AE35;
+
+                hash ^= hash >> 16;
                 return hash;
             }
         }

@@ -1,10 +1,35 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	
+	<!-- Strong Naming -->
+    <SignAssembly>True</SignAssembly>
+	<AssemblyOriginatorKeyFile>Eduard.snk</AssemblyOriginatorKeyFile>
+	
+	
+    <!-- NuGet Package Metadata -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.0</Version>
+    <Authors>MateiIonutEduard</Authors>
+	
+	<PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+	<PackageTags>cryptography;elliptic-curve;ecdsa;ecdh;finite-field;signature;encryption</PackageTags>
+	<RepositoryUrl>https://github.com/MateiIonutEduard/Eduard</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+	
+	<!-- Symbol Package for Debugging -->
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
+
+    <!-- Reproducible Builds -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <Description>Production-grade C# library for high-performance elliptic curve cryptography and multi-precision integer arithmetic.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -14,5 +39,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
