@@ -16,7 +16,7 @@ jobs:
   publish:
     name: Publish to NuGet.org
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -25,6 +25,11 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Setup NuGet OIDC credential provider
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-api-key-source: OIDC  # activează autentificarea OIDC
 
     - name: Restore SNK key
       env:
@@ -55,23 +60,10 @@ jobs:
           --no-build \
           --output ./nupkgs
 
-    - name: Create clean NuGet config for OIDC
-      run: |
-        cat > nuget.config << 'EOF'
-        <?xml version="1.0" encoding="utf-8"?>
-        <configuration>
-          <packageSources>
-            <clear />
-            <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-          </packageSources>
-        </configuration>
-        EOF
-
     - name: Push to NuGet.org
       run: |
         dotnet nuget push ./nupkgs/*.nupkg \
-          --configfile nuget.config \
-          --source nuget.org \
+          --source https://api.nuget.org/v3/index.json \
           --skip-duplicate
 
     - name: Upload artifact
