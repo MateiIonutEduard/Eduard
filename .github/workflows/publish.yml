@@ -55,11 +55,16 @@ jobs:
           --no-build \
           --output ./nupkgs
 
+    - name: Configure NuGet v3 source
+      run: |
+        dotnet nuget remove source nuget.org 2>/dev/null || true
+        dotnet nuget remove source nuget-v3 2>/dev/null || true
+        dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget-v3
+
     - name: Push to NuGet.org
       run: |
         dotnet nuget push ./nupkgs/*.nupkg \
-          --source "https://api.nuget.org/v3/index.json" \
-          --api-key "" \
+          --source nuget-v3 \
           --skip-duplicate
 
     - name: Upload artifact
