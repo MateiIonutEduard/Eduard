@@ -57,6 +57,7 @@ jobs:
 
     - name: Push to NuGet.org
       run: |
+        dotnet nuget remove source nuget.org 2>/dev/null || true
         dotnet nuget push ./nupkgs/*.nupkg \
           --source https://api.nuget.org/v3/index.json \
           --skip-duplicate
