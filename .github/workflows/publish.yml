@@ -1,0 +1,68 @@
+name: Publish to NuGet
+
+on:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: 'Release'
+  PROJECT_PATH: 'Eduard/Eduard.csproj'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to NuGet.org
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore SNK key
+      env:
+        SNK_BASE64: ${{ secrets.SNK_PRIVATE_KEY }}
+      shell: pwsh
+      run: |
+        [IO.File]::WriteAllBytes("Eduard/Eduard.snk", [Convert]::FromBase64String($env:SNK_BASE64))
+
+    - name: Read version from csproj
+      run: |
+        VERSION=$(grep -oP '<Version>\K[^<]+' ${{ env.PROJECT_PATH }})
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Version: $VERSION"
+
+    - name: Restore
+      run: dotnet restore Eduard.sln
+
+    - name: Build
+      run: dotnet build Eduard.sln --configuration ${{ env.CONFIGURATION }} --no-restore
+
+    - name: Test
+      run: dotnet test UnitTests/UnitTests.csproj --configuration ${{ env.CONFIGURATION }} --no-build
+
+    - name: Pack
+      run: |
+        dotnet pack ${{ env.PROJECT_PATH }} \
+          --configuration ${{ env.CONFIGURATION }} \
+          --no-build \
+          --output ./nupkgs
+
+    - name: Push to NuGet.org
+      run: |
+        dotnet nuget push ./nupkgs/*.nupkg \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./nupkgs/*.nupkg
