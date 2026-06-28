@@ -55,16 +55,23 @@ jobs:
           --no-build \
           --output ./nupkgs
 
-    - name: Configure NuGet v3 source
+    - name: Create clean NuGet config for OIDC
       run: |
-        dotnet nuget remove source nuget.org 2>/dev/null || true
-        dotnet nuget remove source nuget-v3 2>/dev/null || true
-        dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget-v3
+        cat > nuget.config << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <configuration>
+          <packageSources>
+            <clear />
+            <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+          </packageSources>
+        </configuration>
+        EOF
 
     - name: Push to NuGet.org
       run: |
         dotnet nuget push ./nupkgs/*.nupkg \
-          --source nuget-v3 \
+          --configfile nuget.config \
+          --source nuget.org \
           --skip-duplicate
 
     - name: Upload artifact
