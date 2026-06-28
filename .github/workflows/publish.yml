@@ -55,7 +55,7 @@ jobs:
           --no-build \
           --output ./nupkgs
 
-    - name: NuGet login (OIDC → temp API key)
+    - name: NuGet login (OIDC)
       uses: NuGet/login@v1
       id: login
       with:
