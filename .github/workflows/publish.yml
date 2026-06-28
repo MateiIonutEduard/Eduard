@@ -57,9 +57,9 @@ jobs:
 
     - name: Push to NuGet.org
       run: |
-        dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget-v3 2>/dev/null || true
         dotnet nuget push ./nupkgs/*.nupkg \
-          --source nuget-v3 \
+          --source "https://api.nuget.org/v3/index.json" \
+          --api-key "" \
           --skip-duplicate
 
     - name: Upload artifact
